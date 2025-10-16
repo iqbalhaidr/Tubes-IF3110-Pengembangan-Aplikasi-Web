@@ -3,6 +3,27 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # TODO
+    ports:
+      - "8080:80"
+    volumes:
+      - ./php/src:/var/www/html/
+    depends_on:
+      - db
   db:
-# TODO
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: nimonspedia_db # ganti aja
+      POSTGRES_USER: nimonspedia_user # ganti aja
+      POSTGRES_PASSWORD: your_strong_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
+# cara run: docker compose up -d --build
+# cara masuk db: docker exec -it milestone-1-tugas-besar-if-3110-web-based-development-k01-15-db-1 psql -U {POSTGRES_USER} -d {POSTGRES_DB}
