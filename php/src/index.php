@@ -19,6 +19,13 @@ spl_autoload_register(function ($class_name) {
         return;
     }
 
+    // Look in middleware
+    $middleware_file = __DIR__ . '/middleware/' . $class_name . '.php';
+    if (file_exists($middleware_file)) {
+        require_once $middleware_file;
+        return;
+    }
+
     // Look in utils
     $util_file = __DIR__ . '/utils/' . $class_name . '.php';
     if (file_exists($util_file)) {
@@ -27,9 +34,50 @@ spl_autoload_register(function ($class_name) {
     }
 });
 
+// Parse URI and method
+$method = $_SERVER['REQUEST_METHOD'];
+$uri_parts = parse_url($uri);
+$path = $uri_parts['path'] ?? '/';
+
+// Remove leading/trailing slashes
+$path = trim($path, '/');
+if (empty($path)) {
+    $path = 'home';
+}
 
 // Routing
-if ($uri === '/' || $uri === '/index.php') {
+$route_parts = explode('/', $path);
+
+// Route matching
+if ($route_parts[0] === 'auth') {
+    $authController = new AuthController();
+    
+    if ($route_parts[1] === 'login') {
+        if ($method === 'GET') {
+            $authController->showLogin();
+        } elseif ($method === 'POST') {
+            $authController->login();
+        }
+    } elseif ($route_parts[1] === 'register') {
+        if ($method === 'GET') {
+            $authController->showRegister();
+        } elseif ($method === 'POST') {
+            $authController->register();
+        }
+    } elseif ($route_parts[1] === 'logout') {
+        $authController->logout();
+    } elseif ($route_parts[1] === 'me') {
+        $authController->getCurrentUser();
+    } elseif ($route_parts[1] === 'profile' && $method === 'POST') {
+        $authController->updateProfile();
+    } elseif ($route_parts[1] === 'change-password' && $method === 'POST') {
+        $authController->changePassword();
+    } else {
+        // Auth route not found
+        header("HTTP/1.0 404 Not Found");
+        require_once __DIR__ . '/views/404.php';
+    }
+} elseif ($route_parts[0] === 'home' || $route_parts[0] === '') {
     $controller = new HomeController();
     $controller->index();
 } else {

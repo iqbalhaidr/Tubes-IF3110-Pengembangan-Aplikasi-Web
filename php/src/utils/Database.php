@@ -9,12 +9,12 @@ class Database {
 
     public static function getInstance() {
         if (self::$dbconn == null) {
-            // Configuration
-            $host = 'db';
-            $port = '5432';
-            $dbname = 'nimonspedia_db';
-            $user = 'nimonspedia_user';
-            $password = 'your_strong_password';
+            // Get configuration from environment variables
+            $host = getenv('DB_HOST') ?: 'db';
+            $port = getenv('DB_PORT') ?: '5432';
+            $dbname = getenv('DB_NAME') ?: 'nimonspedia_db';
+            $user = getenv('DB_USER') ?: 'nimonspedia_user';
+            $password = getenv('DB_PASSWORD') ?: 'your_strong_password';
 
             // Create connection string
             $conn_string = "host={$host} port={$port} dbname={$dbname} user={$user} password={$password}";
