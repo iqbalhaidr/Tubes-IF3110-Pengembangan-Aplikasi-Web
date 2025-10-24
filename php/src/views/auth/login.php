@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Nimonspedia</title>
+    <link rel="stylesheet" href="/public/css/auth.css">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <!-- Left Panel - Welcome Section -->
+        <div class="auth-left">
+            <h1>Welcome<br>Back!</h1>
+        </div>
+
+        <!-- Right Panel - Login Form -->
+        <div class="auth-right">
+            <div class="auth-header">
+                <h2>Login</h2>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                    <div class="error-message" id="emailError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="password" name="password" required placeholder="Enter your password">
+                        <button type="button" class="toggle-password" onclick="togglePassword('password', this)">
+                            <span class="show-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="error-message" id="passwordError"></div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">Login</button>
+
+                <div class="auth-footer">
+                    don't have an account? <a href="/auth/register">register</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const alertContainer = document.getElementById('alertContainer');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+
+        // Toggle password visibility
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('.show-icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                icon.textContent = '👁️';
+            }
+        }
+
+        // Clear error on input
+        emailInput.addEventListener('input', () => {
+            emailInput.classList.remove('is-invalid');
+            document.getElementById('emailError').classList.remove('show');
+        });
+
+        passwordInput.addEventListener('input', () => {
+            passwordInput.classList.remove('is-invalid');
+            document.getElementById('passwordError').classList.remove('show');
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span>Signing in...';
+
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('Login successful!', 'success');
+                    setTimeout(() => {
+                        window.location.href = data.data.redirect;
+                    }, 500);
+                } else {
+                    if (data.errors) {
+                        Object.keys(data.errors).forEach(field => {
+                            const input = document.getElementById(field);
+                            const errorElement = document.getElementById(field + 'Error');
+                            if (input) {
+                                input.classList.add('is-invalid');
+                                errorElement.textContent = data.errors[field];
+                                errorElement.classList.add('show');
+                            }
+                        });
+                    } else {
+                        showAlert(data.message, 'error');
+                    }
+                }
+            } catch (error) {
+                showAlert('An error occurred. Please try again.', 'error');
+                console.error('Error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Sign In';
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} show`;
+            alert.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+
+            if (type === 'error') {
+                setTimeout(() => {
+                    alert.classList.remove('show');
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>
