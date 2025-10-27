@@ -59,18 +59,9 @@ if (priceFilter) {
 
 // Logout Functionality
 if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-        try {
-            const response = await fetch('/auth/logout', {
-                method: 'GET'
-            });
-
-            if (response.ok) {
-                window.location.href = '/';
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
+    logoutBtn.addEventListener('click', () => {
+        // Use normal navigation for logout to avoid JSON parsing issues
+        window.location.href = '/auth/logout';
     });
 }
 
@@ -92,21 +83,16 @@ if (nextPageBtn) {
 // Check if user is logged in and update navbar
 async function checkAuthStatus() {
     try {
-        const response = await fetch('/auth/me', {
-            method: 'GET'
-        });
+        if (!window.api || typeof window.api.get !== 'function') {
+            console.error('API helper not available');
+            showAuthLinks();
+            return;
+        }
 
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.data) {
-                // User is logged in
-                showUserMenu(data.data);
-            } else {
-                // User is not logged in
-                showAuthLinks();
-            }
+        const data = await window.api.get('/auth/me');
+        if (data && data.success && data.data) {
+            showUserMenu(data.data);
         } else {
-            // User is not logged in
             showAuthLinks();
         }
     } catch (error) {

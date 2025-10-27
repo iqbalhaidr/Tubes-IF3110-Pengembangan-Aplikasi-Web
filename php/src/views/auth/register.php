@@ -90,6 +90,7 @@
         </div>
     </div>
 
+    <script src="/public/js/api.js"></script>
     <script>
         const form = document.getElementById('registerForm');
         const submitBtn = document.getElementById('submitBtn');
@@ -121,44 +122,49 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            if (!window.api || typeof window.api.post !== 'function') {
+                console.error('API helper not available');
+                showAlert('Unable to submit form at the moment.', 'error');
+                return;
+            }
+
             const formData = new FormData(form);
+            const initialText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="loading"></span>Creating account...';
 
             try {
-                const response = await fetch('/auth/register', {
-                    method: 'POST',
-                    body: formData
-                });
+                const data = await window.api.post('/auth/register', formData);
 
-                const data = await response.json();
-
-                if (data.success) {
+                if (data && data.success) {
                     showAlert('Registration successful! Redirecting...', 'success');
                     setTimeout(() => {
                         window.location.href = data.data.redirect;
                     }, 500);
-                } else {
-                    if (data.errors) {
-                        Object.keys(data.errors).forEach(field => {
-                            const input = document.getElementById(field);
-                            const errorElement = document.getElementById(field + 'Error');
-                            if (input) {
-                                input.classList.add('is-invalid');
-                                errorElement.textContent = data.errors[field];
-                                errorElement.classList.add('show');
-                            }
-                        });
-                    } else {
-                        showAlert(data.message, 'error');
-                    }
                 }
             } catch (error) {
-                showAlert('An error occurred. Please try again.', 'error');
-                console.error('Error:', error);
+                const response = error || {};
+
+                if (response.errors) {
+                    Object.keys(response.errors).forEach(field => {
+                        let input = document.getElementById(field);
+                        if (!input && field === 'role') {
+                            input = document.querySelector('input[name="role"]');
+                        }
+                        const errorElement = document.getElementById(field + 'Error');
+                        if (input && errorElement) {
+                            input.classList.add('is-invalid');
+                            errorElement.textContent = response.errors[field];
+                            errorElement.classList.add('show');
+                        }
+                    });
+                } else {
+                    const message = response.message || 'An error occurred. Please try again.';
+                    showAlert(message, 'error');
+                }
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Create Account';
+                submitBtn.textContent = initialText;
             }
         });
 

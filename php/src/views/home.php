@@ -176,6 +176,7 @@
         </div>
     </main>
 
+    <script src="/public/js/api.js"></script>
     <script src="/public/js/main.js"></script>
 </body>
 </html>
