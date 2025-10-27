@@ -32,8 +32,8 @@
                     <label for="password">Password</label>
                     <div class="password-input-wrapper">
                         <input type="password" id="password" name="password" required placeholder="Enter your password">
-                        <button type="button" class="toggle-password" onclick="togglePassword('password', this)">
-                            <span class="show-icon">👁️</span>
+                        <button type="button" class="toggle-password" onclick="togglePassword('password', this)" aria-label="Show password">
+                            <span class="toggle-label">Show</span>
                         </button>
                     </div>
                     <div class="error-message" id="passwordError"></div>
@@ -59,15 +59,12 @@
         // Toggle password visibility
         function togglePassword(inputId, button) {
             const input = document.getElementById(inputId);
-            const icon = button.querySelector('.show-icon');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.textContent = '🙈';
-            } else {
-                input.type = 'password';
-                icon.textContent = '👁️';
-            }
+            const label = button.querySelector('.toggle-label');
+            const isHidden = input.type === 'password';
+
+            input.type = isHidden ? 'text' : 'password';
+            label.textContent = isHidden ? 'Hide' : 'Show';
+            button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
         }
 
         // Clear error on input

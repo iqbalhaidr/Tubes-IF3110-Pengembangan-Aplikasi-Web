@@ -3,178 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nimonspedia - Product Discovery</title>
+    <title>Nimonspedia - Marketplace for Nimons</title>
     <link rel="stylesheet" href="/public/css/main.css">
 </head>
-<body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
+<body class="landing">
+    <?php $isLoggedIn = !empty($current_user); ?>
+    <nav class="navbar landing-navbar">
         <div class="container navbar-container">
-            <!-- Left Side: Balance + Navigation Links -->
-            <div class="navbar-left">
-                <div class="balance-display" id="balanceDisplay" style="display: none;">
-                    💰 Balance: Rp. 5000
-                </div>
-                
-                <div class="navbar-links" id="navbarLinks">
-                    <a href="/" class="navbar-link active">Discover</a>
-                    <a href="/cart" class="navbar-link">Cart</a>
-                    <a href="/checkout" class="navbar-link">Checkout</a>
-                    <a href="/orders" class="navbar-link">Orders</a>
-                </div>
+            <a href="/" class="navbar-brand">Nimonspedia</a>
+            <div class="navbar-links" id="navbarMenu">
+                <a href="/" class="navbar-link active">Home</a>
+                <a href="/buyer/home" class="navbar-link">Buyer Portal</a>
+                <a href="/seller/dashboard" class="navbar-link">Seller Portal</a>
             </div>
-
-            <!-- Right Side: User Profile / Auth Links -->
             <div class="navbar-right">
-                <!-- User Profile (if logged in) -->
                 <div class="user-profile" id="userProfile" style="display: none;">
-                    <div class="user-avatar" id="userAvatar">R</div>
-                    <span class="user-name" id="userName">Rafif Farras</span>
-                    <button class="logout-icon" id="logoutBtn" title="Logout">➜</button>
+                    <div class="user-avatar" id="userAvatar">N</div>
+                    <span class="user-name" id="userName">Nimon</span>
+                    <button class="logout-icon" id="logoutBtn" title="Logout">Logout</button>
                 </div>
-
-                <!-- Auth Links (if not logged in) -->
                 <div class="auth-links" id="authLinks">
                     <a href="/auth/login" class="navbar-link">Login</a>
                     <a href="/auth/register" class="navbar-link">Register</a>
                 </div>
             </div>
-
-            <!-- Mobile Menu Toggle -->
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation">
+                <span class="menu-icon" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </button>
         </div>
     </nav>
 
-    <!-- Filter Bar with Search -->
-    <div class="filter-bar">
+    <header class="landing-hero">
         <div class="container">
-            <div class="filter-container">
-                <!-- Search Bar -->
-                <div class="search-wrapper">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" class="search-input" id="searchInput" placeholder="Search">
+            <div class="hero-content">
+                <h1>Belanja dan berjualan untuk Nimons, dalam satu platform.</h1>
+                <p>Nimonspedia menghubungkan para pembeli dan penjual Nimons dengan pengalaman e-commerce yang sederhana, cepat, dan menyenangkan.</p>
+                <div class="hero-actions">
+                    <?php if ($isLoggedIn && isset($current_user['role']) && $current_user['role'] === 'BUYER'): ?>
+                        <a class="btn btn-primary" href="/buyer/home">Lanjutkan Belanja</a>
+                        <a class="btn btn-secondary" href="/auth/logout">Logout</a>
+                    <?php elseif ($isLoggedIn && isset($current_user['role']) && $current_user['role'] === 'SELLER'): ?>
+                        <a class="btn btn-primary" href="/seller/dashboard">Buka Dashboard</a>
+                        <a class="btn btn-secondary" href="/auth/logout">Logout</a>
+                    <?php else: ?>
+                        <a class="btn btn-primary" href="/auth/register">Mulai sebagai Buyer</a>
+                        <a class="btn btn-secondary" href="/auth/login">Masuk sebagai Seller</a>
+                    <?php endif; ?>
                 </div>
-                
-                <!-- Filter Buttons -->
-                <button class="filter-button" id="categoryFilter">
-                    ☰ Filter by Category
-                </button>
-                <button class="filter-button" id="priceFilter">
-                    ☰ Filter by price
-                </button>
+            </div>
+            <div class="hero-illustration">
+                <div class="illustration-card"><span class="illustration-label">Shop</span></div>
+                <div class="illustration-card"><span class="illustration-label">Deliver</span></div>
+                <div class="illustration-card"><span class="illustration-label">Connect</span></div>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <!-- Products Grid -->
-            <div class="products-grid" id="productsGrid">
-                <!-- Product cards will be loaded here dynamically -->
-                <!-- Sample Product Card Structure -->
-                <div class="product-card">
-                    <div class="product-image">
-                        <img src="/public/images/placeholder.png" alt="Product" onerror="this.style.display='none'; this.parentElement.innerHTML='🛒'">
+    <main class="landing-content">
+        <section class="landing-section">
+            <div class="container">
+                <h2>Mengapa memilih Nimonspedia?</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>Produk Kurasi Nimons</h3>
+                        <p>Temukan barang unik dan inovatif dari para kreator Nimons di seluruh belahan dunia.</p>
                     </div>
-                    <div class="product-info">
-                        <div class="product-category">Name:</div>
-                        <div class="product-name">Kategori:</div>
-                        <div class="product-category">Harga:</div>
-                        <div class="product-store">Nama Toko:</div>
-                        <div class="product-actions">
-                            <button class="btn btn-primary">View Store</button>
-                            <button class="btn btn-secondary">View Detail</button>
-                            <button class="btn btn-icon">🛒</button>
-                        </div>
+                    <div class="feature-card">
+                        <h3>Pengelolaan Toko Mudah</h3>
+                        <p>Kelola stok, pantau pesanan, dan monitor pendapatan dengan dashboard yang intuitif.</p>
                     </div>
-                </div>
-
-                <!-- Repeat for 6 cards to match the image -->
-                <div class="product-card">
-                    <div class="product-image">🛒</div>
-                    <div class="product-info">
-                        <div class="product-category">Name:</div>
-                        <div class="product-name">Kategori:</div>
-                        <div class="product-category">Harga:</div>
-                        <div class="product-store">Nama Toko:</div>
-                        <div class="product-actions">
-                            <button class="btn btn-primary">View Store</button>
-                            <button class="btn btn-secondary">View Detail</button>
-                            <button class="btn btn-icon">🛒</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="product-card">
-                    <div class="product-image">🛒</div>
-                    <div class="product-info">
-                        <div class="product-category">Name:</div>
-                        <div class="product-name">Kategori:</div>
-                        <div class="product-category">Harga:</div>
-                        <div class="product-store">Nama Toko:</div>
-                        <div class="product-actions">
-                            <button class="btn btn-primary">View Store</button>
-                            <button class="btn btn-secondary">View Detail</button>
-                            <button class="btn btn-icon">🛒</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="product-card">
-                    <div class="product-image">🛒</div>
-                    <div class="product-info">
-                        <div class="product-category">Name:</div>
-                        <div class="product-name">Kategori:</div>
-                        <div class="product-category">Harga:</div>
-                        <div class="product-store">Nama Toko:</div>
-                        <div class="product-actions">
-                            <button class="btn btn-primary">View Store</button>
-                            <button class="btn btn-secondary">View Detail</button>
-                            <button class="btn btn-icon">🛒</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="product-card">
-                    <div class="product-image">🛒</div>
-                    <div class="product-info">
-                        <div class="product-category">Name:</div>
-                        <div class="product-name">Kategori:</div>
-                        <div class="product-category">Harga:</div>
-                        <div class="product-store">Nama Toko:</div>
-                        <div class="product-actions">
-                            <button class="btn btn-primary">View Store</button>
-                            <button class="btn btn-secondary">View Detail</button>
-                            <button class="btn btn-icon">🛒</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="product-card">
-                    <div class="product-image">🛒</div>
-                    <div class="product-info">
-                        <div class="product-category">Name:</div>
-                        <div class="product-name">Kategori:</div>
-                        <div class="product-category">Harga:</div>
-                        <div class="product-store">Nama Toko:</div>
-                        <div class="product-actions">
-                            <button class="btn btn-primary">View Store</button>
-                            <button class="btn btn-secondary">View Detail</button>
-                            <button class="btn btn-icon">🛒</button>
-                        </div>
+                    <div class="feature-card">
+                        <h3>Pengalaman Aman</h3>
+                        <p>Autentikasi modern dan sistem transaksi yang menjaga keamanan data Nimons.</p>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <!-- Pagination -->
-            <div class="pagination" id="pagination">
-                <button class="pagination-button" id="prevPage">◀</button>
-                <span class="page-info">1</span>
-                <button class="pagination-button" id="nextPage">▶</button>
+        <section class="landing-section landing-roles">
+            <div class="container">
+                <h2>Portal yang sesuai dengan peranmu</h2>
+                <div class="role-cards">
+                    <div class="role-card">
+                        <h3>Untuk Buyer</h3>
+                        <p>Akses produk terbaru, filter berdasarkan kategori, simpan di cart, dan checkout kapan saja.</p>
+                        <a class="btn btn-primary" href="<?= $isLoggedIn && isset($current_user['role']) && $current_user['role'] === 'BUYER' ? '/buyer/home' : '/auth/register' ?>">
+                            <?= $isLoggedIn && isset($current_user['role']) && $current_user['role'] === 'BUYER' ? 'Masuk ke Beranda Buyer' : 'Jelajahi Produk' ?>
+                        </a>
+                    </div>
+                    <div class="role-card">
+                        <h3>Untuk Seller</h3>
+                        <p>Kelola katalog, pantau order masuk, dan tingkatkan penjualanmu melalui dashboard terpusat.</p>
+                        <a class="btn btn-secondary" href="<?= $isLoggedIn && isset($current_user['role']) && $current_user['role'] === 'SELLER' ? '/seller/dashboard' : '/auth/register' ?>">
+                            <?= $isLoggedIn && isset($current_user['role']) && $current_user['role'] === 'SELLER' ? 'Masuk ke Dashboard' : 'Kelola Toko' ?>
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
+
+        <?php if (!empty($categories)): ?>
+        <section class="landing-section landing-categories">
+            <div class="container">
+                <h2>Kategori populer</h2>
+                <div class="category-pills">
+                    <?php foreach ($categories as $category): ?>
+                        <span class="pill">
+                            <?= htmlspecialchars($category['name']) ?>
+                        </span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </section>
+        <?php endif; ?>
     </main>
+
+    <footer class="landing-footer">
+        <div class="container">
+            <p>© <?= date('Y') ?> Nimonspedia. Dibuat untuk komunitas Nimons dengan penuh semangat.</p>
+        </div>
+    </footer>
 
     <script src="/public/js/api.js"></script>
     <script src="/public/js/main.js"></script>

@@ -80,6 +80,24 @@ if ($route_parts[0] === 'auth') {
 } elseif ($route_parts[0] === 'home' || $route_parts[0] === '') {
     $controller = new HomeController();
     $controller->index();
+} elseif ($route_parts[0] === 'buyer') {
+    $controller = new HomeController();
+
+    if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'home') {
+        $controller->buyerHome();
+    } else {
+        header("HTTP/1.0 404 Not Found");
+        require_once __DIR__ . '/views/404.php';
+    }
+} elseif ($route_parts[0] === 'seller') {
+    $controller = new HomeController();
+
+    if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'dashboard') {
+        $controller->sellerDashboard();
+    } else {
+        header("HTTP/1.0 404 Not Found");
+        require_once __DIR__ . '/views/404.php';
+    }
 } else {
     // Not Found
     header("HTTP/1.0 404 Not Found");

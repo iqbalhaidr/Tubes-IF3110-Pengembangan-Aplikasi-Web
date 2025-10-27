@@ -55,8 +55,8 @@
                     <label for="password">Password</label>
                     <div class="password-input-wrapper">
                         <input type="password" id="password" name="password" required placeholder="Enter your password">
-                        <button type="button" class="toggle-password" onclick="togglePassword('password', this)">
-                            <span class="show-icon">👁️</span>
+                        <button type="button" class="toggle-password" onclick="togglePassword('password', this)" aria-label="Show password">
+                            <span class="toggle-label">Show</span>
                         </button>
                     </div>
                     <small class="password-hint">Min 8 characters: uppercase, lowercase, number, symbol</small>
@@ -67,8 +67,8 @@
                     <label for="password_confirm">Confirm Password</label>
                     <div class="password-input-wrapper">
                         <input type="password" id="password_confirm" name="password_confirm" required placeholder="Confirm your password">
-                        <button type="button" class="toggle-password" onclick="togglePassword('password_confirm', this)">
-                            <span class="show-icon">👁️</span>
+                        <button type="button" class="toggle-password" onclick="togglePassword('password_confirm', this)" aria-label="Show password">
+                            <span class="toggle-label">Show</span>
                         </button>
                     </div>
                     <div class="error-message" id="password_confirmError"></div>
@@ -100,15 +100,12 @@
         // Toggle password visibility
         function togglePassword(inputId, button) {
             const input = document.getElementById(inputId);
-            const icon = button.querySelector('.show-icon');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.textContent = '🙈';
-            } else {
-                input.type = 'password';
-                icon.textContent = '👁️';
-            }
+            const label = button.querySelector('.toggle-label');
+            const isHidden = input.type === 'password';
+
+            input.type = isHidden ? 'text' : 'password';
+            label.textContent = isHidden ? 'Hide' : 'Show';
+            button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
         }
 
         // Clear error on input

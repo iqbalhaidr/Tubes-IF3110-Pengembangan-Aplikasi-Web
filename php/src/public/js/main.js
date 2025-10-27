@@ -3,7 +3,6 @@
 // DOM Elements
 const mobileMenuToggle = document.getElementById('mobileMenuToggle');
 const navbarMenu = document.getElementById('navbarMenu');
-const searchButton = document.getElementById('searchButton');
 const searchInput = document.getElementById('searchInput');
 const categoryFilter = document.getElementById('categoryFilter');
 const priceFilter = document.getElementById('priceFilter');
@@ -13,7 +12,7 @@ const prevPageBtn = document.getElementById('prevPage');
 const nextPageBtn = document.getElementById('nextPage');
 
 // Mobile Menu Toggle
-if (mobileMenuToggle) {
+if (mobileMenuToggle && navbarMenu) {
     mobileMenuToggle.addEventListener('click', () => {
         navbarMenu.classList.toggle('active');
     });
@@ -123,7 +122,7 @@ function showUserMenu(userData) {
         if (balanceDisplay) {
             balanceDisplay.style.display = 'flex';
             if (userData.balance !== undefined) {
-                balanceDisplay.textContent = `💰 Balance: Rp. ${formatCurrency(userData.balance)}`;
+                balanceDisplay.textContent = `Balance: Rp. ${formatCurrency(userData.balance)}`;
             }
         }
     }
@@ -163,7 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Add to cart functionality (placeholder)
 document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('btn-icon') && e.target.textContent === '🛒') {
+    const addButton = e.target.closest('[data-action="add-to-cart"]');
+    if (addButton) {
         console.log('Add to cart clicked');
         // TODO: Implement add to cart
     }
