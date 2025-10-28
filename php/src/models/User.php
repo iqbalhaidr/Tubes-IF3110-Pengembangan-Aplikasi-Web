@@ -8,23 +8,69 @@ class User {
     }
 
     /**
-     * Register a new user
+     * Register buyer
      */
-    public function register($email, $password, $name, $role, $address = '') {
-        // Check if email already exists
-        $query = 'SELECT user_id FROM "user" WHERE email = $1';
-        $result = pg_query_params($this->db, $query, array($email));
-        
-        if (pg_num_rows($result) > 0) {
-            return ['success' => false, 'message' => 'Email already exists'];
+    public function registerBuyer($email, $password, $name, $address = '') {
+        $createResult = $this->createUser($email, $password, $name, 'BUYER', $address);
+
+        if (!$createResult['success']) {
+            return $createResult;
         }
 
-        // Hash password
+        return ['success' => true, 'user' => $createResult['user']];
+    }
+
+    /**
+     * Register seller along with store
+     */
+    public function registerSeller($email, $password, $name, $address, $storeName, $storeDescription, $storeLogoPath = null) {
+        $storeCheck = pg_query_params(
+            $this->db,
+            'SELECT store_id FROM store WHERE store_name = $1',
+            array($storeName)
+        );
+
+        if ($storeCheck && pg_num_rows($storeCheck) > 0) {
+            return [
+                'success' => false,
+                'message' => 'Store name already exists',
+                'field' => 'store_name'
+            ];
+        }
+
+        pg_query($this->db, 'BEGIN');
+
+        try {
+            $createResult = $this->createUser($email, $password, $name, 'SELLER', $address);
+
+            if (!$createResult['success']) {
+                throw new Exception($createResult['message']);
+            }
+
+            $user = $createResult['user'];
+
+            $storeModel = new Store();
+            $storeResult = $storeModel->create($user['user_id'], $storeName, $storeDescription ?? '', $storeLogoPath);
+
+            if (!$storeResult['success']) {
+                throw new Exception($storeResult['message']);
+            }
+
+            pg_query($this->db, 'COMMIT');
+
+            return ['success' => true, 'user' => $user];
+        } catch (Exception $e) {
+            pg_query($this->db, 'ROLLBACK');
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    private function createUser($email, $password, $name, $role, $address = '') {
         $password_hash = password_hash($password, PASSWORD_BCRYPT);
 
-        // Insert user
-        $query = 'INSERT INTO "user" (email, password_hash, name, role, address) 
-                  VALUES ($1, $2, $3, $4, $5) RETURNING user_id, email, name, role';
+        $query = 'INSERT INTO "user" (email, password_hash, name, role, address)
+                  VALUES ($1, $2, $3, $4, $5)
+                  RETURNING user_id, email, name, role, address, balance';
         $result = pg_query_params($this->db, $query, array($email, $password_hash, $name, $role, $address));
 
         if (!$result) {

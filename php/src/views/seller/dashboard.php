@@ -11,9 +11,10 @@
         <div class="container navbar-container">
             <a href="/seller/dashboard" class="navbar-brand">Nimonspedia</a>
             <div class="seller-tabs" id="navbarMenu">
-                <a href="javascript:void(0);" class="navbar-link">Product Management</a>
                 <a href="/seller/dashboard" class="navbar-link active">Dashboard</a>
+                <a href="javascript:void(0);" class="navbar-link">Product Management</a>
                 <a href="javascript:void(0);" class="navbar-link">Order Management</a>
+                <a href="/seller/profile" class="navbar-link">Profile</a>
             </div>
             <div class="navbar-right">
                 <div class="user-profile" id="userProfile" style="display: none;">

@@ -59,10 +59,33 @@ if ($route_parts[0] === 'auth') {
             $authController->login();
         }
     } elseif ($route_parts[1] === 'register') {
-        if ($method === 'GET') {
-            $authController->showRegister();
-        } elseif ($method === 'POST') {
-            $authController->register();
+        $registerAction = $route_parts[2] ?? null;
+
+        if ($registerAction === null) {
+            if ($method === 'GET') {
+                $authController->showRegister();
+            } else {
+                Response::error('Method not allowed', null, 405);
+            }
+        } elseif ($registerAction === 'buyer') {
+            if ($method === 'GET') {
+                $authController->showRegisterBuyer();
+            } elseif ($method === 'POST') {
+                $authController->registerBuyer();
+            } else {
+                Response::error('Method not allowed', null, 405);
+            }
+        } elseif ($registerAction === 'seller') {
+            if ($method === 'GET') {
+                $authController->showRegisterSeller();
+            } elseif ($method === 'POST') {
+                $authController->registerSeller();
+            } else {
+                Response::error('Method not allowed', null, 405);
+            }
+        } else {
+            header("HTTP/1.0 404 Not Found");
+            require_once __DIR__ . '/views/404.php';
         }
     } elseif ($route_parts[1] === 'logout') {
         $authController->logout();
@@ -85,6 +108,8 @@ if ($route_parts[0] === 'auth') {
 
     if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'home') {
         $controller->buyerHome();
+    } elseif ($route_parts[1] === 'profile') {
+        $controller->buyerProfile();
     } else {
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';
@@ -94,6 +119,8 @@ if ($route_parts[0] === 'auth') {
 
     if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'dashboard') {
         $controller->sellerDashboard();
+    } elseif ($route_parts[1] === 'profile') {
+        $controller->sellerProfile();
     } else {
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';

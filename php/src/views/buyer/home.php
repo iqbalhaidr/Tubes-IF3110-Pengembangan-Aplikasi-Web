@@ -19,6 +19,7 @@
                     <a href="javascript:void(0);" class="navbar-link">Cart</a>
                     <a href="javascript:void(0);" class="navbar-link">Checkout</a>
                     <a href="javascript:void(0);" class="navbar-link">Orders</a>
+                    <a href="/buyer/profile" class="navbar-link">Profile</a>
                 </div>
             </div>
             <div class="navbar-right">

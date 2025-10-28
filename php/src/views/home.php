@@ -40,8 +40,15 @@
     <header class="landing-hero">
         <div class="container">
             <div class="hero-content">
-                <h1>Belanja dan berjualan untuk Nimons, dalam satu platform.</h1>
-                <p>Nimonspedia menghubungkan para pembeli dan penjual Nimons dengan pengalaman e-commerce yang sederhana, cepat, dan menyenangkan.</p>
+                <span class="hero-kicker">Marketplace Nimons</span>
+                <h1 class="hero-title">Kelola jual beli Nimons dalam satu tempat terintegrasi.</h1>
+                <p class="hero-lead">Nimonspedia menyatukan pembeli dan penjual dengan alur katalog, keranjang, serta dashboard toko yang dibuat khusus untuk kebutuhan dunia Nimons.</p>
+                <div class="hero-divider" aria-hidden="true"></div>
+                <ul class="hero-points">
+                    <li>Akses ribuan produk Nimons yang telah dikurasi.</li>
+                    <li>Kelola toko dengan metrik penjualan yang transparan.</li>
+                    <li>Checkout aman dengan pelacakan pesanan real-time.</li>
+                </ul>
                 <div class="hero-actions">
                     <?php if ($isLoggedIn && isset($current_user['role']) && $current_user['role'] === 'BUYER'): ?>
                         <a class="btn btn-primary" href="/buyer/home">Lanjutkan Belanja</a>
@@ -66,27 +73,33 @@
     <main class="landing-content">
         <section class="landing-section">
             <div class="container">
-                <h2>Mengapa memilih Nimonspedia?</h2>
+                <div class="section-heading">
+                    <h2>Mengapa memilih Nimonspedia?</h2>
+                    <p class="section-subtitle">Platform kami dirancang untuk membantu Nimons menemukan produk unik sambil memberi penjual alat kontrol penuh atas bisnisnya.</p>
+                </div>
                 <div class="feature-grid">
-                    <div class="feature-card">
+                    <article class="feature-card">
                         <h3>Produk Kurasi Nimons</h3>
-                        <p>Temukan barang unik dan inovatif dari para kreator Nimons di seluruh belahan dunia.</p>
-                    </div>
-                    <div class="feature-card">
+                        <p>Temukan barang original dari para kreator Nimons, lengkap dengan kategori, foto, dan detail toko.</p>
+                    </article>
+                    <article class="feature-card">
                         <h3>Pengelolaan Toko Mudah</h3>
-                        <p>Kelola stok, pantau pesanan, dan monitor pendapatan dengan dashboard yang intuitif.</p>
-                    </div>
-                    <div class="feature-card">
+                        <p>Kelola stok, pantau kinerja, dan tindak lanjuti order lewat dashboard terpusat yang ringan dan informatif.</p>
+                    </article>
+                    <article class="feature-card">
                         <h3>Pengalaman Aman</h3>
-                        <p>Autentikasi modern dan sistem transaksi yang menjaga keamanan data Nimons.</p>
-                    </div>
+                        <p>Autentikasi modern, notifikasi status, dan pelacakan transaksi menjaga kenyamanan jual beli Nimons.</p>
+                    </article>
                 </div>
             </div>
         </section>
 
         <section class="landing-section landing-roles">
             <div class="container">
-                <h2>Portal yang sesuai dengan peranmu</h2>
+                <div class="section-heading">
+                    <h2>Portal yang sesuai dengan peranmu</h2>
+                    <p class="section-subtitle">Masuk sebagai buyer atau seller dan lanjutkan aktivitas bisnis sesuai kebutuhanmu.</p>
+                </div>
                 <div class="role-cards">
                     <div class="role-card">
                         <h3>Untuk Buyer</h3>
@@ -109,7 +122,10 @@
         <?php if (!empty($categories)): ?>
         <section class="landing-section landing-categories">
             <div class="container">
-                <h2>Kategori populer</h2>
+                <div class="section-heading">
+                    <h2>Kategori populer</h2>
+                    <p class="section-subtitle">Mulai eksplorasi dari kategori yang paling diminati oleh komunitas Nimons.</p>
+                </div>
                 <div class="category-pills">
                     <?php foreach ($categories as $category): ?>
                         <span class="pill">
@@ -124,7 +140,7 @@
 
     <footer class="landing-footer">
         <div class="container">
-            <p>© <?= date('Y') ?> Nimonspedia. Dibuat untuk komunitas Nimons dengan penuh semangat.</p>
+            <p>Copyright <?= date('Y') ?> Nimonspedia. Dibuat untuk komunitas Nimons dengan penuh semangat.</p>
         </div>
     </footer>
 
