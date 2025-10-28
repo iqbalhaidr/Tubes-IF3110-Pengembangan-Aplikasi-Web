@@ -8,25 +8,26 @@ class Database {
     }
 
     public static function getInstance() {
-        if (self::$dbconn == null) {
-            // Get configuration from environment variables
+        if (self::$dbconn === null) {
             $host = getenv('DB_HOST') ?: 'db';
             $port = getenv('DB_PORT') ?: '5432';
             $dbname = getenv('DB_NAME') ?: 'nimonspedia_db';
             $user = getenv('DB_USER') ?: 'nimonspedia_user';
             $password = getenv('DB_PASSWORD') ?: 'your_strong_password';
 
-            // Create connection string
-            $conn_string = "host={$host} port={$port} dbname={$dbname} user={$user} password={$password}";
+            $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
 
-            // Establish database connection
-            self::$dbconn = pg_connect($conn_string);
-
-            if (!self::$dbconn) {
+            try {
+                self::$dbconn = new PDO($dsn, $user, $password, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                ]);
+            } catch (PDOException $exception) {
                 // In a real app, you'd log this error, not die
-                die("Connection failed: " . pg_last_error());
+                die('Connection failed: ' . $exception->getMessage());
             }
         }
+
         return self::$dbconn;
     }
 }

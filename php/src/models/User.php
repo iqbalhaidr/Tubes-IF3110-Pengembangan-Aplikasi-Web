@@ -24,23 +24,20 @@ class User {
      * Register seller along with store
      */
     public function registerSeller($email, $password, $name, $address, $storeName, $storeDescription, $storeLogoPath = null) {
-        $storeCheck = pg_query_params(
-            $this->db,
-            'SELECT store_id FROM store WHERE store_name = $1',
-            array($storeName)
-        );
-
-        if ($storeCheck && pg_num_rows($storeCheck) > 0) {
-            return [
-                'success' => false,
-                'message' => 'Store name already exists',
-                'field' => 'store_name'
-            ];
-        }
-
-        pg_query($this->db, 'BEGIN');
-
         try {
+            $storeCheckStatement = $this->db->prepare('SELECT store_id FROM store WHERE store_name = :store_name');
+            $storeCheckStatement->execute([':store_name' => $storeName]);
+
+            if ($storeCheckStatement->fetch()) {
+                return [
+                    'success' => false,
+                    'message' => 'Store name already exists',
+                    'field' => 'store_name'
+                ];
+            }
+
+            $this->db->beginTransaction();
+
             $createResult = $this->createUser($email, $password, $name, 'SELLER', $address);
 
             if (!$createResult['success']) {
@@ -56,11 +53,13 @@ class User {
                 throw new Exception($storeResult['message']);
             }
 
-            pg_query($this->db, 'COMMIT');
+            $this->db->commit();
 
             return ['success' => true, 'user' => $user];
         } catch (Exception $e) {
-            pg_query($this->db, 'ROLLBACK');
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -69,70 +68,99 @@ class User {
         $password_hash = password_hash($password, PASSWORD_BCRYPT);
 
         $query = 'INSERT INTO "user" (email, password_hash, name, role, address)
-                  VALUES ($1, $2, $3, $4, $5)
+                  VALUES (:email, :password_hash, :name, :role, :address)
                   RETURNING user_id, email, name, role, address, balance';
-        $result = pg_query_params($this->db, $query, array($email, $password_hash, $name, $role, $address));
 
-        if (!$result) {
-            return ['success' => false, 'message' => 'Registration failed: ' . pg_last_error($this->db)];
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([
+                ':email' => $email,
+                ':password_hash' => $password_hash,
+                ':name' => $name,
+                ':role' => $role,
+                ':address' => $address,
+            ]);
+
+            $user = $statement->fetch();
+
+            if (!$user) {
+                return ['success' => false, 'message' => 'Registration failed: unable to fetch user'];
+            }
+
+            return ['success' => true, 'user' => $user];
+        } catch (PDOException $exception) {
+            return ['success' => false, 'message' => 'Registration failed: ' . $exception->getMessage()];
         }
-
-        $user = pg_fetch_assoc($result);
-        return ['success' => true, 'user' => $user];
     }
 
     /**
      * Login user
      */
     public function login($email, $password) {
-        $query = 'SELECT user_id, email, name, role, password_hash FROM "user" WHERE email = $1';
-        $result = pg_query_params($this->db, $query, array($email));
+        $query = 'SELECT user_id, email, name, role, password_hash FROM "user" WHERE email = :email';
 
-        if (pg_num_rows($result) === 0) {
-            return ['success' => false, 'message' => 'Email not found'];
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([':email' => $email]);
+
+            $user = $statement->fetch();
+
+            if (!$user) {
+                return ['success' => false, 'message' => 'Email not found'];
+            }
+
+            if (!password_verify($password, $user['password_hash'])) {
+                return ['success' => false, 'message' => 'Invalid password'];
+            }
+
+            unset($user['password_hash']);
+
+            return ['success' => true, 'user' => $user];
+        } catch (PDOException $exception) {
+            return ['success' => false, 'message' => 'Login failed: ' . $exception->getMessage()];
         }
-
-        $user = pg_fetch_assoc($result);
-
-        // Verify password
-        if (!password_verify($password, $user['password_hash'])) {
-            return ['success' => false, 'message' => 'Invalid password'];
-        }
-
-        // Remove password hash from result
-        unset($user['password_hash']);
-
-        return ['success' => true, 'user' => $user];
     }
 
     /**
      * Get user by ID
      */
     public function getUserById($user_id) {
-        $query = 'SELECT user_id, email, name, role, balance, address, created_at, updated_at FROM "user" WHERE user_id = $1';
-        $result = pg_query_params($this->db, $query, array($user_id));
+        $query = 'SELECT user_id, email, name, role, balance, address, created_at, updated_at FROM "user" WHERE user_id = :user_id';
 
-        if (pg_num_rows($result) === 0) {
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([':user_id' => $user_id]);
+            return $statement->fetch() ?: null;
+        } catch (PDOException $exception) {
             return null;
         }
-
-        return pg_fetch_assoc($result);
     }
 
     /**
      * Update user profile
      */
     public function updateProfile($user_id, $name, $address) {
-        $query = 'UPDATE "user" SET name = $1, address = $2, updated_at = CURRENT_TIMESTAMP 
-                  WHERE user_id = $3 RETURNING user_id, email, name, role, balance, address';
-        $result = pg_query_params($this->db, $query, array($name, $address, $user_id));
+        $query = 'UPDATE "user" SET name = :name, address = :address, updated_at = CURRENT_TIMESTAMP 
+                  WHERE user_id = :user_id RETURNING user_id, email, name, role, balance, address';
 
-        if (!$result) {
-            return ['success' => false, 'message' => 'Update failed: ' . pg_last_error($this->db)];
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([
+                ':name' => $name,
+                ':address' => $address,
+                ':user_id' => $user_id,
+            ]);
+
+            $user = $statement->fetch();
+
+            if (!$user) {
+                return ['success' => false, 'message' => 'Update failed: unable to fetch user'];
+            }
+
+            return ['success' => true, 'user' => $user];
+        } catch (PDOException $exception) {
+            return ['success' => false, 'message' => 'Update failed: ' . $exception->getMessage()];
         }
-
-        $user = pg_fetch_assoc($result);
-        return ['success' => true, 'user' => $user];
     }
 
     /**
@@ -146,11 +174,12 @@ class User {
         }
 
         // Verify old password
-        $query = 'SELECT password_hash FROM "user" WHERE user_id = $1';
-        $result = pg_query_params($this->db, $query, array($user_id));
-        $user_data = pg_fetch_assoc($result);
+        $query = 'SELECT password_hash FROM "user" WHERE user_id = :user_id';
+        $statement = $this->db->prepare($query);
+        $statement->execute([':user_id' => $user_id]);
+        $user_data = $statement->fetch();
 
-        if (!password_verify($old_password, $user_data['password_hash'])) {
+        if (!$user_data || !password_verify($old_password, $user_data['password_hash'])) {
             return ['success' => false, 'message' => 'Current password is incorrect'];
         }
 
@@ -158,23 +187,34 @@ class User {
         $password_hash = password_hash($new_password, PASSWORD_BCRYPT);
 
         // Update password
-        $query = 'UPDATE "user" SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2';
-        $result = pg_query_params($this->db, $query, array($password_hash, $user_id));
+        $query = 'UPDATE "user" SET password_hash = :password_hash, updated_at = CURRENT_TIMESTAMP WHERE user_id = :user_id';
 
-        if (!$result) {
-            return ['success' => false, 'message' => 'Password change failed: ' . pg_last_error($this->db)];
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([
+                ':password_hash' => $password_hash,
+                ':user_id' => $user_id,
+            ]);
+
+            return ['success' => true, 'message' => 'Password changed successfully'];
+        } catch (PDOException $exception) {
+            return ['success' => false, 'message' => 'Password change failed: ' . $exception->getMessage()];
         }
-
-        return ['success' => true, 'message' => 'Password changed successfully'];
     }
 
     /**
      * Check if email exists
      */
     public function emailExists($email) {
-        $query = 'SELECT user_id FROM "user" WHERE email = $1';
-        $result = pg_query_params($this->db, $query, array($email));
-        return pg_num_rows($result) > 0;
+        $query = 'SELECT user_id FROM "user" WHERE email = :email';
+
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([':email' => $email]);
+            return (bool) $statement->fetchColumn();
+        } catch (PDOException $exception) {
+            return false;
+        }
     }
 }
 ?>

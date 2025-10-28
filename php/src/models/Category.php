@@ -5,14 +5,13 @@ require_once __DIR__ . '/../utils/Database.php';
 class Category {
     public static function findAll() {
         $dbconn = Database::getInstance();
-        $result = pg_query($dbconn, 'SELECT category_id, name FROM category ORDER BY name ASC');
 
-        $categories = [];
-        if ($result) {
-            while ($row = pg_fetch_assoc($result)) {
-                $categories[] = $row;
-            }
+        try {
+            $statement = $dbconn->query('SELECT category_id, name FROM category ORDER BY name ASC');
+            return $statement->fetchAll();
+        } catch (PDOException $exception) {
+            // Surface an empty result set to keep the caller flow intact
+            return [];
         }
-        return $categories;
     }
 }
