@@ -9,7 +9,7 @@
  * - AC #6: Empty state logic
  * - AC #7: Loading state on items
  * - AC #8: Cart badge update
- * - AC #9: Persistence (AJAX)
+ * - AC #9: Persistence (AJAX) - SIMULATED
  * - AC #10: Optimistic UI updates
  * - AC #11: Debouncing for quantity updates
  */
@@ -18,7 +18,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. Select Global Elements ---
-    // These are elements we need to reference frequently.
     const cartItemsList = document.getElementById('cart-items-list');
     const cartSummary = document.getElementById('cart-summary');
     const cartContentContainer = document.getElementById('cart-content-container');
@@ -28,15 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryGrandTotalItems = document.getElementById('summary-grandtotal-items');
     const summaryGrandTotalPrice = document.getElementById('summary-grandtotal-price');
     const checkoutButton = document.getElementById('checkout-button');
-    const checkoutButtonText = checkoutButton ? checkoutButton.querySelector('span') : null; // Assumes text is inside a span, or just update textContent
+    // const checkoutButtonText = checkoutButton ? checkoutButton.querySelector('span') : null; // This wasn't used, just updating textContent
 
     // Modal elements (for AC #4)
     const deleteModal = document.getElementById('delete-confirm-modal');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
     const modalConfirmBtn = document.getElementById('modal-confirm-delete-btn');
 
-    // Header cart badge (AC #8) - We assume an ID from your main layout
-    const cartBadge = document.getElementById('cart-badge-counter'); // Adjust this ID if needed
+    // Header cart badge (AC #8)
+    const cartBadge = document.getElementById('cart-badge-counter');
 
     // A variable to store which item we're about to delete
     let itemToDelete = null;
@@ -44,6 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if we are on a page with cart items
     if (!cartItemsList) {
         // We're not on the cart page or the cart is initially empty
+        // We still run the script to handle the initial empty state
+        if (cartEmptyState) {
+            checkEmptyState();
+        }
         return;
     }
 
@@ -66,11 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Debounce function (AC #11)
-     * Delays invoking a function until after `wait` milliseconds
-     * have elapsed since the last time it was invoked.
-     * @param {function} func - The function to debounce
-     * @param {number} wait - The delay in milliseconds
-     * @returns {function} - The debounced function
      */
     const debounce = (func, wait) => {
         let timeout;
@@ -86,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Recalculates all totals on the page (AC #5 & #10)
-     * Reads from the DOM to perform optimistic updates.
      */
     const updateAllTotals = () => {
         let grandTotalItems = 0;
@@ -149,12 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Updates the header cart badge (AC #8)
-     * @param {number} totalItems - The total items to display
      */
     const updateCartBadge = (totalItems) => {
         if (cartBadge) {
             cartBadge.textContent = totalItems;
-            cartBadge.style.display = totalItems > 0 ? 'flex' : 'none'; // Or your preferred show/hide logic
+            // Use visibility or a class for better accessibility/transitions
+            cartBadge.style.display = totalItems > 0 ? 'flex' : 'none'; 
         }
     };
 
@@ -162,23 +159,21 @@ document.addEventListener('DOMContentLoaded', () => {
      * Checks if the cart is empty and shows the empty state (AC #6)
      */
     const checkEmptyState = () => {
-        const anyItemLeft = cartItemsList.querySelector('.cart-item');
+        // Check if any item *lists* are left (more robust than checking for items)
+        const anyStoreGroupLeft = document.querySelector('.cart-store-group');
         
-        if (!anyItemLeft) {
+        if (!anyStoreGroupLeft) {
             if (cartContentContainer) cartContentContainer.style.display = 'none';
-            if (cartEmptyState) cartEmptyState.style.display = 'flex'; // Assuming CSS handles hiding it initially
+            if (cartEmptyState) cartEmptyState.style.display = 'flex'; 
         } else {
-            if (cartContentContainer) cartContentContainer.style.display = 'grid'; // Or 'block'
+            // This case handles the initial page load if cart is not empty
+            if (cartContentContainer) cartContentContainer.style.display = 'grid'; 
             if (cartEmptyState) cartEmptyState.style.display = 'none';
         }
     };
 
     /**
-     * Sends the updated quantity to the server (AC #9)
-     * This is the function we will debounce.
-     * @param {string} itemId - The cart item ID
-     * @param {number} quantity - The new quantity
-     * @param {HTMLElement} cartItemElement - The DOM element for the item
+     * Sends the updated quantity to the server (AC #9) - SIMULATED
      */
     const sendQuantityUpdate = (itemId, quantity, cartItemElement) => {
         console.log(`Debounced: Sending update for ${itemId} to quantity ${quantity}`);
@@ -186,42 +181,45 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set loading state (AC #7)
         cartItemElement.classList.add('is-loading');
 
-        // fetch('/cart/update', { // Assuming this is your update endpoint
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         'Accept': 'application/json'
-        //     },
-        //     body: JSON.stringify({
-        //         cart_item_id: itemId,
-        //         quantity: quantity
-        //     })
-        // })
-        api.put('/cart/' + itemId, { quantity: quantity })
+        // --- SERVER COMMUNICATION (DISABLED FOR TESTING) ---
+        /*
+        fetch('/cart/update', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                cart_item_id: itemId,
+                quantity: quantity
+            })
+        })
+        .then(response => response.json())
         .then(data => {
             if (!data.success) {
-                // Server-side error
                 throw new Error(data.message || 'Failed to update quantity.');
             }
-            // On success, we can re-sync totals from the server if needed,
-            // but our optimistic update should be close.
-            // For now, just remove the loading state.
             console.log('Server update successful:', data);
-            
-            // Re-sync totals from server response for 100% accuracy
-            // (This assumes your server sends back new totals)
-            // updateAllTotalsFromServer(data.totals);
         })
         .catch(error => {
             console.error('Error updating quantity:', error);
-            // Optionally: revert the UI change on failure
-            // For now, just show an error
             alert('Error updating cart. Please refresh and try again.');
         })
         .finally(() => {
-            // Remove loading state
             cartItemElement.classList.remove('is-loading');
         });
+        */
+        // --- END DISABLED BLOCK ---
+
+
+        // --- SIMULATION FOR CLIENT-SIDE TESTING ---
+        console.log("Simulating server update...");
+        // Simulate a 300ms server delay
+        setTimeout(() => {
+            console.log('Simulated server update successful.');
+            cartItemElement.classList.remove('is-loading');
+        }, 300);
+        // --- END SIMULATION ---
     };
 
     // Create the debounced version of our update function (AC #11)
@@ -232,12 +230,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Handles clicks on '+', '-', or typing in the quantity input
-     * @param {Event} event - The click or input event
      */
     const handleQuantityChange = (event) => {
         const target = event.target;
 
-        // Find the parent cart item
         const cartItem = target.closest('.cart-item');
         if (!cartItem) return;
 
@@ -250,16 +246,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let newQuantity = currentQuantity;
 
-        // Determine new quantity based on which button was clicked
         if (target.matches('.quantity-plus')) {
             newQuantity = currentQuantity + 1;
         } else if (target.matches('.quantity-minus')) {
             newQuantity = currentQuantity - 1;
         } else if (target.matches('.quantity-value')) {
-            // User is typing or changed the value directly
             newQuantity = parseInt(quantityInput.value);
             if (isNaN(newQuantity)) {
-                newQuantity = 1; // Default to 1 if invalid input
+                newQuantity = 1; 
             }
         }
 
@@ -277,50 +271,51 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAllTotals();
 
         // --- Persistence (AC #9 & #11) ---
-        // Call the debounced function to update the server
         debouncedSendQuantityUpdate(itemId, newQuantity, cartItem);
     };
 
     /**
      * Handles click on the delete button (AC #4)
-     * @param {HTMLElement} deleteButton - The delete button that was clicked
      */
     const handleDeleteClick = (deleteButton) => {
         const cartItem = deleteButton.closest('.cart-item');
         if (!cartItem) return;
 
-        // Store the item to be deleted
         itemToDelete = cartItem;
-
-        // Show the confirmation modal
         if (deleteModal) deleteModal.hidden = false;
     };
 
     /**
-     * Finalizes the deletion after confirmation (AC #4)
+     * Finalizes the deletion after confirmation (AC #4) - SIMULATED
      */
     const confirmDelete = () => {
         if (!itemToDelete) return;
 
         const itemId = itemToDelete.dataset.itemId;
 
-        // Set loading state (AC #7)
         itemToDelete.classList.add('is-loading');
-
-        // Hide modal
         if (deleteModal) deleteModal.hidden = true;
 
-        api.delete('/cart/' + itemId)
+        // --- SERVER COMMUNICATION (DISABLED FOR TESTING) ---
+        /*
+        fetch('/cart/delete', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                cart_item_id: itemId
+            })
+        })
+        .then(response => response.json())
         .then(data => {
             if (!data.success) {
                 throw new Error(data.message || 'Failed to delete item.');
             }
             
-            // --- Optimistic UI Update (AC #10) ---
-            // On success, remove the item from the DOM
+            // --- UI Update was here ---
             itemToDelete.remove();
-            
-            // Recalculate everything
             updateAllTotals();
         })
         .catch(error => {
@@ -329,8 +324,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (itemToDelete) itemToDelete.classList.remove('is-loading');
         })
         .finally(() => {
-            itemToDelete = null; // Clear the stored item
+            itemToDelete = null; 
         });
+        */
+        // --- END DISABLED BLOCK ---
+
+
+        // --- SIMULATION FOR CLIENT-SIDE TESTING ---
+        console.log("Simulating server delete...");
+        // Simulate a 300ms delay, then run the UI update logic
+        setTimeout(() => {
+            console.log('Simulated server delete successful.');
+            
+            // This logic was moved from the .then() block for testing
+            itemToDelete.remove();
+            updateAllTotals(); // Recalculate everything
+
+            itemToDelete = null; // Clear the stored item
+        }, 300);
+        // --- END SIMULATION ---
     };
 
     /**
@@ -348,12 +360,10 @@ document.addEventListener('DOMContentLoaded', () => {
     cartItemsList.addEventListener('click', (event) => {
         const target = event.target;
 
-        // Check for quantity button clicks
         if (target.matches('.quantity-plus') || target.matches('.quantity-minus')) {
             handleQuantityChange(event);
         }
 
-        // Check for delete button click
         if (target.matches('.delete-item-btn') || target.closest('.delete-item-btn')) {
             const deleteButton = target.matches('.delete-item-btn') ? target : target.closest('.delete-item-btn');
             handleDeleteClick(deleteButton);
@@ -370,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal button listeners
     if (modalConfirmBtn) modalConfirmBtn.addEventListener('click', confirmDelete);
     if (modalCancelBtn) modalCancelBtn.addEventListener('click', cancelDelete);
-    // Optional: Allow clicking the backdrop to cancel
+    
     if (deleteModal) {
         deleteModal.addEventListener('click', (event) => {
             if (event.target === deleteModal) {
@@ -378,5 +388,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // --- 6. Initial Page Load Check ---
+    // Run an initial check in case the cart is loaded empty from the server
+    checkEmptyState();
+    // Run totals on load to set initial badge count, etc.
+    updateAllTotals();
 
 });
