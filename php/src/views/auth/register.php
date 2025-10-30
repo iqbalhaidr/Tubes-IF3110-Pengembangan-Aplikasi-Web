@@ -6,6 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Create Account - Nimonspedia</title>
 	<link rel="stylesheet" href="/public/css/auth.css?v=<?= $authCssVersion ?>">
+	<link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css">
 </head>
 <body class="auth-body register-page buyer-register">
 	<div class="auth-shell register-shell">
@@ -91,7 +92,7 @@
 				<input type="hidden" name="role" value="SELLER">
 
 				<div class="form-group">
-					<label for="seller_name">Nama pemilik</label>
+					<label for="seller_name">Nama</label>
 					<input type="text" id="seller_name" name="name" required placeholder="Nama pemilik toko">
 					<div class="error-message" id="seller_nameError"></div>
 				</div>
@@ -139,9 +140,11 @@
 				</div>
 
 				<div class="form-group">
-					<label for="seller_store_description">Deskripsi toko</label>
-					<textarea id="seller_store_description" name="store_description" required placeholder="Ceritakan produk dan nilai jual"></textarea>
-					<div class="form-hint">Berikan gambaran singkat tentang produkmu.</div>
+					<label for="seller_store_description_editor">Deskripsi toko</label>
+					<div class="rich-text-wrapper" data-editor-wrapper="seller_store_description">
+						<div id="seller_store_description_editor" class="rich-text-editor" aria-describedby="seller_store_descriptionError"></div>
+					</div>
+					<input type="hidden" id="seller_store_description" name="store_description" data-richtext-hidden="seller_store_description">
 					<div class="error-message" id="seller_store_descriptionError"></div>
 				</div>
 
@@ -162,6 +165,7 @@
 		</div>
 	</div>
 
+	<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 	<script src="/public/js/api.js"></script>
 	<script>
 		function togglePassword(inputId, button) {
@@ -291,6 +295,10 @@
 			const sellerSubmitBtn = document.getElementById('sellerSubmitBtn');
 
 			if (sellerForm && sellerSubmitBtn) {
+				const sellerDescriptionInput = document.getElementById('seller_store_description');
+				const sellerDescriptionWrapper = document.querySelector('[data-editor-wrapper="seller_store_description"]');
+				let sellerDescriptionEditor = null;
+
 				function clearSellerError(element) {
 					if (!element) {
 						return;
@@ -300,9 +308,40 @@
 					if (errorElement) {
 						errorElement.classList.remove('show');
 					}
+					const wrapper = document.querySelector(`[data-editor-wrapper="${element.id}"]`);
+					if (wrapper) {
+						wrapper.classList.remove('is-invalid');
+					}
+				}
+
+				if (sellerDescriptionWrapper && sellerDescriptionInput && typeof Quill !== 'undefined') {
+					sellerDescriptionEditor = new Quill('#seller_store_description_editor', {
+						theme: 'snow',
+						placeholder: 'Beri ulasan singkat tentang tokomu',
+						modules: {
+							toolbar: [
+								['bold', 'italic', 'underline'],
+								[{ list: 'ordered' }, { list: 'bullet' }],
+								['link']
+							]
+						}
+					});
+
+					sellerDescriptionEditor.on('text-change', () => {
+						const plainText = sellerDescriptionEditor.getText().trim();
+						sellerDescriptionInput.value = plainText ? sellerDescriptionEditor.root.innerHTML : '';
+						clearSellerError(sellerDescriptionInput);
+					});
+
+					sellerDescriptionWrapper.addEventListener('focusin', () => {
+						clearSellerError(sellerDescriptionInput);
+					});
 				}
 
 				sellerForm.querySelectorAll('input, textarea').forEach(input => {
+					if (input.type === 'hidden') {
+						return;
+					}
 					const eventName = input.type === 'file' ? 'change' : 'input';
 					input.addEventListener(eventName, () => clearSellerError(input));
 				});
@@ -313,6 +352,11 @@
 					if (!window.api || typeof window.api.post !== 'function') {
 						showAlert('seller', 'Saat ini formulir tidak dapat dikirim. Coba lagi nanti.', 'error');
 						return;
+					}
+
+					if (sellerDescriptionEditor && sellerDescriptionInput) {
+						const plainText = sellerDescriptionEditor.getText().trim();
+						sellerDescriptionInput.value = plainText ? sellerDescriptionEditor.root.innerHTML : '';
 					}
 
 					const formData = new FormData(sellerForm);
@@ -346,6 +390,10 @@
 						const errorElement = document.getElementById(`${fieldId}Error`);
 						if (input && errorElement) {
 							input.classList.add('is-invalid');
+							const wrapper = document.querySelector(`[data-editor-wrapper="${fieldId}"]`);
+							if (wrapper) {
+								wrapper.classList.add('is-invalid');
+							}
 							errorElement.textContent = response.errors[field];
 							errorElement.classList.add('show');
 						}

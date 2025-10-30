@@ -1,4 +1,84 @@
-<?php $mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css'); ?>
+<?php
+$mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css');
+
+$featuredProducts = [
+    [
+        'name' => 'Starter Pack Nimons Plush',
+        'price' => 45000,
+        'store' => 'Nimons Official Store',
+        'location' => 'Kota Nimopolis',
+        'tag' => 'Official Store',
+        'rating' => 4.9,
+        'sold' => '1,2 rb',
+        'label' => 'Gratis Ongkir'
+    ],
+    [
+        'name' => 'Figur Koleksi Nimons Series 2',
+        'price' => 89000,
+        'store' => 'Nimon Lab',
+        'location' => 'Kota Bandung',
+        'tag' => 'Terlaris',
+        'rating' => 4.8,
+        'sold' => '870',
+        'label' => 'Cashback 5%'
+    ],
+    [
+        'name' => 'Sticker Pack Nimons Limited',
+        'price' => 18000,
+        'store' => 'Nimons Creative Hub',
+        'location' => 'Kota Jakarta',
+        'tag' => 'Promo',
+        'rating' => 4.7,
+        'sold' => '540',
+        'label' => 'Bebas Ongkir'
+    ],
+    [
+        'name' => 'Aksesoris Gadget Nimons',
+        'price' => 62000,
+        'store' => 'Nimons Tech',
+        'location' => 'Kota Surabaya',
+        'tag' => 'Pilihan Pembeli',
+        'rating' => 4.9,
+        'sold' => '2,1 rb',
+        'label' => 'Cicilan 0%'
+    ],
+    [
+        'name' => 'Apparel Nimons Everyday Tee',
+        'price' => 99000,
+        'store' => 'Nimons Apparel',
+        'location' => 'Kota Yogyakarta',
+        'tag' => 'Baru',
+        'rating' => 4.6,
+        'sold' => '320',
+        'label' => 'Diskon 20%'
+    ],
+    [
+        'name' => 'Poster Nimons Wall Art',
+        'price' => 35000,
+        'store' => 'Nimonspace Gallery',
+        'location' => 'Kota Malang',
+        'tag' => 'Favorit',
+        'rating' => 4.8,
+        'sold' => '610',
+        'label' => 'Siap Kirim'
+    ],
+];
+
+$fallbackCategories = [
+    ['name' => 'Nimons Collectibles'],
+    ['name' => 'Merchandise'],
+    ['name' => 'Apparel'],
+    ['name' => 'Aksesoris Gadget'],
+    ['name' => 'Dekorasi'],
+    ['name' => 'Peralatan Kreatif'],
+    ['name' => 'Digital Goods'],
+    ['name' => 'Bundel Spesial'],
+];
+
+$categoryPreviews = (is_array($categories) && !empty($categories))
+    ? array_slice($categories, 0, 8)
+    : $fallbackCategories;
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -72,6 +152,77 @@
     </header>
 
     <main class="landing-content">
+        <section class="landing-section landing-categories">
+            <div class="container">
+                <div class="category-showcase">
+                    <div class="showcase-header">
+                        <h2>Eksplor kategori populer</h2>
+                        <a class="showcase-link" href="/buyer/home">Lihat semua</a>
+                    </div>
+                    <div class="category-grid">
+                        <?php foreach ($categoryPreviews as $category): ?>
+                            <?php
+                                $categoryName = is_array($category)
+                                    ? ($category['name'] ?? 'Kategori Nimons')
+                                    : (string) $category;
+                            ?>
+                            <article class="category-card">
+                                <div class="category-icon" aria-hidden="true">
+                                    <span class="icon-placeholder">Icon</span>
+                                </div>
+                                <div class="category-copy">
+                                    <h3 class="category-name"><?= htmlspecialchars($categoryName) ?></h3>
+                                    <p class="category-hint">Temukan pilihan terbaik di kategori ini.</p>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="landing-section landing-product-preview">
+            <div class="container">
+                <div class="showcase-header">
+                    <h2>Produk pilihan untuk kamu</h2>
+                    <a class="showcase-link" href="/buyer/home">Lihat semua produk</a>
+                </div>
+                <div class="product-preview-grid">
+                    <?php foreach ($featuredProducts as $product): ?>
+                        <article class="product-preview-card">
+                            <div class="preview-image">
+                                <span class="image-placeholder">Image</span>
+                                <?php if (!empty($product['tag'])): ?>
+                                    <span class="preview-badge"><?= htmlspecialchars($product['tag']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="preview-info">
+                                <h3 class="preview-name"><?= htmlspecialchars($product['name']) ?></h3>
+                                <p class="preview-price">Rp <?= number_format($product['price'], 0, ',', '.'); ?></p>
+                                <div class="preview-meta">
+                                    <span>Rating <?= number_format((float) $product['rating'], 1) ?></span>
+                                    <span>|</span>
+                                    <span>Terjual <?= htmlspecialchars($product['sold']) ?></span>
+                                </div>
+                                <div class="preview-store">
+                                    <?= htmlspecialchars($product['store']) ?> | <?= htmlspecialchars($product['location']) ?>
+                                </div>
+                                <?php if (!empty($product['label'])): ?>
+                                    <div class="preview-tags">
+                                        <span class="preview-tag"><?= htmlspecialchars($product['label']) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="preview-actions">
+                                    <a class="btn btn-primary" href="/buyer/home">Lihat Detail</a>
+                                    <a class="btn btn-secondary" href="/auth/register">Tambah ke Wishlist</a>
+                                </div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </section>
+
         <section class="landing-section">
             <div class="container">
                 <div class="section-heading">
@@ -120,23 +271,6 @@
             </div>
         </section>
 
-        <?php if (!empty($categories)): ?>
-        <section class="landing-section landing-categories">
-            <div class="container">
-                <div class="section-heading">
-                    <h2>Kategori populer</h2>
-                    <p class="section-subtitle">Mulai eksplorasi dari kategori yang paling diminati oleh komunitas Nimons.</p>
-                </div>
-                <div class="category-pills">
-                    <?php foreach ($categories as $category): ?>
-                        <span class="pill">
-                            <?= htmlspecialchars($category['name']) ?>
-                        </span>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </section>
-        <?php endif; ?>
     </main>
 
     <footer class="landing-footer">

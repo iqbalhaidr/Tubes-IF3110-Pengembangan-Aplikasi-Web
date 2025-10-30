@@ -209,6 +209,56 @@ body.auth-body {
     resize: vertical;
 }
 
+.rich-text-wrapper {
+    border: 1px solid rgba(10, 64, 18, 0.22);
+    border-radius: 10px;
+    background: white;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rich-text-wrapper:focus-within {
+    border-color: #03ac0e;
+    box-shadow: 0 0 0 3px rgba(3, 172, 14, 0.16);
+}
+
+.rich-text-wrapper.is-invalid {
+    border-color: #d93025;
+    box-shadow: 0 0 0 3px rgba(217, 48, 37, 0.16);
+}
+
+.rich-text-wrapper .ql-toolbar {
+    border: none;
+    border-bottom: 1px solid rgba(10, 64, 18, 0.12);
+    border-radius: 10px 10px 0 0;
+    background: #f3fbf4;
+    padding: 8px;
+}
+
+.rich-text-wrapper .ql-toolbar button:hover,
+.rich-text-wrapper .ql-toolbar button.ql-active {
+    color: #03ac0e;
+}
+
+.rich-text-wrapper .ql-container {
+    border: none;
+    border-radius: 0 0 10px 10px;
+    min-height: 140px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #062b0a;
+}
+
+.rich-text-wrapper .ql-editor {
+    min-height: 120px;
+    padding: 12px 14px;
+    line-height: 1.6;
+}
+
+.rich-text-wrapper .ql-editor.ql-blank::before {
+    color: rgba(11, 60, 16, 0.5);
+    font-style: normal;
+}
+
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;

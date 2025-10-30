@@ -75,7 +75,8 @@ class Validator {
     }
 
     public static function isValidStoreDescription($description) {
-        return strlen(trim($description)) >= 5;
+        $plainText = trim(strip_tags($description));
+        return strlen($plainText) >= 5;
     }
 
     private static function validateRegisterCommon($email, $password, $password_confirm, $name, $address) {

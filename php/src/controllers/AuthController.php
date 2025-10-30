@@ -122,8 +122,9 @@ class AuthController {
         $password_confirm = isset($_POST['password_confirm']) ? $_POST['password_confirm'] : '';
         $name = isset($_POST['name']) ? trim($_POST['name']) : '';
         $address = isset($_POST['address']) ? trim($_POST['address']) : '';
-        $store_name = isset($_POST['store_name']) ? trim($_POST['store_name']) : '';
-        $store_description = isset($_POST['store_description']) ? trim($_POST['store_description']) : '';
+    $store_name = isset($_POST['store_name']) ? trim($_POST['store_name']) : '';
+    $store_description_raw = isset($_POST['store_description']) ? $_POST['store_description'] : '';
+    $store_description = $this->sanitizeRichText($store_description_raw);
         $store_logo = isset($_FILES['store_logo']) ? $_FILES['store_logo'] : null;
 
         $validator = Validator::validateRegisterSeller(
@@ -149,7 +150,7 @@ class AuthController {
             Response::error('Validation failed', ['store_logo' => $logoUpload['message']], 400);
         }
 
-        $result = $this->userModel->registerSeller($email, $password, $name, $address, $store_name, $store_description, $logoUpload['relative_path']);
+    $result = $this->userModel->registerSeller($email, $password, $name, $address, $store_name, $store_description, $logoUpload['relative_path']);
 
         if (!$result['success']) {
             if ($logoUpload['absolute_path']) {
@@ -267,6 +268,23 @@ class AuthController {
         if ($absolutePath && file_exists($absolutePath)) {
             unlink($absolutePath);
         }
+    }
+
+    private function sanitizeRichText($html) {
+        if (!is_string($html) || $html === '') {
+            return '';
+        }
+
+        $allowedTags = '<p><strong><b><em><i><u><s><ol><ul><li><br><blockquote><span><a>';
+        $sanitized = strip_tags($html, $allowedTags);
+
+        // Remove inline event handlers, style attributes, and custom data attributes
+        $sanitized = preg_replace('/\s(on\w+|style|data-[^=]+)="[^"]*"/i', '', $sanitized);
+
+        // Neutralize javascript: URLs inside href attributes
+        $sanitized = preg_replace('/href="javascript:[^"]*"/i', 'href="#"', $sanitized);
+
+        return trim($sanitized);
     }
 
     /**
