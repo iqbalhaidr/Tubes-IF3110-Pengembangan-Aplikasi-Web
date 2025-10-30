@@ -17,6 +17,7 @@ class HomeController {
         AuthMiddleware::requireRole('BUYER', '/auth/login');
 
         $categories = Category::findAll();
+        $current_user = AuthMiddleware::getCurrentUser();
 
         require_once __DIR__ . '/../views/buyer/home.php';
     }
@@ -98,6 +99,12 @@ class HomeController {
             ['label' => 'Profile', 'href' => '/seller/profile', 'active' => true],
         ];
 
+        $storeDescriptionRaw = $store['store_description'] ?? '';
+        $storeDescription = $this->formatRichTextField($storeDescriptionRaw);
+        $hasStoreDescription = $storeDescription !== '';
+        
+        $storeLogoPath = $store['store_logo_path'] ?? null;
+
         $profileSections = [
             [
                 'title' => 'Account Information',
@@ -111,7 +118,16 @@ class HomeController {
                 'title' => 'Store Overview',
                 'items' => [
                     ['label' => 'Store Name', 'value' => $store['store_name'] ?? 'Complete your store profile'],
-                    ['label' => 'Store Description', 'value' => $store['store_description'] ?? 'Tell buyers what makes your store unique.'],
+                    [
+                        'label' => 'Store Logo',
+                        'value' => $storeLogoPath,
+                        'isLogo' => true,
+                    ],
+                    [
+                        'label' => 'Store Description',
+                        'value' => $hasStoreDescription ? $storeDescription : 'Tell buyers what makes your store unique.',
+                        'isRichText' => $hasStoreDescription,
+                    ],
                     ['label' => 'Store Balance', 'value' => 'Rp ' . number_format($store['balance'] ?? 0, 0, ',', '.')],
                 ],
             ],
@@ -136,5 +152,19 @@ class HomeController {
         } catch (Exception $e) {
             return '-';
         }
+    }
+
+    private function formatRichTextField($html) {
+        if (!is_string($html) || trim($html) === '') {
+            return '';
+        }
+
+        $allowedTags = '<p><strong><b><em><i><u><s><ol><ul><li><br><blockquote><span><a>';
+        $clean = strip_tags($html, $allowedTags);
+
+        // Remove empty paragraphs that Quill can generate
+        $clean = preg_replace('/<p>\s*<\/p>/', '', $clean);
+
+        return trim($clean);
     }
 }

@@ -64,6 +64,56 @@ class User {
         }
     }
 
+    public function topUpBalance($userId, $amount) {
+        if ($amount <= 0) {
+            return [
+                'success' => false,
+                'message' => 'Amount must be greater than zero.'
+            ];
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            $statement = $this->db->prepare('UPDATE "user"
+                SET balance = COALESCE(balance, 0) + :amount,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = :user_id
+                RETURNING user_id, balance');
+
+            $statement->execute([
+                ':amount' => $amount,
+                ':user_id' => $userId,
+            ]);
+
+            $result = $statement->fetch();
+
+            if (!$result) {
+                $this->db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'User not found.'
+                ];
+            }
+
+            $this->db->commit();
+
+            return [
+                'success' => true,
+                'balance' => (int) $result['balance'],
+            ];
+        } catch (PDOException $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Failed to update balance: ' . $exception->getMessage(),
+            ];
+        }
+    }
+
     private function createUser($email, $password, $name, $role, $address = '') {
         $password_hash = password_hash($password, PASSWORD_BCRYPT);
 
@@ -87,6 +137,9 @@ class User {
                 return ['success' => false, 'message' => 'Registration failed: unable to fetch user'];
             }
 
+            // Ensure balance is an integer
+            $user['balance'] = isset($user['balance']) ? (int)$user['balance'] : 0;
+
             return ['success' => true, 'user' => $user];
         } catch (PDOException $exception) {
             return ['success' => false, 'message' => 'Registration failed: ' . $exception->getMessage()];
@@ -97,7 +150,7 @@ class User {
      * Login user
      */
     public function login($email, $password) {
-        $query = 'SELECT user_id, email, name, role, password_hash FROM "user" WHERE email = :email';
+        $query = 'SELECT user_id, email, name, role, balance, password_hash FROM "user" WHERE email = :email';
 
         try {
             $statement = $this->db->prepare($query);
@@ -114,6 +167,9 @@ class User {
             }
 
             unset($user['password_hash']);
+            
+            // Ensure balance is an integer
+            $user['balance'] = isset($user['balance']) ? (int)$user['balance'] : 0;
 
             return ['success' => true, 'user' => $user];
         } catch (PDOException $exception) {
@@ -130,7 +186,14 @@ class User {
         try {
             $statement = $this->db->prepare($query);
             $statement->execute([':user_id' => $user_id]);
-            return $statement->fetch() ?: null;
+            $user = $statement->fetch();
+            
+            if ($user) {
+                // Ensure balance is an integer
+                $user['balance'] = isset($user['balance']) ? (int)$user['balance'] : 0;
+            }
+            
+            return $user ?: null;
         } catch (PDOException $exception) {
             return null;
         }

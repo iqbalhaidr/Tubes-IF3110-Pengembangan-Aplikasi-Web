@@ -45,7 +45,8 @@ class AuthMiddleware {
             'user_id' => $_SESSION['user_id'],
             'email' => $_SESSION['email'],
             'name' => $_SESSION['name'],
-            'role' => $_SESSION['role']
+            'role' => $_SESSION['role'],
+            'balance' => isset($_SESSION['balance']) ? (int)$_SESSION['balance'] : 0
         ];
     }
 
@@ -58,6 +59,7 @@ class AuthMiddleware {
         $_SESSION['email'] = $user['email'];
         $_SESSION['name'] = $user['name'];
         $_SESSION['role'] = $user['role'];
+        $_SESSION['balance'] = isset($user['balance']) ? (int)$user['balance'] : 0;
         
         // Get session lifetime from environment (default 24 hours)
         $sessionLifetime = intval(getenv('SESSION_LIFETIME') ?: 86400);

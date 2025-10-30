@@ -240,7 +240,12 @@ class AuthController {
             return $response;
         }
 
-        $baseDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public';
+        $publicDir = realpath(__DIR__ . '/../public');
+        if ($publicDir === false) {
+            $publicDir = __DIR__ . '/../public';
+        }
+
+        $baseDir = $publicDir;
         $relativeDir = 'uploads' . DIRECTORY_SEPARATOR . 'store_logos';
         $targetDir = $baseDir . DIRECTORY_SEPARATOR . $relativeDir;
 
@@ -249,10 +254,33 @@ class AuthController {
             return $response;
         }
 
-    $filename = uniqid('store_logo_', true) . '.' . $extension;
+        // Auto-crop image to square if needed
+        $croppedImage = $this->cropToSquare($file['tmp_name']);
+        if ($croppedImage === false) {
+            $response['message'] = 'Failed to process store logo image';
+            return $response;
+        }
+
+        $filename = uniqid('store_logo_', true) . '.' . $extension;
         $targetPath = $targetDir . DIRECTORY_SEPARATOR . $filename;
 
-        if (!is_uploaded_file($file['tmp_name']) || !move_uploaded_file($file['tmp_name'], $targetPath)) {
+        // Save the cropped image
+        $saveSuccess = false;
+        switch ($extension) {
+            case 'jpg':
+                $saveSuccess = imagejpeg($croppedImage, $targetPath, 90);
+                break;
+            case 'png':
+                $saveSuccess = imagepng($croppedImage, $targetPath, 9);
+                break;
+            case 'webp':
+                $saveSuccess = imagewebp($croppedImage, $targetPath, 90);
+                break;
+        }
+
+        imagedestroy($croppedImage);
+
+        if (!$saveSuccess) {
             $response['message'] = 'Failed to save store logo';
             return $response;
         }
@@ -268,6 +296,73 @@ class AuthController {
         if ($absolutePath && file_exists($absolutePath)) {
             unlink($absolutePath);
         }
+    }
+
+    private function cropToSquare($imagePath) {
+        // Get image info
+        $imageInfo = @getimagesize($imagePath);
+        if ($imageInfo === false) {
+            return false;
+        }
+
+        $width = $imageInfo[0];
+        $height = $imageInfo[1];
+        $mimeType = $imageInfo['mime'];
+
+        // Load source image based on type
+        $sourceImage = false;
+        switch ($mimeType) {
+            case 'image/jpeg':
+                $sourceImage = @imagecreatefromjpeg($imagePath);
+                break;
+            case 'image/png':
+                $sourceImage = @imagecreatefrompng($imagePath);
+                break;
+            case 'image/webp':
+                $sourceImage = @imagecreatefromwebp($imagePath);
+                break;
+        }
+
+        if ($sourceImage === false) {
+            return false;
+        }
+
+        // If already square, return as is
+        if ($width === $height) {
+            return $sourceImage;
+        }
+
+        // Calculate square size (use smaller dimension)
+        $squareSize = min($width, $height);
+
+        // Calculate crop position (center crop)
+        $cropX = ($width - $squareSize) / 2;
+        $cropY = ($height - $squareSize) / 2;
+
+        // Create new square image
+        $croppedImage = imagecreatetruecolor($squareSize, $squareSize);
+
+        // Preserve transparency for PNG and WebP
+        if ($mimeType === 'image/png' || $mimeType === 'image/webp') {
+            imagealphablending($croppedImage, false);
+            imagesavealpha($croppedImage, true);
+            $transparent = imagecolorallocatealpha($croppedImage, 0, 0, 0, 127);
+            imagefilledrectangle($croppedImage, 0, 0, $squareSize, $squareSize, $transparent);
+        }
+
+        // Copy and crop
+        imagecopyresampled(
+            $croppedImage,
+            $sourceImage,
+            0, 0,
+            $cropX, $cropY,
+            $squareSize, $squareSize,
+            $squareSize, $squareSize
+        );
+
+        imagedestroy($sourceImage);
+
+        return $croppedImage;
     }
 
     private function sanitizeRichText($html) {
@@ -299,7 +394,10 @@ class AuthController {
      * Get current user info (API endpoint)
      */
     public function getCurrentUser() {
-        AuthMiddleware::requireLogin();
+        // For API endpoints, return JSON error instead of redirect
+        if (!AuthMiddleware::isLoggedIn()) {
+            Response::error('Not authenticated', null, 401);
+        }
         
         $current_user = AuthMiddleware::getCurrentUser();
         $user = $this->userModel->getUserById($current_user['user_id']);

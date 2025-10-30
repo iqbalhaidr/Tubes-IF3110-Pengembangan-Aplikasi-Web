@@ -199,6 +199,29 @@ class Validator {
             }
         }
 
+        // Validate image dimensions
+        $imageInfo = @getimagesize($storeLogo['tmp_name']);
+        if ($imageInfo === false) {
+            return 'Unable to read store logo image data';
+        }
+
+        $width = $imageInfo[0];
+        $height = $imageInfo[1];
+
+        // Check minimum dimensions (at least 100x100)
+        // Note: Image will be auto-cropped to square, so check the smaller dimension
+        $minDimension = 100;
+        $smallerDimension = min($width, $height);
+        if ($smallerDimension < $minDimension) {
+            return "Store logo must be at least {$minDimension}x{$minDimension} pixels (current: {$width}x{$height})";
+        }
+
+        // Check maximum dimensions (max 2000x2000)
+        $maxDimension = 2000;
+        if ($width > $maxDimension || $height > $maxDimension) {
+            return "Store logo dimensions must not exceed {$maxDimension}x{$maxDimension} pixels (current: {$width}x{$height})";
+        }
+
         return null;
     }
 }

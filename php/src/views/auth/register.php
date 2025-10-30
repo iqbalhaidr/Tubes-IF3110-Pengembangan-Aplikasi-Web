@@ -83,7 +83,6 @@
 				</div>
 
 				<button type="submit" class="submit-btn" id="buyerSubmitBtn">Daftar sebagai Buyer</button>
-				<p class="auth-note">Ingin membuka toko? <button class="link-button" type="button" data-register-option="seller">Daftar sebagai seller</button></p>
 			</form>
 
 			<div id="sellerAlertContainer"></div>
@@ -151,12 +150,11 @@
 				<div class="form-group">
 					<label for="seller_store_logo">Logo toko</label>
 					<input type="file" id="seller_store_logo" name="store_logo" accept="image/png,image/jpeg,image/webp" required>
-					<div class="form-hint">PNG, JPG, atau WEBP maksimal 2MB.</div>
+					<div class="form-hint">PNG, JPG, atau WEBP maksimal 2MB. Gambar minimal 100x100 dan maksimal 2000x2000 piksel. Gambar akan otomatis dipotong menjadi persegi.</div>
 					<div class="error-message" id="seller_store_logoError"></div>
 				</div>
 
 				<button type="submit" class="submit-btn" id="sellerSubmitBtn">Daftar sebagai Seller</button>
-				<p class="auth-note">Mau belanja saja? <button class="link-button" type="button" data-register-option="buyer">Daftar sebagai buyer</button></p>
 			</form>
 
 			<div class="auth-footer login-redirect">

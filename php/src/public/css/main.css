@@ -132,12 +132,40 @@ body {
 .balance-display {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 8px 14px;
-    border-radius: 20px;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    padding: 8px 16px 8px 14px;
+    border-radius: 999px;
     font-size: 13px;
     font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.balance-display .balance-label {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.balance-display .balance-topup-btn {
+    border: none;
+    background: var(--white);
+    color: var(--primary-green);
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.balance-display .balance-topup-btn:hover {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.balance-display .balance-topup-btn:focus-visible {
+    outline: 2px solid var(--white);
+    outline-offset: 2px;
 }
 
 /* User Profile */
@@ -711,6 +739,17 @@ body {
     .navbar-left,
     .navbar-right {
         flex-wrap: wrap;
+    }
+
+    .balance-display {
+        width: 100%;
+        justify-content: space-between;
+        padding: 10px 16px;
+    }
+
+    .balance-display .balance-topup-btn {
+        width: auto;
+        padding: 6px 16px;
     }
 
     .mobile-menu-toggle {
@@ -1397,3 +1436,194 @@ body.seller-dashboard {
         flex: none;
     }
 }
+
+    /* Top-up Modal */
+    .topup-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(18, 18, 18, 0.48);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 2000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+
+    .topup-backdrop.is-visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .topup-modal {
+        width: min(420px, 100%);
+        background: var(--white);
+        border-radius: 18px;
+        padding: 28px;
+        box-shadow: 0 32px 70px rgba(18, 18, 18, 0.18);
+        display: grid;
+        gap: 18px;
+    }
+
+    .topup-modal header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .topup-modal h2 {
+        font-size: 20px;
+        color: var(--text-dark);
+    }
+
+    .topup-close-btn {
+        background: none;
+        border: none;
+        color: var(--text-light);
+        font-size: 20px;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .topup-close-btn:hover {
+        color: var(--text-medium);
+    }
+
+    .topup-modal p {
+        font-size: 14px;
+        color: var(--text-medium);
+    }
+
+    .topup-form {
+        display: grid;
+        gap: 14px;
+    }
+
+    .topup-form label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .topup-form input[type="number"] {
+        width: 100%;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .topup-form input[type="number"]:focus {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 3px rgba(3, 172, 14, 0.16);
+    }
+
+    .topup-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 6px;
+    }
+
+    .topup-cancel-btn {
+        border: none;
+        background: var(--background-gray);
+        color: var(--text-medium);
+        padding: 10px 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .topup-cancel-btn:hover {
+        background: var(--border-color);
+    }
+
+    .topup-submit-btn {
+        border: none;
+        background: var(--primary-green);
+        color: var(--white);
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.2s ease;
+    }
+
+    .topup-submit-btn:hover {
+        background: var(--primary-green-hover);
+    }
+
+    .topup-submit-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .topup-submit-btn .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-top-color: var(--white);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    .topup-feedback {
+        font-size: 13px;
+        font-weight: 600;
+        padding: 10px 12px;
+        border-radius: 10px;
+        display: none;
+    }
+
+    .topup-feedback.is-visible {
+        display: block;
+    }
+
+    .topup-feedback.success {
+        background: #edfbef;
+        color: #0f6c1d;
+    }
+
+    .topup-feedback.error {
+        background: #fff4f3;
+        color: #c6281d;
+    }
+
+    .topup-quick-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        gap: 10px;
+    }
+
+    .topup-quick-option {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: var(--white);
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .topup-quick-option:hover {
+        border-color: var(--primary-green);
+        background: rgba(3, 172, 14, 0.08);
+    }
+
+    .topup-quick-option:focus-visible {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 3px rgba(3, 172, 14, 0.18);
+    }

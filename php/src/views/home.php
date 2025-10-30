@@ -98,6 +98,10 @@ $categoryPreviews = (is_array($categories) && !empty($categories))
                 <a href="/seller/dashboard" class="navbar-link">Seller Portal</a>
             </div>
             <div class="navbar-right">
+                <div class="balance-display" id="balanceDisplay" style="display: none;">
+                    <span class="balance-label">Balance: Rp. <span id="balanceAmount">0</span></span>
+                    <button type="button" class="balance-topup-btn" data-action="open-topup">Top Up</button>
+                </div>
                 <div class="user-profile" id="userProfile" style="display: none;">
                     <div class="user-avatar" id="userAvatar">N</div>
                     <span class="user-name" id="userName">Nimon</span>
@@ -280,6 +284,7 @@ $categoryPreviews = (is_array($categories) && !empty($categories))
     </footer>
 
     <script src="/public/js/api.js"></script>
+    <script src="/public/js/balance.js"></script>
     <script src="/public/js/main.js"></script>
 </body>
 </html>

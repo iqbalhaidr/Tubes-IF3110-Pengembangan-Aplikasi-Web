@@ -12,8 +12,9 @@
         <div class="container navbar-container">
             <a href="/buyer/home" class="navbar-brand">Nimonspedia</a>
             <div class="navbar-left">
-                <div class="balance-display" id="balanceDisplay" style="display: none;">
-                    Balance: Rp. 0
+                <div class="balance-display" id="balanceDisplay">
+                    <span class="balance-label">Balance: Rp. <span id="balanceAmount"><?= number_format($current_user['balance'] ?? 0, 0, ',', '.') ?></span></span>
+                    <button type="button" class="balance-topup-btn" data-action="open-topup">Top Up</button>
                 </div>
                 <div class="navbar-links" id="navbarMenu">
                     <a href="/buyer/home" class="navbar-link active">Discover</a>
@@ -94,6 +95,7 @@
     </main>
 
     <script src="/public/js/api.js"></script>
+    <script src="/public/js/balance.js"></script>
     <script src="/public/js/main.js"></script>
 </body>
 </html>

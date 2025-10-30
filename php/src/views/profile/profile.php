@@ -21,8 +21,13 @@ $profileSubtitle = $profileSubtitle ?? '';
             <a href="<?= $currentRole === 'SELLER' ? '/seller/dashboard' : '/buyer/home' ?>" class="navbar-brand">Nimonspedia</a>
             <div class="navbar-left">
                 <?php if ($currentRole === 'BUYER'): ?>
-                <div class="balance-display" id="balanceDisplay" style="display: none;">
-                    Balance: Rp. 0
+                <?php 
+                    $currentSessionUser = AuthMiddleware::getCurrentUser();
+                    $displayBalance = $currentSessionUser['balance'] ?? 0;
+                ?>
+                <div class="balance-display" id="balanceDisplay">
+                    <span class="balance-label">Balance: Rp. <span id="balanceAmount"><?= number_format($displayBalance, 0, ',', '.') ?></span></span>
+                    <button type="button" class="balance-topup-btn" data-action="open-topup">Top Up</button>
                 </div>
                 <?php endif; ?>
                 <div class="navbar-links" id="navbarMenu">
@@ -73,7 +78,19 @@ $profileSubtitle = $profileSubtitle ?? '';
                                 <?php foreach ($section['items'] as $item): ?>
                                     <div class="profile-detail-row">
                                         <dt><?= htmlspecialchars($item['label']) ?></dt>
-                                        <dd><?= nl2br(htmlspecialchars($item['value'])) ?></dd>
+                                        <dd>
+                                            <?php if (isset($item['isLogo']) && $item['isLogo']): ?>
+                                                <?php if (!empty($item['value'])): ?>
+                                                    <img src="/public/<?= htmlspecialchars($item['value']) ?>" alt="Store Logo" class="store-logo-preview" style="max-width: 200px; height: auto; border-radius: 8px; border: 1px solid var(--border-color);">
+                                                <?php else: ?>
+                                                    <span style="color: var(--text-light);">No logo uploaded</span>
+                                                <?php endif; ?>
+                                            <?php elseif (isset($item['isRichText']) && $item['isRichText']): ?>
+                                                <?= $item['value'] ?>
+                                            <?php else: ?>
+                                                <?= nl2br(htmlspecialchars($item['value'])) ?>
+                                            <?php endif; ?>
+                                        </dd>
                                     </div>
                                 <?php endforeach; ?>
                             </dl>
@@ -104,6 +121,7 @@ $profileSubtitle = $profileSubtitle ?? '';
     </main>
 
     <script src="/public/js/api.js"></script>
+    <script src="/public/js/balance.js"></script>
     <script src="/public/js/main.js"></script>
 </body>
 </html>

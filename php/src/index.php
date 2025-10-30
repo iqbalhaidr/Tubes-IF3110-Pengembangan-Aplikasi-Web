@@ -125,6 +125,14 @@ if ($route_parts[0] === 'auth') {
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';
     }
+} elseif ($route_parts[0] === 'balance') {
+    $balanceController = new BalanceController();
+
+    if (($route_parts[1] ?? '') === 'top-up' && $method === 'POST') {
+        $balanceController->topUp();
+    } else {
+        Response::error('Not found', null, 404);
+    }
 } else {
     // Not Found
     header("HTTP/1.0 404 Not Found");
