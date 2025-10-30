@@ -56,6 +56,24 @@ if (priceFilter) {
     });
 }
 
+// User Dropdown Functionality
+const userProfileBtn = document.getElementById('userProfileBtn');
+const userDropdown = document.querySelector('.user-dropdown');
+
+if (userProfileBtn && userDropdown) {
+    userProfileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('active');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('active');
+        }
+    });
+}
+
 // Logout Functionality
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {

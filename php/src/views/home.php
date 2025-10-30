@@ -78,6 +78,19 @@ $fallbackCategories = [
 $categoryPreviews = (is_array($categories) && !empty($categories))
     ? array_slice($categories, 0, 8)
     : $fallbackCategories;
+
+$navbarType = 'guest';
+
+// Redirect logged-in users to their appropriate portal
+if (!empty($current_user) && isset($current_user['role'])) {
+    if ($current_user['role'] === 'BUYER') {
+        header('Location: /buyer/home');
+        exit;
+    } elseif ($current_user['role'] === 'SELLER') {
+        header('Location: /seller/dashboard');
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -88,39 +101,7 @@ $categoryPreviews = (is_array($categories) && !empty($categories))
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
 </head>
 <body class="landing">
-    <?php $isLoggedIn = !empty($current_user); ?>
-    <nav class="navbar landing-navbar">
-        <div class="container navbar-container">
-            <a href="/" class="navbar-brand">Nimonspedia</a>
-            <div class="navbar-links" id="navbarMenu">
-                <a href="/" class="navbar-link active">Home</a>
-                <a href="/buyer/home" class="navbar-link">Buyer Portal</a>
-                <a href="/seller/dashboard" class="navbar-link">Seller Portal</a>
-            </div>
-            <div class="navbar-right">
-                <div class="balance-display" id="balanceDisplay" style="display: none;">
-                    <span class="balance-label">Balance: Rp. <span id="balanceAmount">0</span></span>
-                    <button type="button" class="balance-topup-btn" data-action="open-topup">Top Up</button>
-                </div>
-                <div class="user-profile" id="userProfile" style="display: none;">
-                    <div class="user-avatar" id="userAvatar">N</div>
-                    <span class="user-name" id="userName">Nimon</span>
-                    <button class="logout-icon" id="logoutBtn" title="Logout">Logout</button>
-                </div>
-                <div class="auth-links" id="authLinks">
-                    <a href="/auth/login" class="navbar-link">Login</a>
-                    <a href="/auth/register" class="navbar-link">Register</a>
-                </div>
-            </div>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation">
-                <span class="menu-icon" aria-hidden="true">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </span>
-            </button>
-        </div>
-    </nav>
+    <?php include __DIR__ . '/components/navbar.php'; ?>
 
     <header class="landing-hero">
         <div class="container">
