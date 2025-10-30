@@ -1,10 +1,11 @@
+<?php $mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nimonspedia - Seller Dashboard</title>
-    <link rel="stylesheet" href="/public/css/main.css">
+    <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
 </head>
 <body class="seller-dashboard">
     <nav class="navbar seller-navbar">

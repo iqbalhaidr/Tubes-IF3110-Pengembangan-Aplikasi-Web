@@ -1,48 +1,44 @@
+<?php $authCssVersion = filemtime(__DIR__ . '/../../public/css/auth.css'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Nimonspedia</title>
-    <link rel="stylesheet" href="/public/css/auth.css">
+    <link rel="stylesheet" href="/public/css/auth.css?v=<?= $authCssVersion ?>">
 </head>
-<body>
-    <div class="auth-wrapper">
-        <!-- Left Panel - Welcome Section -->
-        <div class="auth-left">
-            <h1>Welcome<br>Back!</h1>
-        </div>
+<body class="auth-body login-page">
+    <div class="auth-shell">
+        <div class="auth-brand">Nimonspedia</div>
+        <p class="auth-tagline">Masuk untuk melanjutkan pengalaman belanja dan kelola Nimons Anda.</p>
 
-        <!-- Right Panel - Login Form -->
-        <div class="auth-right">
-            <div class="auth-header">
-                <h2>Login</h2>
-            </div>
+        <div class="auth-card">
+            <h1 class="auth-title">Masuk ke akun</h1>
 
             <div id="alertContainer"></div>
 
             <form id="loginForm" class="auth-form">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                    <input type="email" id="email" name="email" required placeholder="Email kamu">
                     <div class="error-message" id="emailError"></div>
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
                     <div class="password-input-wrapper">
-                        <input type="password" id="password" name="password" required placeholder="Enter your password">
-                        <button type="button" class="toggle-password" onclick="togglePassword('password', this)" aria-label="Show password">
-                            <span class="toggle-label">Show</span>
+                        <input type="password" id="password" name="password" required placeholder="Password">
+                        <button type="button" class="toggle-password" onclick="togglePassword('password', this)" aria-label="Tampilkan password">
+                            <span class="toggle-label">Tampilkan</span>
                         </button>
                     </div>
                     <div class="error-message" id="passwordError"></div>
                 </div>
 
-                <button type="submit" class="submit-btn" id="submitBtn">Login</button>
+                <button type="submit" class="submit-btn" id="submitBtn">Masuk</button>
 
                 <div class="auth-footer">
-                    don't have an account? <a href="/auth/register">register</a>
+                    Belum punya akun? <a href="/auth/register">Daftar sekarang</a>
                 </div>
             </form>
         </div>
@@ -63,8 +59,8 @@
             const isHidden = input.type === 'password';
 
             input.type = isHidden ? 'text' : 'password';
-            label.textContent = isHidden ? 'Hide' : 'Show';
-            button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+            label.textContent = isHidden ? 'Sembunyikan' : 'Tampilkan';
+            button.setAttribute('aria-label', isHidden ? 'Sembunyikan password' : 'Tampilkan password');
         }
 
         // Clear error on input
@@ -83,20 +79,20 @@
 
             if (!window.api || typeof window.api.post !== 'function') {
                 console.error('API helper not available');
-                showAlert('Unable to submit form at the moment.', 'error');
+                showAlert('Saat ini formulir tidak dapat dikirim. Coba lagi nanti.', 'error');
                 return;
             }
 
             const formData = new FormData(form);
             const initialText = submitBtn.textContent;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="loading"></span>Signing in...';
+            submitBtn.innerHTML = '<span class="loading"></span>Memproses...';
 
             try {
                 const data = await window.api.post('/auth/login', formData);
 
                 if (data && data.success) {
-                    showAlert('Login successful!', 'success');
+                    showAlert('Login berhasil! Mengalihkan...', 'success');
                     setTimeout(() => {
                         window.location.href = data.data.redirect;
                     }, 500);
@@ -115,7 +111,7 @@
                         }
                     });
                 } else {
-                    const message = response.message || 'An error occurred. Please try again.';
+                    const message = response.message || 'Terjadi kesalahan. Silakan coba lagi.';
                     showAlert(message, 'error');
                 }
             } finally {

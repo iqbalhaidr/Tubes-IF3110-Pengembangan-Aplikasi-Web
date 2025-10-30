@@ -1,10 +1,11 @@
+<?php $mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nimonspedia - Product Discovery</title>
-    <link rel="stylesheet" href="/public/css/main.css">
+    <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
 </head>
 <body class="buyer-home">
     <nav class="navbar">
@@ -75,13 +76,10 @@
                     </div>
                     <div class="product-info">
                         <div class="product-name">Product Name</div>
-                        <div class="product-category">Category</div>
                         <div class="product-price">Rp 0</div>
-                        <div class="product-store">Store Name</div>
-                        <div class="product-actions">
-                            <button class="btn btn-primary">View Store</button>
-                            <button class="btn btn-secondary">View Detail</button>
-                            <button class="btn btn-icon" title="Add to cart" data-action="add-to-cart">Add</button>
+                        <div class="product-meta">
+                            <span class="meta-badge" aria-hidden="true">✔</span>
+                            <span class="meta-text">Kota Jakarta</span>
                         </div>
                     </div>
                 </div>

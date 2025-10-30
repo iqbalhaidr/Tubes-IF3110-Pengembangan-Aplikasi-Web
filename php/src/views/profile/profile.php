@@ -6,13 +6,14 @@ $currentRole = $currentRole ?? 'BUYER';
 $profileTitle = $profileTitle ?? 'Profile';
 $profileSubtitle = $profileSubtitle ?? '';
 ?>
+<?php $mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nimonspedia - Profile</title>
-    <link rel="stylesheet" href="/public/css/main.css">
+    <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
 </head>
 <body class="profile-page">
     <nav class="navbar <?= $currentRole === 'SELLER' ? 'seller-navbar' : '' ?>">

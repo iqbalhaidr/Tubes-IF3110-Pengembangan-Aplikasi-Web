@@ -1,67 +1,37 @@
+<?php $authCssVersion = filemtime(__DIR__ . '/../../public/css/auth.css'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Create Account - Nimonspedia</title>
-	<link rel="stylesheet" href="/public/css/auth.css">
+	<link rel="stylesheet" href="/public/css/auth.css?v=<?= $authCssVersion ?>">
 </head>
-<body class="auth-register-page buyer-register">
-	<div class="auth-wrapper register-layout">
-		<aside class="auth-left register-panel buyer-accent">
-			<div class="register-pane is-active" data-role-pane="buyer">
-				<h1>Join Nimonspedia</h1>
-				<p>Discover trusted stores, track orders, and manage your balance in one dashboard.</p>
-				<ul class="auth-highlight-list">
-					<li>Curated categories and smart filters</li>
-					<li>Secure checkout with balance tracking</li>
-					<li>Personalized recommendations soon</li>
-				</ul>
-			</div>
-			<div class="register-pane" data-role-pane="seller">
-				<h1>Open Your Storefront</h1>
-				<p>Launch a branded store, manage inventory, and delight Nimons everywhere.</p>
-				<div class="seller-checklist">
-					<h3>Get ready with:</h3>
-					<ul>
-						<li>Business contact information</li>
-						<li>A memorable store name</li>
-						<li>Short description of your offerings</li>
-						<li>Logo in PNG, JPG, or WEBP (max 2MB)</li>
-					</ul>
-				</div>
-				<div class="seller-support">
-					<p>Our team is ready to help approved sellers onboard quickly.</p>
-				</div>
-			</div>
-		</aside>
+<body class="auth-body register-page buyer-register">
+	<div class="auth-shell register-shell">
+		<div class="auth-brand">Nimonspedia</div>
+		<p class="auth-tagline">Satu akun untuk menjelajah katalog Nimons dan membuka toko favoritmu.</p>
 
-		<section class="auth-right register-right">
+		<div class="register-card">
 			<div class="register-tabs" role="tablist">
 				<button type="button" class="register-tab is-active" data-register-option="buyer" aria-selected="true" aria-controls="registerBuyerForm">
-					<span class="tab-text">
-						<span class="tab-title">Buyer</span>
-						<span class="tab-subtitle">Shop, track orders, earn rewards</span>
-					</span>
-					<span class="tab-indicator">B</span>
+					<span class="tab-title">Buyer</span>
+					<span class="tab-subtitle">Belanja produk Nimons</span>
 				</button>
 				<button type="button" class="register-tab" data-register-option="seller" aria-selected="false" aria-controls="registerSellerForm">
-					<span class="tab-text">
-						<span class="tab-title">Seller</span>
-						<span class="tab-subtitle">Launch store, manage catalog</span>
-					</span>
-					<span class="tab-indicator">S</span>
+					<span class="tab-title">Seller</span>
+					<span class="tab-subtitle">Kelola katalog & toko</span>
 				</button>
 			</div>
 
 			<div class="auth-header">
 				<div class="header-group is-active" data-role-header="buyer">
-					<h2>Create Buyer Account</h2>
-					<p class="subtitle">Fill in your personal details below.</p>
+					<h2>Buat akun Buyer</h2>
+					<p class="subtitle">Masukkan data diri untuk mulai belanja.</p>
 				</div>
 				<div class="header-group" data-role-header="seller">
-					<h2>Create Seller Account</h2>
-					<p class="subtitle">Provide account and storefront information to start selling.</p>
+					<h2>Buat akun Seller</h2>
+					<p class="subtitle">Informasi toko membantu pembeli menemukanmu.</p>
 				</div>
 			</div>
 
@@ -71,47 +41,48 @@
 				<input type="hidden" name="role" value="BUYER">
 
 				<div class="form-group">
-					<label for="buyer_name">Full Name</label>
-					<input type="text" id="buyer_name" name="name" required placeholder="Enter your full name">
+					<label for="buyer_name">Nama lengkap</label>
+					<input type="text" id="buyer_name" name="name" required placeholder="Nama lengkap kamu">
 					<div class="error-message" id="buyer_nameError"></div>
 				</div>
 
 				<div class="form-group">
 					<label for="buyer_email">Email</label>
-					<input type="email" id="buyer_email" name="email" required placeholder="Enter your email">
+					<input type="email" id="buyer_email" name="email" required placeholder="Email aktif">
 					<div class="error-message" id="buyer_emailError"></div>
 				</div>
 
 				<div class="form-group">
 					<label for="buyer_password">Password</label>
 					<div class="password-input-wrapper">
-						<input type="password" id="buyer_password" name="password" required placeholder="Create a password">
-						<button type="button" class="toggle-password" onclick="togglePassword('buyer_password', this)" aria-label="Show password">
-							<span class="toggle-label">Show</span>
+						<input type="password" id="buyer_password" name="password" required placeholder="Minimal 8 karakter">
+						<button type="button" class="toggle-password" onclick="togglePassword('buyer_password', this)" aria-label="Tampilkan password">
+							<span class="toggle-label">Tampilkan</span>
 						</button>
 					</div>
-					<small class="password-hint">Min 8 characters with uppercase, lowercase, number, and symbol.</small>
+					<small class="password-hint">Gunakan kombinasi huruf besar, kecil, angka, dan simbol.</small>
 					<div class="error-message" id="buyer_passwordError"></div>
 				</div>
 
 				<div class="form-group">
-					<label for="buyer_password_confirm">Confirm Password</label>
+					<label for="buyer_password_confirm">Konfirmasi password</label>
 					<div class="password-input-wrapper">
-						<input type="password" id="buyer_password_confirm" name="password_confirm" required placeholder="Re-enter your password">
-						<button type="button" class="toggle-password" onclick="togglePassword('buyer_password_confirm', this)" aria-label="Show password">
-							<span class="toggle-label">Show</span>
+						<input type="password" id="buyer_password_confirm" name="password_confirm" required placeholder="Ulangi password">
+						<button type="button" class="toggle-password" onclick="togglePassword('buyer_password_confirm', this)" aria-label="Tampilkan password">
+							<span class="toggle-label">Tampilkan</span>
 						</button>
 					</div>
 					<div class="error-message" id="buyer_password_confirmError"></div>
 				</div>
 
 				<div class="form-group">
-					<label for="buyer_address">Address</label>
-					<textarea id="buyer_address" name="address" required placeholder="Enter your complete address"></textarea>
+					<label for="buyer_address">Alamat lengkap</label>
+					<textarea id="buyer_address" name="address" required placeholder="Tuliskan alamat pengiriman"></textarea>
 					<div class="error-message" id="buyer_addressError"></div>
 				</div>
 
-				<button type="submit" class="submit-btn" id="buyerSubmitBtn">Create Buyer Account</button>
+				<button type="submit" class="submit-btn" id="buyerSubmitBtn">Daftar sebagai Buyer</button>
+				<p class="auth-note">Ingin membuka toko? <button class="link-button" type="button" data-register-option="seller">Daftar sebagai seller</button></p>
 			</form>
 
 			<div id="sellerAlertContainer"></div>
@@ -120,74 +91,75 @@
 				<input type="hidden" name="role" value="SELLER">
 
 				<div class="form-group">
-					<label for="seller_name">Full Name</label>
-					<input type="text" id="seller_name" name="name" required placeholder="Owner full name">
+					<label for="seller_name">Nama pemilik</label>
+					<input type="text" id="seller_name" name="name" required placeholder="Nama pemilik toko">
 					<div class="error-message" id="seller_nameError"></div>
 				</div>
 
 				<div class="form-group">
 					<label for="seller_email">Email</label>
-					<input type="email" id="seller_email" name="email" required placeholder="Business email">
+					<input type="email" id="seller_email" name="email" required placeholder="Email bisnis">
 					<div class="error-message" id="seller_emailError"></div>
 				</div>
 
 				<div class="form-group">
 					<label for="seller_password">Password</label>
 					<div class="password-input-wrapper">
-						<input type="password" id="seller_password" name="password" required placeholder="Create strong password">
-						<button type="button" class="toggle-password" onclick="togglePassword('seller_password', this)" aria-label="Show password">
-							<span class="toggle-label">Show</span>
+						<input type="password" id="seller_password" name="password" required placeholder="Minimal 8 karakter">
+						<button type="button" class="toggle-password" onclick="togglePassword('seller_password', this)" aria-label="Tampilkan password">
+							<span class="toggle-label">Tampilkan</span>
 						</button>
 					</div>
-					<small class="password-hint">Min 8 characters with uppercase, lowercase, number, and symbol.</small>
+					<small class="password-hint">Gunakan kombinasi huruf besar, kecil, angka, dan simbol.</small>
 					<div class="error-message" id="seller_passwordError"></div>
 				</div>
 
 				<div class="form-group">
-					<label for="seller_password_confirm">Confirm Password</label>
+					<label for="seller_password_confirm">Konfirmasi password</label>
 					<div class="password-input-wrapper">
-						<input type="password" id="seller_password_confirm" name="password_confirm" required placeholder="Re-enter password">
-						<button type="button" class="toggle-password" onclick="togglePassword('seller_password_confirm', this)" aria-label="Show password">
-							<span class="toggle-label">Show</span>
+						<input type="password" id="seller_password_confirm" name="password_confirm" required placeholder="Ulangi password">
+						<button type="button" class="toggle-password" onclick="togglePassword('seller_password_confirm', this)" aria-label="Tampilkan password">
+							<span class="toggle-label">Tampilkan</span>
 						</button>
 					</div>
 					<div class="error-message" id="seller_password_confirmError"></div>
 				</div>
 
 				<div class="form-group">
-					<label for="seller_address">Business Address</label>
-					<textarea id="seller_address" name="address" required placeholder="Where do you operate from?"></textarea>
+					<label for="seller_address">Alamat usaha</label>
+					<textarea id="seller_address" name="address" required placeholder="Lokasi operasional"></textarea>
 					<div class="error-message" id="seller_addressError"></div>
 				</div>
 
 				<div class="form-group">
-					<label for="seller_store_name">Store Name</label>
-					<input type="text" id="seller_store_name" name="store_name" required maxlength="100" placeholder="Storefront name visible to buyers">
-					<div class="form-hint">Max 100 characters.</div>
+					<label for="seller_store_name">Nama toko</label>
+					<input type="text" id="seller_store_name" name="store_name" required maxlength="100" placeholder="Nama yang tampil ke pembeli">
+					<div class="form-hint">Maksimal 100 karakter.</div>
 					<div class="error-message" id="seller_store_nameError"></div>
 				</div>
 
 				<div class="form-group">
-					<label for="seller_store_description">Store Description</label>
-					<textarea id="seller_store_description" name="store_description" required placeholder="Describe your products and value proposition"></textarea>
-					<div class="form-hint">Share at least a short paragraph about what you sell.</div>
+					<label for="seller_store_description">Deskripsi toko</label>
+					<textarea id="seller_store_description" name="store_description" required placeholder="Ceritakan produk dan nilai jual"></textarea>
+					<div class="form-hint">Berikan gambaran singkat tentang produkmu.</div>
 					<div class="error-message" id="seller_store_descriptionError"></div>
 				</div>
 
 				<div class="form-group">
-					<label for="seller_store_logo">Store Logo</label>
+					<label for="seller_store_logo">Logo toko</label>
 					<input type="file" id="seller_store_logo" name="store_logo" accept="image/png,image/jpeg,image/webp" required>
-					<div class="form-hint">Upload PNG, JPG, or WEBP image up to 2MB.</div>
+					<div class="form-hint">PNG, JPG, atau WEBP maksimal 2MB.</div>
 					<div class="error-message" id="seller_store_logoError"></div>
 				</div>
 
-				<button type="submit" class="submit-btn" id="sellerSubmitBtn">Create Seller Account</button>
+				<button type="submit" class="submit-btn" id="sellerSubmitBtn">Daftar sebagai Seller</button>
+				<p class="auth-note">Mau belanja saja? <button class="link-button" type="button" data-register-option="buyer">Daftar sebagai buyer</button></p>
 			</form>
 
 			<div class="auth-footer login-redirect">
-				Already have an account? <a href="/auth/login">Login here</a>
+				Sudah punya akun? <a href="/auth/login">Masuk di sini</a>
 			</div>
-		</section>
+		</div>
 	</div>
 
 	<script src="/public/js/api.js"></script>
@@ -201,9 +173,9 @@
 			const isHidden = input.type === 'password';
 			input.type = isHidden ? 'text' : 'password';
 			if (label) {
-				label.textContent = isHidden ? 'Hide' : 'Show';
+				label.textContent = isHidden ? 'Sembunyikan' : 'Tampilkan';
 			}
-			button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+			button.setAttribute('aria-label', isHidden ? 'Sembunyikan password' : 'Tampilkan password');
 		}
 
 		document.addEventListener('DOMContentLoaded', () => {
@@ -218,8 +190,6 @@
 				seller: document.getElementById('sellerAlertContainer')
 			};
 			const headers = document.querySelectorAll('[data-role-header]');
-			const panes = document.querySelectorAll('[data-role-pane]');
-			const leftPanel = document.querySelector('.register-panel');
 
 			function setActiveRole(role) {
 				const target = role === 'seller' ? 'seller' : 'buyer';
@@ -240,13 +210,6 @@
 					const isActive = key === target;
 					formElement.classList.toggle('is-active', isActive);
 					formElement.hidden = !isActive;
-					formElement.style.display = isActive ? '' : 'none';
-				});
-
-				panes.forEach(pane => {
-					const isActive = pane.dataset.rolePane === target;
-					pane.classList.toggle('is-active', isActive);
-					pane.hidden = !isActive;
 				});
 
 				headers.forEach(group => {
@@ -257,11 +220,6 @@
 
 				body.classList.remove('buyer-register', 'seller-register');
 				body.classList.add(`${target}-register`);
-
-				if (leftPanel) {
-					leftPanel.classList.remove('buyer-accent', 'seller-accent');
-					leftPanel.classList.add(target === 'seller' ? 'seller-accent' : 'buyer-accent');
-				}
 
 				const url = new URL(window.location.href);
 				url.searchParams.set('role', target);
@@ -283,97 +241,101 @@
 			const buyerForm = forms.buyer;
 			const buyerSubmitBtn = document.getElementById('buyerSubmitBtn');
 
-			function clearBuyerError(element) {
-				if (!element) {
-					return;
-				}
-				element.classList.remove('is-invalid');
-				const errorElement = document.getElementById(element.id + 'Error');
-				if (errorElement) {
-					errorElement.classList.remove('show');
-				}
-			}
-
-			buyerForm.querySelectorAll('input, textarea').forEach(input => {
-				input.addEventListener('input', () => clearBuyerError(input));
-			});
-
-			buyerForm.addEventListener('submit', async (event) => {
-				event.preventDefault();
-
-				if (!window.api || typeof window.api.post !== 'function') {
-					showAlert('buyer', 'Unable to submit form at the moment.', 'error');
-					return;
-				}
-
-				const formData = new FormData(buyerForm);
-				const initialText = buyerSubmitBtn.textContent;
-				buyerSubmitBtn.disabled = true;
-				buyerSubmitBtn.innerHTML = '<span class="loading"></span>Creating account...';
-
-				try {
-					const data = await window.api.post('/auth/register/buyer', formData);
-					if (data && data.success) {
-						showAlert('buyer', 'Buyer account created! Redirecting...', 'success');
-						setTimeout(() => {
-							window.location.href = data.data.redirect;
-						}, 600);
+			if (buyerForm && buyerSubmitBtn) {
+				function clearBuyerError(element) {
+					if (!element) {
+						return;
 					}
-				} catch (error) {
-					handleFormErrors('buyer', error);
-				} finally {
-					buyerSubmitBtn.disabled = false;
-					buyerSubmitBtn.textContent = initialText;
+					element.classList.remove('is-invalid');
+					const errorElement = document.getElementById(element.id + 'Error');
+					if (errorElement) {
+						errorElement.classList.remove('show');
+					}
 				}
-			});
+
+				buyerForm.querySelectorAll('input, textarea').forEach(input => {
+					input.addEventListener('input', () => clearBuyerError(input));
+				});
+
+				buyerForm.addEventListener('submit', async (event) => {
+					event.preventDefault();
+
+					if (!window.api || typeof window.api.post !== 'function') {
+						showAlert('buyer', 'Saat ini formulir tidak dapat dikirim. Coba lagi nanti.', 'error');
+						return;
+					}
+
+					const formData = new FormData(buyerForm);
+					const initialText = buyerSubmitBtn.textContent;
+					buyerSubmitBtn.disabled = true;
+					buyerSubmitBtn.innerHTML = '<span class="loading"></span>Memproses...';
+
+					try {
+						const data = await window.api.post('/auth/register/buyer', formData);
+						if (data && data.success) {
+							showAlert('buyer', 'Akun buyer berhasil dibuat! Mengalihkan...', 'success');
+							setTimeout(() => {
+								window.location.href = data.data.redirect;
+							}, 600);
+						}
+					} catch (error) {
+						handleFormErrors('buyer', error);
+					} finally {
+						buyerSubmitBtn.disabled = false;
+						buyerSubmitBtn.textContent = initialText;
+					}
+				});
+			}
 
 			const sellerForm = forms.seller;
 			const sellerSubmitBtn = document.getElementById('sellerSubmitBtn');
 
-			function clearSellerError(element) {
-				if (!element) {
-					return;
-				}
-				element.classList.remove('is-invalid');
-				const errorElement = document.getElementById(element.id + 'Error');
-				if (errorElement) {
-					errorElement.classList.remove('show');
-				}
-			}
-
-			sellerForm.querySelectorAll('input, textarea').forEach(input => {
-				const eventName = input.type === 'file' ? 'change' : 'input';
-				input.addEventListener(eventName, () => clearSellerError(input));
-			});
-
-			sellerForm.addEventListener('submit', async (event) => {
-				event.preventDefault();
-
-				if (!window.api || typeof window.api.post !== 'function') {
-					showAlert('seller', 'Unable to submit form at the moment.', 'error');
-					return;
-				}
-
-				const formData = new FormData(sellerForm);
-				const initialText = sellerSubmitBtn.textContent;
-				sellerSubmitBtn.disabled = true;
-				sellerSubmitBtn.innerHTML = '<span class="loading"></span>Creating account...';
-
-				try {
-					const data = await window.api.post('/auth/register/seller', formData);
-					if (data && data.success) {
-						showAlert('seller', 'Seller account created! Redirecting to dashboard...', 'success');
-						setTimeout(() => {
-							window.location.href = data.data.redirect;
-						}, 600);
+			if (sellerForm && sellerSubmitBtn) {
+				function clearSellerError(element) {
+					if (!element) {
+						return;
 					}
-				} catch (error) {
-					handleFormErrors('seller', error);
-				} finally {
-					sellerSubmitBtn.disabled = false;
-					sellerSubmitBtn.textContent = initialText;
+					element.classList.remove('is-invalid');
+					const errorElement = document.getElementById(element.id + 'Error');
+					if (errorElement) {
+						errorElement.classList.remove('show');
+					}
 				}
-			});
+
+				sellerForm.querySelectorAll('input, textarea').forEach(input => {
+					const eventName = input.type === 'file' ? 'change' : 'input';
+					input.addEventListener(eventName, () => clearSellerError(input));
+				});
+
+				sellerForm.addEventListener('submit', async (event) => {
+					event.preventDefault();
+
+					if (!window.api || typeof window.api.post !== 'function') {
+						showAlert('seller', 'Saat ini formulir tidak dapat dikirim. Coba lagi nanti.', 'error');
+						return;
+					}
+
+					const formData = new FormData(sellerForm);
+					const initialText = sellerSubmitBtn.textContent;
+					sellerSubmitBtn.disabled = true;
+					sellerSubmitBtn.innerHTML = '<span class="loading"></span>Memproses...';
+
+					try {
+						const data = await window.api.post('/auth/register/seller', formData);
+						if (data && data.success) {
+							showAlert('seller', 'Akun seller berhasil dibuat! Mengalihkan...', 'success');
+							setTimeout(() => {
+								window.location.href = data.data.redirect;
+							}, 600);
+						}
+					} catch (error) {
+						handleFormErrors('seller', error);
+					} finally {
+						sellerSubmitBtn.disabled = false;
+						sellerSubmitBtn.textContent = initialText;
+					}
+				});
+			}
 
 			function handleFormErrors(type, error) {
 				const response = error || {};
@@ -389,7 +351,7 @@
 						}
 					});
 				} else {
-					const message = response.message || 'An error occurred. Please try again.';
+					const message = response.message || 'Terjadi kesalahan. Silakan coba lagi.';
 					showAlert(type, message, 'error');
 				}
 			}
