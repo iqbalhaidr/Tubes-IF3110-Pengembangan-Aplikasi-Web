@@ -28,7 +28,7 @@ CREATE TABLE store (
 
 CREATE TABLE category (
     category_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL
+    category_name VARCHAR(100) UNIQUE NOT NULL
 );
 
 CREATE TABLE product (
@@ -91,4 +91,4 @@ CREATE TABLE order_item (
     CONSTRAINT fk_product_historical FOREIGN KEY(product_id) REFERENCES product(product_id) ON DELETE SET NULL
 );
 
-INSERT INTO category (name) VALUES ('Electronics'), ('Fashion'), ('Books'), ('Home & Kitchen');
+INSERT INTO category (category_name) VALUES ('Electronics'), ('Fashion'), ('Books'), ('Home & Kitchen');
