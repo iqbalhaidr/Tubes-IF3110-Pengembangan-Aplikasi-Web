@@ -114,6 +114,7 @@ if ($route_parts[0] === 'auth') {
         header("HTTP/1.0 404 Not Found");
         echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
         exit;
+    }
 } elseif ($route_parts[0] === 'buyer') {
     $controller = new HomeController();
 
