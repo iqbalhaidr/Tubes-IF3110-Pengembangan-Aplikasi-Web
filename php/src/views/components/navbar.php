@@ -27,7 +27,6 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                         ['href' => '/seller/dashboard', 'label' => 'Dashboard', 'key' => 'dashboard'],
                         ['href' => 'javascript:void(0);', 'label' => 'Produk', 'key' => 'products'],
                         ['href' => 'javascript:void(0);', 'label' => 'Orders', 'key' => 'orders'],
-                        ['href' => '/seller/profile', 'label' => 'Profile', 'key' => 'profile'],
                     ];
                     $sellerLinks = $navLinks ?? $defaultSellerLinks;
                     ?>
@@ -41,11 +40,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                 <?php 
                     $storeModel = new Store();
                     $store = $storeModel->findBySeller($current_user['user_id']);
-                    $storeBalance = $store['balance'] ?? 0;
                 ?>
-                <div class="store-balance-display">
-                    <span class="balance-label">Balance: Rp <?= number_format($storeBalance, 0, ',', '.') ?></span>
-                </div>
             <?php endif; ?>
         </div>
         

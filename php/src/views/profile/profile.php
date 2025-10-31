@@ -1,13 +1,12 @@
 <?php
 $profileSections = $profileSections ?? [];
 $metaSummary = $metaSummary ?? [];
-$currentRole = $currentRole ?? 'BUYER';
 $profileTitle = $profileTitle ?? 'Profile';
 $profileSubtitle = $profileSubtitle ?? '';
 $mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css');
 
-// Set navbar type and active link
-$navbarType = strtolower($currentRole);
+// Set navbar type and active link (Buyer only)
+$navbarType = 'buyer';
 $activeLink = 'profile';
 ?>
 <!DOCTYPE html>
@@ -24,8 +23,8 @@ $activeLink = 'profile';
 
     <main class="profile-main">
         <div class="container">
-            <header class="profile-header" data-role-header="<?= strtolower($currentRole) ?>">
-                <span class="profile-kicker"><?= $currentRole === 'SELLER' ? 'Seller Center' : 'Account Overview' ?></span>
+            <header class="profile-header" data-role-header="buyer">
+                <span class="profile-kicker">Account Overview</span>
                 <h1 class="profile-title"><?= htmlspecialchars($profileTitle) ?></h1>
                 <p class="profile-subtitle"><?= htmlspecialchars($profileSubtitle) ?></p>
             </header>
@@ -42,17 +41,7 @@ $activeLink = 'profile';
                                     <div class="profile-detail-row">
                                         <dt><?= htmlspecialchars($item['label']) ?></dt>
                                         <dd>
-                                            <?php if (isset($item['isLogo']) && $item['isLogo']): ?>
-                                                <?php if (!empty($item['value'])): ?>
-                                                    <img src="/public/<?= htmlspecialchars($item['value']) ?>" alt="Store Logo" class="store-logo-display">
-                                                <?php else: ?>
-                                                    <span style="color: var(--text-light);">No logo uploaded</span>
-                                                <?php endif; ?>
-                                            <?php elseif (isset($item['isRichText']) && $item['isRichText']): ?>
-                                                <?= $item['value'] ?>
-                                            <?php else: ?>
-                                                <?= nl2br(htmlspecialchars($item['value'])) ?>
-                                            <?php endif; ?>
+                                            <?= nl2br(htmlspecialchars($item['value'])) ?>
                                         </dd>
                                     </div>
                                 <?php endforeach; ?>
@@ -74,12 +63,8 @@ $activeLink = 'profile';
                             <?php endforeach; ?>
                         </dl>
                         <div class="profile-actions">
-                            <?php if ($currentRole === 'SELLER'): ?>
-                                <button type="button" class="btn btn-primary" id="editProfileBtn">Edit Store</button>
-                            <?php else: ?>
-                                <button type="button" class="btn btn-primary" id="editProfileBtn">Edit Profile</button>
-                                <button type="button" class="btn btn-secondary" id="changePasswordBtn">Change Password</button>
-                            <?php endif; ?>
+                            <button type="button" class="btn btn-primary" id="editProfileBtn">Edit Profile</button>
+                            <button type="button" class="btn btn-secondary" id="changePasswordBtn">Change Password</button>
                         </div>
                     </div>
                 </aside>
@@ -153,47 +138,6 @@ $activeLink = 'profile';
                     <div class="modal-actions">
                         <button type="button" class="btn btn-secondary" id="changePasswordCancel">Cancel</button>
                         <button type="submit" class="btn btn-primary" id="changePasswordSubmit">Change Password</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    <?php elseif ($currentRole === 'SELLER'): ?>
-        <!-- Edit Store Profile Modal -->
-        <div id="editStoreModal" class="modal hidden">
-            <div class="modal-overlay" id="editStoreOverlay"></div>
-            <div class="modal-content modal-large">
-                <div class="modal-header">
-                    <h2>Edit Store Information</h2>
-                    <button type="button" class="modal-close" id="editStoreClose">&times;</button>
-                </div>
-                <form id="editStoreForm" class="modal-form" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="edit_store_name">Store Name</label>
-                        <input type="text" id="edit_store_name" name="store_name" required maxlength="100" placeholder="Your store name">
-                        <div class="form-hint">Maximum 100 characters.</div>
-                        <div class="error-message" id="edit_store_nameError"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_store_description_editor">Store Description</label>
-                        <div class="rich-text-wrapper" data-editor-wrapper="edit_store_description">
-                            <div id="edit_store_description_editor" style="height: 200px;"></div>
-                        </div>
-                        <input type="hidden" id="edit_store_description" name="store_description" data-richtext-hidden="edit_store_description">
-                        <div class="error-message" id="edit_store_descriptionError"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_store_logo">Store Logo</label>
-                        <input type="file" id="edit_store_logo" name="store_logo" accept="image/png,image/jpeg,image/webp">
-                        <div class="logo-upload-preview">
-                            <img id="logoPreview" src="" alt="Store Logo Preview" style="display: none;">
-                            <span id="logoPlaceholder" style="color: var(--text-light);">No logo selected</span>
-                        </div>
-                        <div class="form-hint">PNG, JPG, or WEBP maximum 2MB. Logo will be displayed in circular shape.</div>
-                        <div class="error-message" id="edit_store_logoError"></div>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" id="editStoreCancel">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="editStoreSubmit">Save Changes</button>
                     </div>
                 </form>
             </div>

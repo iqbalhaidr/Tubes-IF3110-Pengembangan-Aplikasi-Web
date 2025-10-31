@@ -111,7 +111,6 @@ class HomeController {
             ['label' => 'Dashboard', 'href' => '/seller/dashboard', 'key' => 'dashboard'],
             ['label' => 'Produk', 'href' => 'javascript:void(0);', 'key' => 'products'],
             ['label' => 'Orders', 'href' => 'javascript:void(0);', 'key' => 'orders'],
-            ['label' => 'Profile', 'href' => '/seller/profile', 'key' => 'profile'],
         ];
 
         require_once __DIR__ . '/../views/seller/dashboard.php';
@@ -156,64 +155,9 @@ class HomeController {
     }
 
     public function sellerProfile() {
-        AuthMiddleware::requireRole('SELLER', '/auth/login');
-
-        $userModel = new User();
-        $storeModel = new Store();
-        $currentSessionUser = AuthMiddleware::getCurrentUser();
-        $user = $userModel->getUserById($currentSessionUser['user_id']);
-    $store = $storeModel->findBySeller($currentSessionUser['user_id']);
-
-        $profileTitle = 'Seller Profile';
-        $profileSubtitle = 'Review your account and storefront details to build buyer trust.';
-        $currentRole = 'SELLER';
-        $navLinks = [
-            ['label' => 'Dashboard', 'href' => '/seller/dashboard', 'key' => 'dashboard'],
-            ['label' => 'Produk', 'href' => 'javascript:void(0);', 'key' => 'products'],
-            ['label' => 'Orders', 'href' => 'javascript:void(0);', 'key' => 'orders'],
-            ['label' => 'Profile', 'href' => '/seller/profile', 'key' => 'profile'],
-        ];
-
-        $storeDescriptionRaw = $store['store_description'] ?? '';
-        $storeDescription = $this->formatRichTextField($storeDescriptionRaw);
-        $hasStoreDescription = $storeDescription !== '';
-        
-        $storeLogoPath = $store['store_logo_path'] ?? null;
-
-        $profileSections = [
-            [
-                'title' => 'Account Information',
-                'items' => [
-                    ['label' => 'Full Name', 'value' => $user['name'] ?? '-'],
-                    ['label' => 'Email', 'value' => $user['email'] ?? '-'],
-                    ['label' => 'Address', 'value' => $user['address'] ?? 'Add a business address to simplify logistics.'],
-                ],
-            ],
-            [
-                'title' => 'Store Overview',
-                'items' => [
-                    ['label' => 'Store Name', 'value' => $store['store_name'] ?? 'Complete your store profile'],
-                    [
-                        'label' => 'Store Logo',
-                        'value' => $storeLogoPath,
-                        'isLogo' => true,
-                    ],
-                    [
-                        'label' => 'Store Description',
-                        'value' => $hasStoreDescription ? $storeDescription : 'Tell buyers what makes your store unique.',
-                        'isRichText' => $hasStoreDescription,
-                    ],
-                    ['label' => 'Store Balance', 'value' => 'Rp ' . number_format($store['balance'] ?? 0, 0, ',', '.')],
-                ],
-            ],
-        ];
-
-        $metaSummary = [
-            ['label' => 'Role', 'value' => 'Seller'],
-            ['label' => 'Store Created', 'value' => $this->formatDate($store['created_at'] ?? null)],
-        ];
-
-        require_once __DIR__ . '/../views/profile/profile.php';
+        AuthMiddleware::requireRole('BUYER', '/auth/login');
+        header('Location: /seller/dashboard');
+        exit;
     }
 
     private function formatDate($dateValue) {
@@ -418,6 +362,31 @@ class HomeController {
         $response['absolute_path'] = $targetPath;
         $response['message'] = null;
         return $response;
+    }
+
+    public function getStoreInfo() {
+        AuthMiddleware::requireRole('SELLER', '/auth/login');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            Response::error('Invalid request method', null, 405);
+            return;
+        }
+
+        $currentSessionUser = AuthMiddleware::getCurrentUser();
+        $storeModel = new Store();
+        $store = $storeModel->findBySeller($currentSessionUser['user_id']);
+
+        if (!$store) {
+            Response::error('Store not found', null, 404);
+            return;
+        }
+
+        Response::success('Store information retrieved', [
+            'store_id' => $store['store_id'],
+            'store_name' => $store['store_name'],
+            'store_description' => $store['store_description'],
+            'store_logo_path' => $store['store_logo_path']
+        ], 200);
     }
 }
 ?>

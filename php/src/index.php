@@ -160,6 +160,17 @@ if ($route_parts[0] === 'auth') {
     } elseif ($route_parts[1] === 'cartcounter' && $method === 'GET') {
         $controller = new CartController();
         $controller->getUniqueItemCount();
+    } elseif ($route_parts[1] === 'store') {
+        $controller = new HomeController();
+        if ($route_parts[2] === 'get-store-info' && $method === 'GET') {
+            $controller->getStoreInfo();
+        } elseif ($route_parts[2] === 'update' && $method === 'POST') {
+            $controller->updateStore();
+        } else {
+            header("HTTP/1.0 404 Not Found");
+            echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
+            exit;
+        }
     } elseif ($route_parts[1] === 'orders') {
         $orderController = new OrderController();
         if ($route_parts[2] === 'detail' && $method === 'GET') {
