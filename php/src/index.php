@@ -228,13 +228,10 @@ if ($route_parts[0] === 'auth') {
     $orderController = new OrderController();
 
     if ($method === 'GET') {
-        // This is the new method to show the page
-        $orderController->showCheckoutPage();
+        $orderController->index();
     } elseif ($method === 'POST') {
-        // This is the API endpoint to process the checkout
-        $orderController->processCheckout();
+        $orderController->checkout();
     } else {
-        // A GET /checkout page isn't defined, only the POST action
         Response::error('Method not allowed', null, 405);
     }
 } else {
