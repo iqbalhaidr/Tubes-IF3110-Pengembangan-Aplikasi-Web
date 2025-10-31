@@ -3,114 +3,61 @@
 // DOM Elements
 const mobileMenuToggle = document.getElementById('mobileMenuToggle');
 const navbarMenu = document.getElementById('navbarMenu');
-const searchButton = document.getElementById('searchButton');
 const searchInput = document.getElementById('searchInput');
 const categoryFilter = document.getElementById('categoryFilter');
 const priceFilter = document.getElementById('priceFilter');
 const productsGrid = document.getElementById('productsGrid');
 const logoutBtn = document.getElementById('logoutBtn');
-const prevPageBtn = document.getElementById('prevPage');
-const nextPageBtn = document.getElementById('nextPage');
 
 // Mobile Menu Toggle
-if (mobileMenuToggle) {
+if (mobileMenuToggle && navbarMenu) {
     mobileMenuToggle.addEventListener('click', () => {
         navbarMenu.classList.toggle('active');
     });
 }
 
-// Search Functionality
-if (searchInput) {
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleSearch();
+// User Dropdown Functionality
+const userProfileBtn = document.getElementById('userProfileBtn');
+const userDropdown = document.querySelector('.user-dropdown');
+
+if (userProfileBtn && userDropdown) {
+    userProfileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('active');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('active');
         }
-    });
-
-    // Also trigger search on input (debounced would be better in production)
-    searchInput.addEventListener('input', () => {
-        // TODO: Add debounced search functionality
-    });
-}
-
-function handleSearch() {
-    const query = searchInput.value.trim();
-    if (query) {
-        console.log('Searching for:', query);
-        // TODO: Implement search functionality
-        // This will be implemented when the backend is ready
-    }
-}
-
-// Filter Functionality
-if (categoryFilter) {
-    categoryFilter.addEventListener('click', () => {
-        console.log('Category filter clicked');
-        // TODO: Implement category filter
-    });
-}
-
-if (priceFilter) {
-    priceFilter.addEventListener('click', () => {
-        console.log('Price filter clicked');
-        // TODO: Implement price filter
     });
 }
 
 // Logout Functionality
 if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-        try {
-            const response = await fetch('/auth/logout', {
-                method: 'GET'
-            });
-
-            if (response.ok) {
-                window.location.href = '/';
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
-    });
-}
-
-// Pagination
-if (prevPageBtn) {
-    prevPageBtn.addEventListener('click', () => {
-        console.log('Previous page clicked');
-        // TODO: Implement pagination
-    });
-}
-
-if (nextPageBtn) {
-    nextPageBtn.addEventListener('click', () => {
-        console.log('Next page clicked');
-        // TODO: Implement pagination
+    logoutBtn.addEventListener('click', () => {
+        // Use normal navigation for logout to avoid JSON parsing issues
+        window.location.href = '/auth/logout';
     });
 }
 
 // Check if user is logged in and update navbar
 async function checkAuthStatus() {
     try {
-        const response = await fetch('/auth/me', {
-            method: 'GET'
-        });
+        if (!window.api || typeof window.api.get !== 'function') {
+            showAuthLinks();
+            return;
+        }
 
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.data) {
-                // User is logged in
-                showUserMenu(data.data);
-            } else {
-                // User is not logged in
-                showAuthLinks();
-            }
+        const data = await window.api.get('/auth/me');
+        
+        if (data && data.success && data.data) {
+            showUserMenu(data.data);
         } else {
-            // User is not logged in
             showAuthLinks();
         }
     } catch (error) {
-        console.error('Auth check error:', error);
         showAuthLinks();
     }
 }
@@ -120,7 +67,7 @@ function showUserMenu(userData) {
     const authLinks = document.getElementById('authLinks');
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
-    const balanceDisplay = document.getElementById('balanceDisplay');
+    const balanceAmount = document.getElementById('balanceAmount');
 
     if (userProfile && authLinks) {
         userProfile.style.display = 'flex';
@@ -134,11 +81,9 @@ function showUserMenu(userData) {
             userAvatar.textContent = userData.name.charAt(0).toUpperCase();
         }
         
-        if (balanceDisplay) {
-            balanceDisplay.style.display = 'flex';
-            if (userData.balance !== undefined) {
-                balanceDisplay.textContent = `💰 Balance: Rp. ${formatCurrency(userData.balance)}`;
-            }
+        // Update balance amount if element exists (buyer pages only)
+        if (balanceAmount && userData.role === 'BUYER' && userData.balance !== undefined) {
+            balanceAmount.textContent = formatCurrency(userData.balance);
         }
     }
 }
@@ -146,15 +91,10 @@ function showUserMenu(userData) {
 function showAuthLinks() {
     const userProfile = document.getElementById('userProfile');
     const authLinks = document.getElementById('authLinks');
-    const balanceDisplay = document.getElementById('balanceDisplay');
 
     if (userProfile && authLinks) {
         userProfile.style.display = 'none';
         authLinks.style.display = 'flex';
-        
-        if (balanceDisplay) {
-            balanceDisplay.style.display = 'none';
-        }
     }
 }
 
@@ -163,22 +103,7 @@ function formatCurrency(amount) {
     return new Intl.NumberFormat('id-ID').format(amount);
 }
 
-// Load products (placeholder for when backend is ready)
-function loadProducts() {
-    // TODO: Implement product loading from backend
-    console.log('Loading products...');
-}
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthStatus();
-    // loadProducts(); // Uncomment when backend is ready
-});
-
-// Add to cart functionality (placeholder)
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('btn-icon') && e.target.textContent === '🛒') {
-        console.log('Add to cart clicked');
-        // TODO: Implement add to cart
-    }
 });

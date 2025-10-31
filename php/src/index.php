@@ -1,5 +1,10 @@
 <?php
 
+// START SESSION FIRST - Before anything else!
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // A simple router
 $uri = $_SERVER['REQUEST_URI'];
 
@@ -59,10 +64,33 @@ if ($route_parts[0] === 'auth') {
             $authController->login();
         }
     } elseif ($route_parts[1] === 'register') {
-        if ($method === 'GET') {
-            $authController->showRegister();
-        } elseif ($method === 'POST') {
-            $authController->register();
+        $registerAction = $route_parts[2] ?? null;
+
+        if ($registerAction === null) {
+            if ($method === 'GET') {
+                $authController->showRegister();
+            } else {
+                Response::error('Method not allowed', null, 405);
+            }
+        } elseif ($registerAction === 'buyer') {
+            if ($method === 'GET') {
+                $authController->showRegisterBuyer();
+            } elseif ($method === 'POST') {
+                $authController->registerBuyer();
+            } else {
+                Response::error('Method not allowed', null, 405);
+            }
+        } elseif ($registerAction === 'seller') {
+            if ($method === 'GET') {
+                $authController->showRegisterSeller();
+            } elseif ($method === 'POST') {
+                $authController->registerSeller();
+            } else {
+                Response::error('Method not allowed', null, 405);
+            }
+        } else {
+            header("HTTP/1.0 404 Not Found");
+            require_once __DIR__ . '/views/404.php';
         }
     } elseif ($route_parts[1] === 'logout') {
         $authController->logout();
@@ -119,6 +147,50 @@ if ($route_parts[0] === 'auth') {
         require_once __DIR__ . '/views/404.php';
     }
 
+} elseif ($route_parts[0] === 'api') {
+    if ($route_parts[1] === 'products' && $method === 'GET') {
+        $controller = new ProductController();
+        $controller->getProducts();
+    } elseif ($route_parts[1] === 'categories' && $method === 'GET') {
+        $controller = new CategoryController();
+        $controller->getAllCategories();
+    } else {
+        header("HTTP/1.0 404 Not Found");
+        echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
+        exit;
+    }
+} elseif ($route_parts[0] === 'buyer') {
+    $controller = new HomeController();
+
+    if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'home') {
+        // Redirect to unified home page
+        header('Location: /home');
+        exit;
+    } elseif ($route_parts[1] === 'profile') {
+        $controller->buyerProfile();
+    } else {
+        header("HTTP/1.0 404 Not Found");
+        require_once __DIR__ . '/views/404.php';
+    }
+} elseif ($route_parts[0] === 'seller') {
+    $controller = new HomeController();
+
+    if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'dashboard') {
+        $controller->sellerDashboard();
+    } elseif ($route_parts[1] === 'profile') {
+        $controller->sellerProfile();
+    } else {
+        header("HTTP/1.0 404 Not Found");
+        require_once __DIR__ . '/views/404.php';
+    }
+} elseif ($route_parts[0] === 'balance') {
+    $balanceController = new BalanceController();
+
+    if (($route_parts[1] ?? '') === 'top-up' && $method === 'POST') {
+        $balanceController->topUp();
+    } else {
+        Response::error('Not found', null, 404);
+    }
 } else {
     // Not Found
     header("HTTP/1.0 404 Not Found");

@@ -5,6 +5,11 @@ class AuthMiddleware {
      * Start a secure session
      */
     public static function startSession() {
+        // Check if headers have already been sent
+        if (headers_sent()) {
+            return; // Session already started or headers sent, skip
+        }
+
         if (session_status() === PHP_SESSION_NONE) {
             // Get configuration from environment variables
             $httpOnly = filter_var(
@@ -14,13 +19,15 @@ class AuthMiddleware {
             $sameSite = getenv('SESSION_COOKIE_SAMESITE') ?: 'Lax';
             $sessionName = getenv('SESSION_NAME') ?: 'NIMONSPEDIA_SESSION';
             
-            // Configure session security
-            ini_set('session.cookie_httponly', $httpOnly ? 1 : 0);
-            ini_set('session.cookie_secure', 0); // Set to 1 in production with HTTPS
-            ini_set('session.cookie_samesite', $sameSite);
-            ini_set('session.name', $sessionName);
-            
-            session_start();
+            // Configure session security ONLY if headers haven't been sent
+            if (!headers_sent()) {
+                ini_set('session.cookie_httponly', $httpOnly ? 1 : 0);
+                ini_set('session.cookie_secure', 0); // Set to 1 in production with HTTPS
+                ini_set('session.cookie_samesite', $sameSite);
+                ini_set('session.name', $sessionName);
+                
+                session_start();
+            }
         }
     }
 
@@ -45,7 +52,8 @@ class AuthMiddleware {
             'user_id' => $_SESSION['user_id'],
             'email' => $_SESSION['email'],
             'name' => $_SESSION['name'],
-            'role' => $_SESSION['role']
+            'role' => $_SESSION['role'],
+            'balance' => isset($_SESSION['balance']) ? (int)$_SESSION['balance'] : 0
         ];
     }
 
@@ -58,6 +66,7 @@ class AuthMiddleware {
         $_SESSION['email'] = $user['email'];
         $_SESSION['name'] = $user['name'];
         $_SESSION['role'] = $user['role'];
+        $_SESSION['balance'] = isset($user['balance']) ? (int)$user['balance'] : 0;
         
         // Get session lifetime from environment (default 24 hours)
         $sessionLifetime = intval(getenv('SESSION_LIFETIME') ?: 86400);

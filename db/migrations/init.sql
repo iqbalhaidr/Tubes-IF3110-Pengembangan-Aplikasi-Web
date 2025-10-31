@@ -16,19 +16,19 @@ CREATE TABLE "user" (
 
 CREATE TABLE store (
     store_id SERIAL PRIMARY KEY,
-    owner_id INT UNIQUE NOT NULL,
+    user_id INT UNIQUE NOT NULL,
     store_name VARCHAR(255) UNIQUE NOT NULL,
     store_description TEXT,
     store_logo_path VARCHAR(255),
     balance INT DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_owner FOREIGN KEY(owner_id) REFERENCES "user"(user_id) ON DELETE CASCADE
+    CONSTRAINT fk_seller FOREIGN KEY(user_id) REFERENCES "user"(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE category (
     category_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL
+    category_name VARCHAR(100) UNIQUE NOT NULL
 );
 
 CREATE TABLE product (
@@ -91,4 +91,4 @@ CREATE TABLE order_item (
     CONSTRAINT fk_product_historical FOREIGN KEY(product_id) REFERENCES product(product_id) ON DELETE SET NULL
 );
 
-INSERT INTO category (name) VALUES ('Electronics'), ('Fashion'), ('Books'), ('Home & Kitchen');
+INSERT INTO category (category_name) VALUES ('Electronics'), ('Fashion'), ('Books'), ('Home & Kitchen');
