@@ -1,4 +1,7 @@
-<?php $mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css'); ?>
+<?php 
+$mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css');
+$navbarType = 'buyer';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,42 +11,7 @@
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
 </head>
 <body class="buyer-home">
-    <nav class="navbar">
-        <div class="container navbar-container">
-            <a href="/buyer/home" class="navbar-brand">Nimonspedia</a>
-            <div class="navbar-left">
-                <div class="balance-display" id="balanceDisplay">
-                    <span class="balance-label">Balance: Rp. <span id="balanceAmount"><?= number_format($current_user['balance'] ?? 0, 0, ',', '.') ?></span></span>
-                    <button type="button" class="balance-topup-btn" data-action="open-topup">Top Up</button>
-                </div>
-                <div class="navbar-links" id="navbarMenu">
-                    <a href="/buyer/home" class="navbar-link active">Discover</a>
-                    <a href="javascript:void(0);" class="navbar-link">Cart</a>
-                    <a href="javascript:void(0);" class="navbar-link">Checkout</a>
-                    <a href="javascript:void(0);" class="navbar-link">Orders</a>
-                    <a href="/buyer/profile" class="navbar-link">Profile</a>
-                </div>
-            </div>
-            <div class="navbar-right">
-                <div class="user-profile" id="userProfile" style="display: none;">
-                    <div class="user-avatar" id="userAvatar">U</div>
-                    <span class="user-name" id="userName">User</span>
-                    <button class="logout-icon" id="logoutBtn" title="Logout">Logout</button>
-                </div>
-                <div class="auth-links" id="authLinks">
-                    <a href="/auth/login" class="navbar-link">Login</a>
-                    <a href="/auth/register" class="navbar-link">Register</a>
-                </div>
-            </div>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation">
-                <span class="menu-icon" aria-hidden="true">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </span>
-            </button>
-        </div>
-    </nav>
+    <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <div class="filter-bar">
         <div class="container">

@@ -1,4 +1,8 @@
-<?php $mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css'); ?>
+<?php 
+$mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css');
+$navbarType = 'seller';
+$activeLink = 'dashboard';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,35 +12,7 @@
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
 </head>
 <body class="seller-dashboard">
-    <nav class="navbar seller-navbar">
-        <div class="container navbar-container">
-            <a href="/seller/dashboard" class="navbar-brand">Nimonspedia</a>
-            <div class="seller-tabs" id="navbarMenu">
-                <a href="/seller/dashboard" class="navbar-link active">Dashboard</a>
-                <a href="javascript:void(0);" class="navbar-link">Product Management</a>
-                <a href="javascript:void(0);" class="navbar-link">Order Management</a>
-                <a href="/seller/profile" class="navbar-link">Profile</a>
-            </div>
-            <div class="navbar-right">
-                <div class="user-profile" id="userProfile" style="display: none;">
-                    <div class="user-avatar" id="userAvatar">S</div>
-                    <span class="user-name" id="userName">Seller</span>
-                    <button class="logout-icon" id="logoutBtn" title="Logout">Logout</button>
-                </div>
-                <div class="auth-links" id="authLinks">
-                    <a href="/auth/login" class="navbar-link">Login</a>
-                    <a href="/auth/register" class="navbar-link">Register</a>
-                </div>
-            </div>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation">
-                <span class="menu-icon" aria-hidden="true">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </span>
-            </button>
-        </div>
-    </nav>
+    <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <main class="dashboard-content">
         <div class="container">

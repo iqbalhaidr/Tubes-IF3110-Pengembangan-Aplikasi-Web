@@ -1,12 +1,15 @@
 <?php
-$navLinks = $navLinks ?? [];
 $profileSections = $profileSections ?? [];
 $metaSummary = $metaSummary ?? [];
 $currentRole = $currentRole ?? 'BUYER';
 $profileTitle = $profileTitle ?? 'Profile';
 $profileSubtitle = $profileSubtitle ?? '';
+$mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css');
+
+// Set navbar type and active link
+$navbarType = strtolower($currentRole);
+$activeLink = 'profile';
 ?>
-<?php $mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,48 +19,7 @@ $profileSubtitle = $profileSubtitle ?? '';
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
 </head>
 <body class="profile-page">
-    <nav class="navbar <?= $currentRole === 'SELLER' ? 'seller-navbar' : '' ?>">
-        <div class="container navbar-container">
-            <a href="<?= $currentRole === 'SELLER' ? '/seller/dashboard' : '/buyer/home' ?>" class="navbar-brand">Nimonspedia</a>
-            <div class="navbar-left">
-                <?php if ($currentRole === 'BUYER'): ?>
-                <?php 
-                    $currentSessionUser = AuthMiddleware::getCurrentUser();
-                    $displayBalance = $currentSessionUser['balance'] ?? 0;
-                ?>
-                <div class="balance-display" id="balanceDisplay">
-                    <span class="balance-label">Balance: Rp. <span id="balanceAmount"><?= number_format($displayBalance, 0, ',', '.') ?></span></span>
-                    <button type="button" class="balance-topup-btn" data-action="open-topup">Top Up</button>
-                </div>
-                <?php endif; ?>
-                <div class="navbar-links" id="navbarMenu">
-                    <?php foreach ($navLinks as $link): ?>
-                        <a href="<?= htmlspecialchars($link['href']) ?>" class="navbar-link <?= $link['active'] ? 'active' : '' ?>">
-                            <?= htmlspecialchars($link['label']) ?>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <div class="navbar-right">
-                <div class="user-profile" id="userProfile" style="display: none;">
-                    <div class="user-avatar" id="userAvatar">U</div>
-                    <span class="user-name" id="userName">User</span>
-                    <button class="logout-icon" id="logoutBtn" title="Logout">Logout</button>
-                </div>
-                <div class="auth-links" id="authLinks">
-                    <a href="/auth/login" class="navbar-link">Login</a>
-                    <a href="/auth/register" class="navbar-link">Register</a>
-                </div>
-            </div>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation">
-                <span class="menu-icon" aria-hidden="true">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </span>
-            </button>
-        </div>
-    </nav>
+    <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <main class="profile-main">
         <div class="container">
