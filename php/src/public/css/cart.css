@@ -1,0 +1,461 @@
+/*
+ * ===============================================
+ * CSS for Cart Page
+ * ===============================================
+ */
+
+/* * -------------------
+ * Global Variables & Resets
+ * -------------------
+ */
+:root {
+    --color-primary: #03ac0e; /* Example: Blue */
+    --color-primary-dark: #00a000;
+    --color-danger: #dc3545; /* Red for delete */
+    --color-danger-dark: #b02a37;
+    --color-secondary: #6c757d; /* Gray */
+    --color-text-primary: #212529; /* Dark text */
+    --color-text-secondary: #6c757d; /* Lighter text */
+    --color-border: #dee2e6;
+    --color-background-light: #f8f9fa;
+    --color-white: #ffffff;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Base styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--color-background-light);
+    color: var(--color-text-primary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* * -------------------
+ * Button Base Styles
+ * -------------------
+ */
+.button-primary,
+.button-secondary,
+.button-danger {
+    padding: 10px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease;
+}
+
+.button-primary {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+.button-primary:hover:not(:disabled) {
+    background-color: var(--color-primary-dark);
+}
+
+.button-secondary {
+    background-color: var(--color-secondary);
+    color: var(--color-white);
+}
+.button-secondary:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
+.button-danger {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+}
+.button-danger:hover:not(:disabled) {
+    background-color: var(--color-danger-dark);
+}
+
+/* Disabled state for checkout button */
+.checkout-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* * -------------------
+ * Main Layout
+ * -------------------
+ */
+.cart-page-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Main container for items + summary */
+.cart-content-container {
+    display: grid;
+    grid-template-columns: 1fr; /* Stacks on mobile by default */
+    gap: 24px;
+}
+
+.cart-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* * -------------------
+ * Store Group Styling (AC #2)
+ * -------------------
+ */
+.cart-store-group {
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+}
+
+.store-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.store-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: contain;
+    border: 1px solid var(--color-border);
+}
+
+.store-name {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* * -------------------
+ * Cart Item Styling (AC #1)
+ * -------------------
+ */
+.cart-item {
+    display: grid;
+    /* Defines 3 columns: Image | Info | Actions */
+    grid-template-columns: auto 1fr auto;
+    gap: 16px;
+    padding: 16px;
+    border-bottom: 1px solid var(--color-border);
+    transition: opacity 0.3s ease;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+/* AC #7: Loading State */
+.cart-item.is-loading {
+    opacity: 0.5;
+    pointer-events: none;
+    background-color: var(--color-background-light);
+}
+
+.item-col-image .cart-item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+}
+
+.item-col-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.product-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.product-price {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+
+/* * -------------------
+ * Item Actions (Delete & Quantity)
+ * -------------------
+ */
+.item-col-alter {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.delete-item-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--color-secondary);
+    border-radius: 50%;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.delete-item-btn svg {
+    display: block;
+}
+
+.delete-item-btn:hover {
+    color: var(--color-danger);
+    background-color: #fbebee;
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.quantity-btn {
+    background: var(--color-white);
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 600;
+    width: 32px;
+    height: 32px;
+    color: var(--color-primary);
+    transition: background-color 0.2s;
+}
+
+.quantity-btn:hover {
+    background-color: var(--color-background-light);
+}
+
+.quantity-value {
+    width: 40px;
+    height: 32px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    border: none;
+    border-left: 1px solid var(--color-border);
+    border-right: 1px solid var(--color-border);
+    padding-left: 5px; /* Adjust for centering */
+}
+
+/* Hide default number input arrows */
+.quantity-value::-webkit-outer-spin-button,
+.quantity-value::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.quantity-value {
+    -moz-appearance: textfield;
+}
+
+/* * -------------------
+ * Summary Panels (AC #5)
+ * -------------------
+ */
+
+/* Per-store summary */
+.store-summary {
+    padding: 16px;
+    background-color: var(--color-background-light);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Grandtotal summary */
+.cart-summary {
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 24px;
+    height: fit-content; /* Makes it "stick" to the top */
+    position: sticky;
+    top: 20px; /* Sticks 20px from the top */
+}
+
+.summary-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.summary-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+}
+
+.summary-label {
+    color: var(--color-text-secondary);
+}
+
+.summary-value {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.summary-value.total-price {
+    font-size: 18px;
+    color: var(--color-primary);
+}
+
+.summary-actions .checkout-btn {
+    width: 100%;
+    font-size: 18px;
+    padding: 14px;
+}
+
+/* * -------------------
+ * Empty State (AC #6)
+ * -------------------
+ */
+.cart-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+}
+
+.empty-cart-image {
+    width: 150px;
+    height: 150px;
+    margin-bottom: 24px;
+}
+
+.empty-state-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.empty-state-subtitle {
+    font-size: 16px;
+    color: var(--color-text-secondary);
+    margin-bottom: 24px;
+    max-width: 300px;
+}
+
+/* * -------------------
+ * Confirmation Modal (AC #4)
+ * -------------------
+ */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+/* Hides the modal by default */
+.modal-backdrop[hidden] {
+    display: none;
+}
+
+.modal-content {
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.modal-body {
+    font-size: 16px;
+    color: var(--color-text-secondary);
+    margin-bottom: 24px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* * -------------------
+ * Responsive Design
+ * -------------------
+ */
+
+/* On mobile, cart items are simpler */
+@media (max-width: 500px) {
+    .cart-item {
+        /* Stack image/info on top of actions */
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .item-col-image {
+        display: none; /* Hide image on very small screens to save space */
+    }
+
+    .item-col-alter {
+        flex-direction: row; /* Actions side-by-side */
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+
+/* On desktop (e.g., > 992px), use a 2-column layout */
+@media (min-width: 992px) {
+    .cart-content-container {
+        /* Items list takes ~2/3, summary takes 1/3 */
+        grid-template-columns: 2fr 1fr;
+        align-items: flex-start; /* Aligns top of items list and summary */
+    }
+
+    .cart-item {
+        /* Image | Info (takes up space) | Actions */
+        grid-template-columns: auto 1fr auto;
+    }
+}
