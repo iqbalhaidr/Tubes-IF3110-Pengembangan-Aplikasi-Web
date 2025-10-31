@@ -40,10 +40,19 @@ class ProductController {
     public function showProductDetail($id) {
         try {
             $isUserLoggedIn = AuthMiddleware::isLoggedIn();
-            $current_user = null;
-            if ($isUserLoggedIn) {
-                $current_user = AuthMiddleware::getCurrentUser();
+            $current_user = AuthMiddleware::getCurrentUser();
+    
+            if (!$isUserLoggedIn) {
+                $navbarType = 'guest';
+            } elseif ($current_user['role'] === 'BUYER') {
+                $navbarType = 'buyer';
+            } elseif ($current_user['role'] === 'SELLER') {
+                $navbarType = 'seller';
+            } else {
+                $navbarType = 'guest';
             }
+            
+            $activeLink = 'discover'; 
     
             $product = $this->productModel->findProductById($id);
             if (!$product) {
@@ -51,6 +60,7 @@ class ProductController {
                 require __DIR__ . '/../views/404.php';
                 exit;
             }
+    
             $store = $this->productModel->findStoreById($product['store_id']);
             
             $categoryArray = $this->productModel->findCategoriesByProductId($id);

@@ -16,45 +16,9 @@
       data-base-path="<?= $basePath ?>"
       data-store-id="<?= $store['id'] ?>">
 
-    <nav class="navbar">
-        <div class="container navbar-container">
-            <a href="/buyer/home" class="navbar-brand">Nimonspedia</a>
-            <div class="navbar-left">
-                <?php if ($current_user && $current_user['role'] == 'BUYER'): ?>
-                <div class="balance-display" id="balanceDisplay">
-                    <span class="balance-label">Balance: Rp. <span id="balanceAmount"><?= number_format($current_user['balance'] ?? 0, 0, ',', '.') ?></span></span>
-                    <button type="button" class="balance-topup-btn" data-action="open-topup">Top Up</button>
-                </div>
-                <?php endif; ?>
-                <div class="navbar-links" id="navbarMenu">
-                    <a href="/buyer/home" class="navbar-link active">Discover</a>
-                    <a href="javascript:void(0);" class="navbar-link">Cart</a>
-                    <a href="javascript:void(0);" class="navbar-link">Checkout</a>
-                    <a href="javascript:void(0);" class="navbar-link">Orders</a>
-                    <?php if ($current_user): ?>
-                    <a href="/buyer/profile" class="navbar-link">Profile</a>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="navbar-right">
-                <?php if ($current_user): ?>
-                <div class="user-profile" id="userProfile" style="display: flex;">
-                    <div class="user-avatar" id="userAvatar"><?= htmlspecialchars(strtoupper($current_user['name'][0])) ?></div>
-                    <span class="user-name" id="userName"><?= htmlspecialchars($current_user['name']) ?></span>
-                    <button class="logout-icon" id="logoutBtn" title="Logout">Logout</button>
-                </div>
-                <?php else: ?>
-                <div class="auth-links" id="authLinks" style="display: flex;">
-                    <a href="/auth/login" class="navbar-link">Login</a>
-                    <a href="/auth/register" class="navbar-link">Register</a>
-                </div>
-                <?php endif; ?>
-            </div>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation">
-                <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
-            </button>
-        </div>
-    </nav>
+      <?php
+        require __DIR__ . '/components/navbar.php'; 
+        ?>
 
     <div class="store-header">
         <div class="container">
