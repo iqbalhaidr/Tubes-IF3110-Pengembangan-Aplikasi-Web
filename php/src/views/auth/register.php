@@ -150,7 +150,7 @@
 				<div class="form-group">
 					<label for="seller_store_logo">Logo toko</label>
 					<input type="file" id="seller_store_logo" name="store_logo" accept="image/png,image/jpeg,image/webp" required>
-					<div class="form-hint">PNG, JPG, atau WEBP maksimal 2MB. Gambar minimal 100x100 dan maksimal 2000x2000 piksel. Gambar akan otomatis dipotong menjadi persegi.</div>
+					<div class="form-hint">PNG, JPG, atau WEBP maksimal 2MB. Logo akan ditampilkan dalam bentuk lingkaran.</div>
 					<div class="error-message" id="seller_store_logoError"></div>
 				</div>
 
