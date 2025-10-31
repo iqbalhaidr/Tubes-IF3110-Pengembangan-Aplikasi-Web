@@ -11,7 +11,8 @@ $mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css');
     <link rel="stylesheet" href="/public/css/home.css">
     <link rel="stylesheet" href="/public/css/product-card.css">
 </head>
-<body class="landing">
+<?php $basePath = '/home'; ?>
+<body class="landing" data-base-path="<?= $basePath ?>">
     <?php $isLoggedIn = !empty($current_user); ?>
     <nav class="navbar landing-navbar">
         <div class="container navbar-container">
@@ -177,7 +178,7 @@ $mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css');
                     <label for="pageSizeSelector">Per Halaman:</label>
                     <select id="pageSizeSelector" class="filter-select">
                         <?php
-                        $limits = [4, 8, 12, 20];
+                        $limits = [5, 10, 15, 20];
                         foreach ($limits as $lim):
                             // $currentLimit disiapkan oleh HomeController
                             $selected = ($lim == $currentLimit) ? 'selected' : '';

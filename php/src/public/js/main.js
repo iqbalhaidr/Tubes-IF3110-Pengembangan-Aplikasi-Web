@@ -85,6 +85,24 @@ function formatCurrency(amount) {
     return new Intl.NumberFormat('id-ID').format(amount);
 }
 
+// Toast Notification
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.className = 'toast show';
+    if (type === 'error') {
+        toast.style.backgroundColor = 'var(--error-red)';
+    } else {
+        toast.style.backgroundColor = 'var(--text-dark)';
+    }
+
+    setTimeout(() => {
+        toast.className = 'toast';
+    }, 3000);
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthStatus();
