@@ -2,7 +2,6 @@
 $navbarType = $navbarType ?? 'guest';
 $activeLink = $activeLink ?? '';
 
-// Get current user data if logged in
 $current_user = null;
 if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedIn') && AuthMiddleware::isLoggedIn()) {
     $current_user = AuthMiddleware::getCurrentUser();
@@ -15,7 +14,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
             <?php if ($navbarType === 'guest'): ?>
                 <a href="/" class="navbar-brand">Nimonspedia</a>
             <?php elseif ($navbarType === 'buyer'): ?>
-                <a href="/buyer/home" class="navbar-brand">Nimonspedia</a>
+                <a href="/home" class="navbar-brand">Nimonspedia</a>
                 <div class="balance-display" id="balanceDisplay">
                     <span class="balance-label" id="balanceAmount">Balance: Rp <?= number_format($current_user['balance'] ?? 0, 0, ',', '.') ?></span>
                     <button type="button" class="balance-topup-btn" data-action="open-topup">Top Up</button>

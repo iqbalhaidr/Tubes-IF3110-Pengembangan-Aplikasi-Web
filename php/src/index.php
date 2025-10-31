@@ -1,5 +1,10 @@
 <?php
 
+// START SESSION FIRST - Before anything else!
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // A simple router
 $uri = $_SERVER['REQUEST_URI'];
 
@@ -119,7 +124,9 @@ if ($route_parts[0] === 'auth') {
     $controller = new HomeController();
 
     if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'home') {
-        $controller->buyerHome();
+        // Redirect to unified home page
+        header('Location: /home');
+        exit;
     } elseif ($route_parts[1] === 'profile') {
         $controller->buyerProfile();
     } else {

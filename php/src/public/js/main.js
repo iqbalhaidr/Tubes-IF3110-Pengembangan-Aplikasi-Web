@@ -16,44 +16,6 @@ if (mobileMenuToggle && navbarMenu) {
     });
 }
 
-// Search Functionality
-if (searchInput) {
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleSearch();
-        }
-    });
-
-    // Also trigger search on input (debounced would be better in production)
-    searchInput.addEventListener('input', () => {
-        // TODO: Add debounced search functionality
-    });
-}
-
-function handleSearch() {
-    const query = searchInput.value.trim();
-    if (query) {
-        console.log('Searching for:', query);
-        // TODO: Implement search functionality
-        // This will be implemented when the backend is ready
-    }
-}
-
-// Filter Functionality
-if (categoryFilter) {
-    categoryFilter.addEventListener('click', () => {
-        console.log('Category filter clicked');
-        // TODO: Implement category filter
-    });
-}
-
-if (priceFilter) {
-    priceFilter.addEventListener('click', () => {
-        console.log('Price filter clicked');
-        // TODO: Implement price filter
-    });
-}
-
 // User Dropdown Functionality
 const userProfileBtn = document.getElementById('userProfileBtn');
 const userDropdown = document.querySelector('.user-dropdown');

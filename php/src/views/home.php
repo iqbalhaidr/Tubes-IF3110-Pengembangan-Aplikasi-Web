@@ -1,5 +1,11 @@
 <?php
 $mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css');
+// Determine navbar type based on authentication
+$navbarType = 'guest';
+if (isset($current_user) && $current_user) {
+    $navbarType = $current_user['role'] === 'BUYER' ? 'buyer' : 'guest';
+}
+$bodyClass = $navbarType === 'buyer' ? 'buyer-home' : 'landing';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +17,7 @@ $mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css');
     <link rel="stylesheet" href="/public/css/home.css">
     <link rel="stylesheet" href="/public/css/product-card.css">
 </head>
-<body class="landing">
+<body class="<?= $bodyClass ?>">
     <?php include __DIR__ . '/components/navbar.php'; ?>
 
     <div class="filter-bar">

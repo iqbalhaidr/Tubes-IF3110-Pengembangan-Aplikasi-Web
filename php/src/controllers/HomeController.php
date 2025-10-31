@@ -17,6 +17,14 @@ class HomeController {
     }
 
     public function index() {
+        if (AuthMiddleware::isLoggedIn()) {
+            $user = AuthMiddleware::getCurrentUser();
+            if ($user['role'] === 'SELLER') {
+                header('Location: /seller/dashboard');
+                exit;
+            }
+        }
+
         $validLimits = [4, 8, 12, 20];
         $currentLimit = 12; 
         if (isset($_GET['limit']) && in_array((int)$_GET['limit'], $validLimits)) {
@@ -47,16 +55,11 @@ class HomeController {
 
         $paginationLinks = Helper::generatePaginLinks($currentPage, $totalPages);
 
-        require __DIR__ . '/../views/home.php';
-    }
-
-    public function buyerHome() {
-        AuthMiddleware::requireRole('BUYER', '/auth/login');
-
-        $categories = Category::findAll();
+        $categoryModel = new Category($this->db);
+        $categories = $categoryModel->getAllCategories();
         $current_user = AuthMiddleware::getCurrentUser();
 
-        require_once __DIR__ . '/../views/buyer/home.php';
+        require __DIR__ . '/../views/home.php';
     }
 
     public function sellerDashboard() {
