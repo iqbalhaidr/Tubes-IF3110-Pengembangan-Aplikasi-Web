@@ -5,6 +5,11 @@ class AuthMiddleware {
      * Start a secure session
      */
     public static function startSession() {
+        // Check if headers have already been sent
+        if (headers_sent()) {
+            return; // Session already started or headers sent, skip
+        }
+
         if (session_status() === PHP_SESSION_NONE) {
             // Get configuration from environment variables
             $httpOnly = filter_var(
@@ -14,13 +19,15 @@ class AuthMiddleware {
             $sameSite = getenv('SESSION_COOKIE_SAMESITE') ?: 'Lax';
             $sessionName = getenv('SESSION_NAME') ?: 'NIMONSPEDIA_SESSION';
             
-            // Configure session security
-            ini_set('session.cookie_httponly', $httpOnly ? 1 : 0);
-            ini_set('session.cookie_secure', 0); // Set to 1 in production with HTTPS
-            ini_set('session.cookie_samesite', $sameSite);
-            ini_set('session.name', $sessionName);
-            
-            session_start();
+            // Configure session security ONLY if headers haven't been sent
+            if (!headers_sent()) {
+                ini_set('session.cookie_httponly', $httpOnly ? 1 : 0);
+                ini_set('session.cookie_secure', 0); // Set to 1 in production with HTTPS
+                ini_set('session.cookie_samesite', $sameSite);
+                ini_set('session.name', $sessionName);
+                
+                session_start();
+            }
         }
     }
 

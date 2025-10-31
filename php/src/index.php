@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+// START SESSION FIRST - Before anything else!
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // A simple router
 $uri = $_SERVER['REQUEST_URI'];
 
@@ -106,6 +111,45 @@ if ($route_parts[0] === 'auth') {
 } elseif ($route_parts[0] === 'home' || $route_parts[0] === '') {
     $controller = new HomeController();
     $controller->index();
+
+} elseif ($route_parts[0] === 'cart') {
+    $cartController = new CartController();
+
+    if ($method === 'GET') {
+        if (empty($route_parts[1])) {
+            $cartController->index();
+        } elseif ($route_parts[1] === 'items') {
+            $cartController->fetchItems();
+        } else {
+            // Invalid path
+            header("HTTP/1.0 404 Not Found");
+            require_once __DIR__ . '/views/404.php';
+        }
+
+    } elseif ($method === 'POST') {
+        // await api.post('/cart', { product_id: {value} });
+        $cartController->addItem();
+
+    } elseif ($method === 'PUT') {
+        if (!empty($route_parts[1])) {
+            $cart_item_id = $route_parts[1];
+            $cartController->updateItem($cart_item_id);
+        } else {
+            // Invalid path
+            header("HTTP/1.0 404 Not Found");
+            require_once __DIR__ . '/views/404.php';
+        }
+
+    } elseif ($method === 'DELETE') {
+        $cart_item_id = $route_parts[1];
+        $cartController->deleteItem($cart_item_id);
+
+    } else {
+        // Cart route not found
+        header("HTTP/1.0 404 Not Found");
+        require_once __DIR__ . '/views/404.php';
+    }
+
 } elseif ($route_parts[0] === 'api') {
     if ($route_parts[1] === 'products' && $method === 'GET') {
         $controller = new ProductController();
@@ -149,7 +193,9 @@ if ($route_parts[0] === 'auth') {
     $controller = new HomeController();
 
     if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'home') {
-        $controller->buyerHome();
+        // Redirect to unified home page
+        header('Location: /home');
+        exit;
     } elseif ($route_parts[1] === 'profile') {
         $controller->buyerProfile();
     } else {

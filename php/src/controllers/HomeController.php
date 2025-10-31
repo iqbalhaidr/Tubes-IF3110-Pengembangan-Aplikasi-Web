@@ -17,6 +17,14 @@ class HomeController {
     }
 
     public function index() {
+        if (AuthMiddleware::isLoggedIn()) {
+            $user = AuthMiddleware::getCurrentUser();
+            if ($user['role'] === 'SELLER') {
+                header('Location: /seller/dashboard');
+                exit;
+            }
+        }
+
         $validLimits = [5, 10, 15, 20];
         $currentLimit = 10; 
         if (isset($_GET['limit']) && in_array((int)$_GET['limit'], $validLimits)) {
@@ -46,6 +54,10 @@ class HomeController {
         $resultText = "Menampilkan $start - $end dari $total data";
 
         $paginationLinks = Helper::generatePaginLinks($currentPage, $totalPages);
+
+        $categoryModel = new Category($this->db);
+        $categories = $categoryModel->getAllCategories();
+        $current_user = AuthMiddleware::getCurrentUser();
 
         require __DIR__ . '/../views/home.php';
     }

@@ -122,9 +122,9 @@ class AuthController {
         $password_confirm = isset($_POST['password_confirm']) ? $_POST['password_confirm'] : '';
         $name = isset($_POST['name']) ? trim($_POST['name']) : '';
         $address = isset($_POST['address']) ? trim($_POST['address']) : '';
-    $store_name = isset($_POST['store_name']) ? trim($_POST['store_name']) : '';
-    $store_description_raw = isset($_POST['store_description']) ? $_POST['store_description'] : '';
-    $store_description = $this->sanitizeRichText($store_description_raw);
+        $store_name = isset($_POST['store_name']) ? trim($_POST['store_name']) : '';
+        $store_description_raw = isset($_POST['store_description']) ? $_POST['store_description'] : '';
+        $store_description = $this->sanitizeRichText($store_description_raw);
         $store_logo = isset($_FILES['store_logo']) ? $_FILES['store_logo'] : null;
 
         $validator = Validator::validateRegisterSeller(
@@ -254,33 +254,12 @@ class AuthController {
             return $response;
         }
 
-        // Auto-crop image to square if needed
-        $croppedImage = $this->cropToSquare($file['tmp_name']);
-        if ($croppedImage === false) {
-            $response['message'] = 'Failed to process store logo image';
-            return $response;
-        }
-
+        // Generate filename and target path
         $filename = uniqid('store_logo_', true) . '.' . $extension;
         $targetPath = $targetDir . DIRECTORY_SEPARATOR . $filename;
 
-        // Save the cropped image
-        $saveSuccess = false;
-        switch ($extension) {
-            case 'jpg':
-                $saveSuccess = imagejpeg($croppedImage, $targetPath, 90);
-                break;
-            case 'png':
-                $saveSuccess = imagepng($croppedImage, $targetPath, 9);
-                break;
-            case 'webp':
-                $saveSuccess = imagewebp($croppedImage, $targetPath, 90);
-                break;
-        }
-
-        imagedestroy($croppedImage);
-
-        if (!$saveSuccess) {
+        // Move uploaded file directly without cropping
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
             $response['message'] = 'Failed to save store logo';
             return $response;
         }
@@ -296,73 +275,6 @@ class AuthController {
         if ($absolutePath && file_exists($absolutePath)) {
             unlink($absolutePath);
         }
-    }
-
-    private function cropToSquare($imagePath) {
-        // Get image info
-        $imageInfo = @getimagesize($imagePath);
-        if ($imageInfo === false) {
-            return false;
-        }
-
-        $width = $imageInfo[0];
-        $height = $imageInfo[1];
-        $mimeType = $imageInfo['mime'];
-
-        // Load source image based on type
-        $sourceImage = false;
-        switch ($mimeType) {
-            case 'image/jpeg':
-                $sourceImage = @imagecreatefromjpeg($imagePath);
-                break;
-            case 'image/png':
-                $sourceImage = @imagecreatefrompng($imagePath);
-                break;
-            case 'image/webp':
-                $sourceImage = @imagecreatefromwebp($imagePath);
-                break;
-        }
-
-        if ($sourceImage === false) {
-            return false;
-        }
-
-        // If already square, return as is
-        if ($width === $height) {
-            return $sourceImage;
-        }
-
-        // Calculate square size (use smaller dimension)
-        $squareSize = min($width, $height);
-
-        // Calculate crop position (center crop)
-        $cropX = ($width - $squareSize) / 2;
-        $cropY = ($height - $squareSize) / 2;
-
-        // Create new square image
-        $croppedImage = imagecreatetruecolor($squareSize, $squareSize);
-
-        // Preserve transparency for PNG and WebP
-        if ($mimeType === 'image/png' || $mimeType === 'image/webp') {
-            imagealphablending($croppedImage, false);
-            imagesavealpha($croppedImage, true);
-            $transparent = imagecolorallocatealpha($croppedImage, 0, 0, 0, 127);
-            imagefilledrectangle($croppedImage, 0, 0, $squareSize, $squareSize, $transparent);
-        }
-
-        // Copy and crop
-        imagecopyresampled(
-            $croppedImage,
-            $sourceImage,
-            0, 0,
-            $cropX, $cropY,
-            $squareSize, $squareSize,
-            $squareSize, $squareSize
-        );
-
-        imagedestroy($sourceImage);
-
-        return $croppedImage;
     }
 
     private function sanitizeRichText($html) {
