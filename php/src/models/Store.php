@@ -61,6 +61,48 @@ class Store {
             return null;
         }
     }
+
+    /**
+     * Update store information
+     */
+    public function update($storeId, $storeName, $storeDescription = '', $storeLogoPath = null) {
+        $query = 'UPDATE store
+                  SET store_name = :store_name,
+                      store_description = :store_description,
+                      store_logo_path = COALESCE(:store_logo_path, store_logo_path),
+                      updated_at = CURRENT_TIMESTAMP
+                  WHERE store_id = :store_id
+                  RETURNING store_id, user_id, store_name, store_description, store_logo_path, balance';
+
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([
+                ':store_id' => $storeId,
+                ':store_name' => $storeName,
+                ':store_description' => $storeDescription,
+                ':store_logo_path' => $storeLogoPath,
+            ]);
+
+            $store = $statement->fetch();
+
+            if (!$store) {
+                return [
+                    'success' => false,
+                    'message' => 'Store update failed: unable to fetch updated store data'
+                ];
+            }
+
+            return [
+                'success' => true,
+                'store' => $store
+            ];
+        } catch (PDOException $exception) {
+            return [
+                'success' => false,
+                'message' => 'Store update failed: ' . $exception->getMessage()
+            ];
+        }
+    }
 }
 
 ?>
