@@ -54,15 +54,15 @@ document.addEventListener('DOMContentLoaded', () => {
             addToCartBtn.textContent = 'Menambahkan...';
 
             try {
-                const result = await api.post('/api/cart/add', {
+                const result = await api.post('/cart', {
                     product_id: productId,
                     quantity: quantity
                 });
 
                 if (result.success) {
                     showToast("Berhasil ditambahkan ke keranjang");
-                    if (typeof updateCartBadge === 'function') {
-                        updateCartBadge(result.data.total_items);
+                    if (typeof updateGlobalCartBadge === 'function') {
+                        updateGlobalCartBadge(result.data.total_items);
                     }
                 } else {
                     throw new Error(result.message || "Gagal menambahkan");

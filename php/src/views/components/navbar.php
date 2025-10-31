@@ -56,7 +56,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                     <a href="/auth/register" class="navbar-link">Daftar</a>
                 </div>
             <?php elseif ($navbarType === 'buyer'): ?>
-                <a href="javascript:void(0);" class="cart-icon" title="Shopping Cart">
+                <a href="/cart" class="cart-icon" title="Shopping Cart">
                     <span class="cart-badge" id="cartBadge">0</span>
                     🛒
                 </a>

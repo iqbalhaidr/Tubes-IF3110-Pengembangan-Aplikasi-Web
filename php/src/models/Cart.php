@@ -160,6 +160,27 @@ class Cart {
         }
     }
 
+    public function get_unique_item_count($buyer_id) {
+        $query = 'SELECT COUNT(cart_item_id) FROM "cart_item" WHERE buyer_id = :buyer_id';
+
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([
+                ':buyer_id' => $buyer_id
+            ]);
+            
+            $unique_item_count = $stmt->fetchColumn();
+            if ($unique_item_count === false) {
+                return ['success' => true, 'unique_item_count' => 0];
+            }
+
+            return ['success' => true, 'unique_item_count' => $unique_item_count];
+
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Get unique_item_count failed: ' . $e->getMessage()];
+        }
+    }
+
 }
 
 ?>

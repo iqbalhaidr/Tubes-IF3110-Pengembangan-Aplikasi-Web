@@ -157,6 +157,9 @@ if ($route_parts[0] === 'auth') {
     } elseif ($route_parts[1] === 'categories' && $method === 'GET') {
         $controller = new CategoryController();
         $controller->getAllCategories();
+    } elseif ($route_parts[1] === 'cartcounter' && $method === 'GET') {
+        $controller = new CartController();
+        $controller->getUniqueItemCount();
     } else {
         header("HTTP/1.0 404 Not Found");
         echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
@@ -220,6 +223,19 @@ if ($route_parts[0] === 'auth') {
         $balanceController->topUp();
     } else {
         Response::error('Not found', null, 404);
+    }
+} elseif ($route_parts[0] === 'checkout') {
+    $orderController = new OrderController();
+
+    if ($method === 'GET') {
+        // This is the new method to show the page
+        $orderController->showCheckoutPage();
+    } elseif ($method === 'POST') {
+        // This is the API endpoint to process the checkout
+        $orderController->processCheckout();
+    } else {
+        // A GET /checkout page isn't defined, only the POST action
+        Response::error('Method not allowed', null, 405);
     }
 } else {
     // Not Found
