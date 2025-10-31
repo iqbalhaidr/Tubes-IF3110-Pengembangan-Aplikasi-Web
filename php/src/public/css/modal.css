@@ -305,6 +305,16 @@
     font-size: 12px;
 }
 
+/* Store Logo Display - Fixed Square Dimensions */
+.store-logo-display {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .modal-content {
@@ -338,6 +348,20 @@
         height: 100px;
         margin-top: 12px;
         margin-bottom: 8px;
+    }
+
+    /* Responsive store logo display */
+    .store-logo-display {
+        width: 150px;
+        height: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Extra small screens - smaller logo display */
+    .store-logo-display {
+        width: 120px;
+        height: 120px;
     }
 }
 

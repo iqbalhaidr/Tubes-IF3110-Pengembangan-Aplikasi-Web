@@ -337,7 +337,7 @@ class AuthController {
         }
 
         if (!Validator::isValidAddress($address)) {
-            Response::error('Validation failed', ['address' => 'Please enter a valid address'], 400);
+            Response::error('Validation failed', ['address' => 'Please enter a valid address (min. 5 characters)'], 400);
         }
 
         // Update profile

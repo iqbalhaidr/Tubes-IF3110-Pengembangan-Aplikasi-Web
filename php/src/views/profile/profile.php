@@ -44,7 +44,7 @@ $activeLink = 'profile';
                                         <dd>
                                             <?php if (isset($item['isLogo']) && $item['isLogo']): ?>
                                                 <?php if (!empty($item['value'])): ?>
-                                                    <img src="/public/<?= htmlspecialchars($item['value']) ?>" alt="Store Logo" class="store-logo-preview" style="max-width: 200px; height: auto; border-radius: 8px; border: 1px solid var(--border-color);">
+                                                    <img src="/public/<?= htmlspecialchars($item['value']) ?>" alt="Store Logo" class="store-logo-display">
                                                 <?php else: ?>
                                                     <span style="color: var(--text-light);">No logo uploaded</span>
                                                 <?php endif; ?>
