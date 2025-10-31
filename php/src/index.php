@@ -154,11 +154,29 @@ if ($route_parts[0] === 'auth') {
     } elseif ($route_parts[1] === 'categories' && $method === 'GET') {
         $controller = new CategoryController();
         $controller->getAllCategories();
+    } elseif ($route_parts[1] === 'orders' && $method === 'GET') {
+        $orderController = new OrderController();
+        $orderController->getOrders();
+    } elseif ($route_parts[1] === 'orders' && isset($route_parts[2]) && $route_parts[2] === 'detail' && $method === 'GET') {
+        $orderController = new OrderController();
+        $orderController->getOrderDetail();
+    } elseif ($route_parts[1] === 'orders' && isset($route_parts[2]) && $route_parts[2] === 'approve' && $method === 'POST') {
+        $orderController = new OrderController();
+        $orderController->approve();
+    } elseif ($route_parts[1] === 'orders' && isset($route_parts[2]) && $route_parts[2] === 'reject' && $method === 'POST') {
+        $orderController = new OrderController();
+        $orderController->reject();
+    } elseif ($route_parts[1] === 'orders' && isset($route_parts[2]) && $route_parts[2] === 'delivery-time' && $method === 'POST') {
+        $orderController = new OrderController();
+        $orderController->setDeliveryTime();
     } else {
         header("HTTP/1.0 404 Not Found");
         echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
         exit;
     }
+} elseif ($route_parts[0] === 'orders') {
+    $orderController = new OrderController();
+    $orderController->index();
 } elseif ($route_parts[0] === 'buyer') {
     $controller = new HomeController();
 
