@@ -1,41 +1,36 @@
-<?php
-$mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css');
-// Determine navbar type based on authentication
-$navbarType = 'guest';
-if (isset($current_user) && $current_user) {
-    $navbarType = $current_user['role'] === 'BUYER' ? 'buyer' : 'guest';
-}
-$bodyClass = $navbarType === 'buyer' ? 'buyer-home' : 'landing';
-?>
+<?php $mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nimonspedia - Product Discovery</title>
-    <link rel="stylesheet" href="/public/css/main.css">
+    <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/home.css">
     <link rel="stylesheet" href="/public/css/product-card.css">
 </head>
-<?php $basePath = '/home'; ?>
-<body class="landing" data-base-path="<?= $basePath ?>">
-    <?php $isLoggedIn = !empty($current_user); ?>
-    <nav class="navbar landing-navbar">
+<?php $basePath = '/buyer/home'; ?>
+<body class="buyer-home" data-base-path="<?= $basePath ?>">
+    <nav class="navbar">
         <div class="container navbar-container">
-            <a href="/" class="navbar-brand">Nimonspedia</a>
-            <div class="navbar-links" id="navbarMenu">
-                <a href="/" class="navbar-link active">Home</a>
-                <a href="/buyer/home" class="navbar-link">Buyer Portal</a>
-                <a href="/seller/dashboard" class="navbar-link">Seller Portal</a>
-            </div>
-            <div class="navbar-right">
-                <div class="balance-display" id="balanceDisplay" style="display: none;">
-                    <span class="balance-label">Balance: Rp. <span id="balanceAmount">0</span></span>
+            <a href="/buyer/home" class="navbar-brand">Nimonspedia</a>
+            <div class="navbar-left">
+                <div class="balance-display" id="balanceDisplay">
+                    <span class="balance-label">Balance: Rp. <span id="balanceAmount"><?= number_format($current_user['balance'] ?? 0, 0, ',', '.') ?></span></span>
                     <button type="button" class="balance-topup-btn" data-action="open-topup">Top Up</button>
                 </div>
+                <div class="navbar-links" id="navbarMenu">
+                    <a href="/buyer/home" class="navbar-link active">Discover</a>
+                    <a href="javascript:void(0);" class="navbar-link">Cart</a>
+                    <a href="javascript:void(0);" class="navbar-link">Checkout</a>
+                    <a href="javascript:void(0);" class="navbar-link">Orders</a>
+                    <a href="/buyer/profile" class="navbar-link">Profile</a>
+                </div>
+            </div>
+            <div class="navbar-right">
                 <div class="user-profile" id="userProfile" style="display: none;">
-                    <div class="user-avatar" id="userAvatar">N</div>
-                    <span class="user-name" id="userName">Nimon</span>
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <span class="user-name" id="userName">User</span>
                     <button class="logout-icon" id="logoutBtn" title="Logout">Logout</button>
                 </div>
                 <div class="auth-links" id="authLinks">
@@ -52,8 +47,6 @@ $bodyClass = $navbarType === 'buyer' ? 'buyer-home' : 'landing';
             </button>
         </div>
     </nav>
-<body class="<?= $bodyClass ?>">
-    <?php include __DIR__ . '/components/navbar.php'; ?>
 
     <div class="filter-bar">
     <div class="container filter-container">
@@ -66,7 +59,6 @@ $bodyClass = $navbarType === 'buyer' ? 'buyer-home' : 'landing';
 
         <button class="filter-button" id="categoryFilter">
             <?php 
-                // Nanti ini bisa dibuat lebih canggih
                 echo !empty($_GET['category']) ? 'Kategori Terpilih' : 'Filter Kategori'; 
             ?>
         </button>
@@ -156,14 +148,14 @@ $bodyClass = $navbarType === 'buyer' ? 'buyer-home' : 'landing';
                     <?php foreach ($paginationLinks as $link): ?>
                         
                         <?php if ($link['type'] == 'prev'): ?>
-                            <a href="/home?page=<?= $link['page']; ?>"
+                            <a href="<?= $basePath ?>?page=<?= $link['page']; ?>"
                             class="pagination-button <?= $link['disabled'] ? 'disabled' : ''; ?>"
                             data-page="<?= $link['page']; ?>">
                                 ◀
                             </a>
                         
                         <?php elseif ($link['type'] == 'page'): ?>
-                            <a href="/home?page=<?= $link['page']; ?>"
+                            <a href="<?= $basePath ?>?page=<?= $link['page']; ?>"
                             class="pagination-button <?= $link['active'] ? 'active' : ''; ?>"
                             data-page="<?= $link['page']; ?>">
                                 <?= $link['page']; ?>
@@ -173,7 +165,7 @@ $bodyClass = $navbarType === 'buyer' ? 'buyer-home' : 'landing';
                             <span class="pagination-ellipsis">...</span>
 
                         <?php elseif ($link['type'] == 'next'): ?>
-                            <a href="/home?page=<?= $link['page']; ?>"
+                            <a href="<?= $basePath ?>?page=<?= $link['page']; ?>"
                             class="pagination-button <?= $link['disabled'] ? 'disabled' : ''; ?>"
                             data-page="<?= $link['page']; ?>">
                                 ▶

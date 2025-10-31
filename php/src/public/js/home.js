@@ -1,3 +1,6 @@
+const basePath = document.body.dataset.basePath || '/home';
+const storeId = document.body.dataset.storeId || '';
+
 function debounce(func, delay) {
     let timeoutId;
     return function(...args) {
@@ -13,7 +16,8 @@ let currentState = {
     min_price: urlParams.get('min_price') || '',
     max_price: urlParams.get('max_price') || '',
     page: parseInt(urlParams.get('page') || 1),
-    limit: parseInt(urlParams.get('limit') || 12)
+    limit: parseInt(urlParams.get('limit') || 10),
+    store_id: storeId
 };
 
 async function fetchProducts() {
@@ -23,7 +27,7 @@ async function fetchProducts() {
     showLoadingSkeletons(productsGrid);
     
     const queryString = new URLSearchParams(currentState).toString();
-    window.history.pushState(currentState, '', `/home?${queryString}`);
+    window.history.pushState(currentState, '', `${basePath}?${queryString}`);
 
     try {
         const result = await api.get(`/api/products?${queryString}`);
@@ -168,17 +172,17 @@ function renderPagination(paginationContainer, pagination) {
     let navHtml = '';
     links.forEach(link => {
         if (link.type === 'prev') {
-            navHtml += `<a href="/home?page=${link.page}" class="pagination-button ${link.disabled ? 'disabled' : ''}" data-page="${link.page}">◀</a>`;
+            navHtml += `<a href="${basePath}?page=${link.page}" class="pagination-button ${link.disabled ? 'disabled' : ''}" data-page="${link.page}">◀</a>`;
         } else if (link.type === 'page') {
-            navHtml += `<a href="/home?page=${link.page}" class="pagination-button ${link.active ? 'active' : ''}" data-page="${link.page}">${link.page}</a>`;
+            navHtml += `<a href="${basePath}?page=${link.page}" class="pagination-button ${link.active ? 'active' : ''}" data-page="${link.page}">${link.page}</a>`;
         } else if (link.type === 'ellipsis') {
             navHtml += `<span class="pagination-ellipsis">...</span>`;
         } else if (link.type === 'next') {
-            navHtml += `<a href="/home?page=${link.page}" class="pagination-button ${link.disabled ? 'disabled' : ''}" data-page="${link.page}">▶</a>`;
+            navHtml += `<a href="${basePath}?page=${link.page}" class="pagination-button ${link.disabled ? 'disabled' : ''}" data-page="${link.page}">▶</a>`;
         }
     });
 
-    const limits = [4, 8, 12, 20];
+    const limits = [5, 10, 15, 20];
     let selectHtml = '<div class="page-size-selector"><label for="pageSizeSelector">Per Halaman:</label><select id="pageSizeSelector" class="filter-select">';
     limits.forEach(l => {
         selectHtml += `<option value="${l}" ${l == limit ? 'selected' : ''}>${l}</option>`;

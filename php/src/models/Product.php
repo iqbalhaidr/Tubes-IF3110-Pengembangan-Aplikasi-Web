@@ -37,6 +37,11 @@ class Product {
             $params[':max_price'] = $filters['max_price'];
         }
 
+        if (!empty($filters['store_id'])) {
+            $whereConditions[] = 'p.store_id = :store_id';
+            $params[':store_id'] = $filters['store_id'];
+        }
+
         $whereSql = 'WHERE ' . implode(' AND ', $whereConditions);
 
         $countSql = "SELECT COUNT(DISTINCT p.product_id) $baseSql $joinConditions $whereSql";
@@ -72,6 +77,36 @@ class Product {
                 'limit' => $limit
             ]
         ];
+    }
+
+    public function findProductById($id) {
+        $sql = 'SELECT p.product_id AS id, p.product_name AS name, p.description, p.price, 
+                       p.stock, p.main_image_path AS image, s.store_id, s.store_name AS store
+                FROM product p
+                JOIN store s ON p.store_id = s.store_id
+                WHERE p.product_id = :id AND p.deleted_at IS NULL';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function findStoreById($storeId) {
+        $sql = 'SELECT store_id AS id, store_name AS name, store_description AS description
+                FROM store
+                WHERE store_id = :store_id';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':store_id' => $storeId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function findCategoriesByProductId($productId) {
+        $sql = 'SELECT c.category_id AS id, c.category_name AS name
+                FROM category c
+                JOIN category_item ci ON c.category_id = ci.category_id
+                WHERE ci.product_id = :product_id';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':product_id' => $productId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>

@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 // START SESSION FIRST - Before anything else!
 if (session_status() === PHP_SESSION_NONE) {
@@ -38,6 +39,8 @@ spl_autoload_register(function ($class_name) {
         return;
     }
 });
+
+AuthMiddleware::startSession();
 
 // Parse URI and method
 $method = $_SERVER['REQUEST_METHOD'];
@@ -158,6 +161,33 @@ if ($route_parts[0] === 'auth') {
         header("HTTP/1.0 404 Not Found");
         echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
         exit;
+    }
+} elseif ($route_parts[0] === 'product') {
+    if (isset($route_parts[1]) && is_numeric($route_parts[1])) {
+        if ($method === 'GET') {
+            $controller = new ProductController();
+            $id = (int)$route_parts[1];
+            $controller->showProductDetail($id);
+        } else {
+            Response::error('Method not allowed', null, 405);
+        }
+    } else {
+        header("HTTP/1.0 404 Not Found");
+        require_once __DIR__ . '/views/404.php';
+    } 
+
+} elseif ($route_parts[0] === 'store') {
+    if (isset($route_parts[1]) && is_numeric($route_parts[1])) {
+        if ($method === 'GET') {
+            $controller = new StoreController();
+            $id = (int)$route_parts[1]; 
+            $controller->showStorePage($id); 
+        } else {
+            Response::error('Method not allowed', null, 405);
+        }
+    } else {
+        header("HTTP/1.0 404 Not Found");
+        require_once __DIR__ . '/views/404.php';
     }
 } elseif ($route_parts[0] === 'buyer') {
     $controller = new HomeController();
