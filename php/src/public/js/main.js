@@ -3,10 +3,14 @@
 // DOM Elements
 const mobileMenuToggle = document.getElementById('mobileMenuToggle');
 const navbarMenu = document.getElementById('navbarMenu');
+const searchInput = document.getElementById('searchInput');
+const categoryFilter = document.getElementById('categoryFilter');
+const priceFilter = document.getElementById('priceFilter');
+const productsGrid = document.getElementById('productsGrid');
 const logoutBtn = document.getElementById('logoutBtn');
 
 // Mobile Menu Toggle
-if (mobileMenuToggle) {
+if (mobileMenuToggle && navbarMenu) {
     mobileMenuToggle.addEventListener('click', () => {
         navbarMenu.classList.toggle('active');
     });
@@ -14,43 +18,28 @@ if (mobileMenuToggle) {
 
 // Logout Functionality
 if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-        try {
-            const response = await fetch('/auth/logout', {
-                method: 'GET'
-            });
-
-            if (response.ok) {
-                window.location.href = '/';
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
+    logoutBtn.addEventListener('click', () => {
+        // Use normal navigation for logout to avoid JSON parsing issues
+        window.location.href = '/auth/logout';
     });
 }
 
 // Check if user is logged in and update navbar
 async function checkAuthStatus() {
     try {
-        const response = await fetch('/auth/me', {
-            method: 'GET'
-        });
+        if (!window.api || typeof window.api.get !== 'function') {
+            showAuthLinks();
+            return;
+        }
 
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.data) {
-                // User is logged in
-                showUserMenu(data.data);
-            } else {
-                // User is not logged in
-                showAuthLinks();
-            }
+        const data = await window.api.get('/auth/me');
+        
+        if (data && data.success && data.data) {
+            showUserMenu(data.data);
         } else {
-            // User is not logged in
             showAuthLinks();
         }
     } catch (error) {
-        console.error('Auth check error:', error);
         showAuthLinks();
     }
 }
@@ -60,7 +49,7 @@ function showUserMenu(userData) {
     const authLinks = document.getElementById('authLinks');
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
-    const balanceDisplay = document.getElementById('balanceDisplay');
+    const balanceAmount = document.getElementById('balanceAmount');
 
     if (userProfile && authLinks) {
         userProfile.style.display = 'flex';
@@ -74,11 +63,9 @@ function showUserMenu(userData) {
             userAvatar.textContent = userData.name.charAt(0).toUpperCase();
         }
         
-        if (balanceDisplay) {
-            balanceDisplay.style.display = 'flex';
-            if (userData.balance !== undefined) {
-                balanceDisplay.textContent = `💰 Balance: Rp. ${formatCurrency(userData.balance)}`;
-            }
+        // Update balance amount if element exists (buyer pages only)
+        if (balanceAmount && userData.role === 'BUYER' && userData.balance !== undefined) {
+            balanceAmount.textContent = formatCurrency(userData.balance);
         }
     }
 }
@@ -86,15 +73,10 @@ function showUserMenu(userData) {
 function showAuthLinks() {
     const userProfile = document.getElementById('userProfile');
     const authLinks = document.getElementById('authLinks');
-    const balanceDisplay = document.getElementById('balanceDisplay');
 
     if (userProfile && authLinks) {
         userProfile.style.display = 'none';
         authLinks.style.display = 'flex';
-        
-        if (balanceDisplay) {
-            balanceDisplay.style.display = 'none';
-        }
     }
 }
 

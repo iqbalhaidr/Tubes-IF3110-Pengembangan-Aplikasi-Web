@@ -1,3 +1,84 @@
+<?php
+$mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css');
+
+$featuredProducts = [
+    [
+        'name' => 'Starter Pack Nimons Plush',
+        'price' => 45000,
+        'store' => 'Nimons Official Store',
+        'location' => 'Kota Nimopolis',
+        'tag' => 'Official Store',
+        'rating' => 4.9,
+        'sold' => '1,2 rb',
+        'label' => 'Gratis Ongkir'
+    ],
+    [
+        'name' => 'Figur Koleksi Nimons Series 2',
+        'price' => 89000,
+        'store' => 'Nimon Lab',
+        'location' => 'Kota Bandung',
+        'tag' => 'Terlaris',
+        'rating' => 4.8,
+        'sold' => '870',
+        'label' => 'Cashback 5%'
+    ],
+    [
+        'name' => 'Sticker Pack Nimons Limited',
+        'price' => 18000,
+        'store' => 'Nimons Creative Hub',
+        'location' => 'Kota Jakarta',
+        'tag' => 'Promo',
+        'rating' => 4.7,
+        'sold' => '540',
+        'label' => 'Bebas Ongkir'
+    ],
+    [
+        'name' => 'Aksesoris Gadget Nimons',
+        'price' => 62000,
+        'store' => 'Nimons Tech',
+        'location' => 'Kota Surabaya',
+        'tag' => 'Pilihan Pembeli',
+        'rating' => 4.9,
+        'sold' => '2,1 rb',
+        'label' => 'Cicilan 0%'
+    ],
+    [
+        'name' => 'Apparel Nimons Everyday Tee',
+        'price' => 99000,
+        'store' => 'Nimons Apparel',
+        'location' => 'Kota Yogyakarta',
+        'tag' => 'Baru',
+        'rating' => 4.6,
+        'sold' => '320',
+        'label' => 'Diskon 20%'
+    ],
+    [
+        'name' => 'Poster Nimons Wall Art',
+        'price' => 35000,
+        'store' => 'Nimonspace Gallery',
+        'location' => 'Kota Malang',
+        'tag' => 'Favorit',
+        'rating' => 4.8,
+        'sold' => '610',
+        'label' => 'Siap Kirim'
+    ],
+];
+
+$fallbackCategories = [
+    ['name' => 'Nimons Collectibles'],
+    ['name' => 'Merchandise'],
+    ['name' => 'Apparel'],
+    ['name' => 'Aksesoris Gadget'],
+    ['name' => 'Dekorasi'],
+    ['name' => 'Peralatan Kreatif'],
+    ['name' => 'Digital Goods'],
+    ['name' => 'Bundel Spesial'],
+];
+
+$categoryPreviews = (is_array($categories) && !empty($categories))
+    ? array_slice($categories, 0, 8)
+    : $fallbackCategories;
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,36 +89,38 @@
     <link rel="stylesheet" href="/public/css/home.css">
     <link rel="stylesheet" href="/public/css/product-card.css">
 </head>
-<body>
-    <nav class="navbar">
+<body class="landing">
+    <?php $isLoggedIn = !empty($current_user); ?>
+    <nav class="navbar landing-navbar">
         <div class="container navbar-container">
-            <div class="navbar-left">
-                <div class="balance-display" id="balanceDisplay" style="display: none;">
-                    
-                </div>
-                
-                <div class="navbar-links" id="navbarLinks">
-                    <a href="/" class="navbar-link active">Discover</a>
-                    <a href="/cart" class="navbar-link">Cart</a>
-                    <a href="/checkout" class="navbar-link">Checkout</a>
-                    <a href="/orders" class="navbar-link">Orders</a>
-                </div>
+            <a href="/" class="navbar-brand">Nimonspedia</a>
+            <div class="navbar-links" id="navbarMenu">
+                <a href="/" class="navbar-link active">Home</a>
+                <a href="/buyer/home" class="navbar-link">Buyer Portal</a>
+                <a href="/seller/dashboard" class="navbar-link">Seller Portal</a>
             </div>
-
             <div class="navbar-right">
-                <div class="user-profile" id="userProfile" style="display: none;">
-                    <div class="user-avatar" id="userAvatar"></div>
-                    <span class="user-name" id="userName"></span>
-                    <button class="logout-icon" id="logoutBtn" title="Logout">➜</button>
+                <div class="balance-display" id="balanceDisplay" style="display: none;">
+                    <span class="balance-label">Balance: Rp. <span id="balanceAmount">0</span></span>
+                    <button type="button" class="balance-topup-btn" data-action="open-topup">Top Up</button>
                 </div>
-
+                <div class="user-profile" id="userProfile" style="display: none;">
+                    <div class="user-avatar" id="userAvatar">N</div>
+                    <span class="user-name" id="userName">Nimon</span>
+                    <button class="logout-icon" id="logoutBtn" title="Logout">Logout</button>
+                </div>
                 <div class="auth-links" id="authLinks">
                     <a href="/auth/login" class="navbar-link">Login</a>
                     <a href="/auth/register" class="navbar-link">Register</a>
                 </div>
             </div>
-
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation">
+                <span class="menu-icon" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </button>
         </div>
     </nav>
 
@@ -91,45 +174,45 @@
         <div class="container">
             <div class="products-grid" id="productsGrid">
                 
-            <?php if (!empty($products)): ?>
-                <?php foreach ($products as $product): ?>
-                    <?php
-                    $stockClass = ($product['stock'] == 0) ? 'out-of-stock' : '';
-                    // Ambil SEMUA kategori (tidak di-explode)
-                    $allCategories = htmlspecialchars($product['categories']);
-                    ?>
-                    
-                    <a class="product-card <?= $stockClass; ?>" 
-                    href="/product/<?= htmlspecialchars($product['id']); ?>" 
-                    title="<?= htmlspecialchars($product['name']); ?>">
-                        
-                        <div class="product-image">
-                            <img src="<?= htmlspecialchars($product['image']); ?>" 
-                                alt="<?= htmlspecialchars($product['name']); ?>" 
-                                loading="lazy" 
-                                onerror="this.style.display='none'; this.parentElement.innerHTML='🛒'">
-                        </div>
-                        
-                        <div class="product-info">
-                            <div class="product-name"><?= htmlspecialchars($product['name']); ?></div>
-                            <div class="product-price">Rp. <?= number_format($product['price']); ?></div>
-                            
-                            <div class="product-extra-info">
-                                <div class="product-category">
-                                    <span class="info-label">Kategori:</span>
-                                    <span class="info-value"><?= $allCategories; ?></span>
-                                </div>
-                                <div class="product-store">
-                                    <span class="info-label">Nama Toko:</span>
-                                    <span class="info-value"><?= htmlspecialchars($product['store']); ?></span>
+                <?php if (!empty($products)): ?>
+                    <?php foreach ($products as $product): ?>
+                        <?php
+                        $stockClass = ($product['stock'] == 0) ? 'out-of-stock' : '';
+                        // Ambil SEMUA kategori (tidak di-explode)
+                        $allCategories = htmlspecialchars($product['categories']);
+                        ?>
+
+                        <a class="product-card <?= $stockClass; ?>" 
+                        href="/product/<?= htmlspecialchars($product['id']); ?>" 
+                        title="<?= htmlspecialchars($product['name']); ?>">
+
+                            <div class="product-image">
+                                <img src="<?= htmlspecialchars($product['image']); ?>" 
+                                    alt="<?= htmlspecialchars($product['name']); ?>" 
+                                    loading="lazy" 
+                                    onerror="this.style.display='none'; this.parentElement.innerHTML='🛒'">
+                            </div>
+
+                            <div class="product-info">
+                                <div class="product-name"><?= htmlspecialchars($product['name']); ?></div>
+                                <div class="product-price">Rp. <?= number_format($product['price']); ?></div>
+
+                                <div class="product-extra-info">
+                                    <div class="product-category">
+                                        <span class="info-label">Kategori:</span>
+                                        <span class="info-value"><?= $allCategories; ?></span>
+                                    </div>
+                                    <div class="product-store">
+                                        <span class="info-label">Nama Toko:</span>
+                                        <span class="info-value"><?= htmlspecialchars($product['store']); ?></span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </a>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <p style="grid-column: 1 / -1; text-align: center;">Produk tidak ditemukan.</p>
-            <?php endif; ?>
+                        </a>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p style="grid-column: 1 / -1; text-align: center;">Produk tidak ditemukan.</p>
+                <?php endif; ?>
             </div>
 
             <div class="pagination" id="pagination">
@@ -165,7 +248,6 @@
                                 ▶
                             </a>
                         <?php endif; ?>
-
                     <?php endforeach; ?>
                 </div>
 
@@ -217,6 +299,8 @@
                             value="<?php echo htmlspecialchars($maxPrice); ?>">
                     </div>
                 </div>
+            </div>
+        </section>
 
                 <div class="quick-filters">
                     <button class="quick-filter-btn" data-min="0" data-max="100000">
@@ -233,6 +317,7 @@
                     </button>
                 </div>
             </div>
+        </section>
 
             <div class="modal-footer">
                 <button class="modal-button-clear" id="modalClearBtn">Hapus</button>
@@ -241,6 +326,14 @@
         </div>
     </div>
 
+    <footer class="landing-footer">
+        <div class="container">
+            <p>Copyright <?= date('Y') ?> Nimonspedia. Dibuat untuk komunitas Nimons dengan penuh semangat.</p>
+        </div>
+    </footer>
+
+    <script src="/public/js/api.js"></script>
+    <script src="/public/js/balance.js"></script>
     <script src="/public/js/main.js"></script>
     <script src="/public/js/home.js"></script>
     <script src="/public/js/api.js"></script>
