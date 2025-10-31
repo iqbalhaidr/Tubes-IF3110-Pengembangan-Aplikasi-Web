@@ -1,83 +1,5 @@
 <?php
 $mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css');
-
-$featuredProducts = [
-    [
-        'name' => 'Starter Pack Nimons Plush',
-        'price' => 45000,
-        'store' => 'Nimons Official Store',
-        'location' => 'Kota Nimopolis',
-        'tag' => 'Official Store',
-        'rating' => 4.9,
-        'sold' => '1,2 rb',
-        'label' => 'Gratis Ongkir'
-    ],
-    [
-        'name' => 'Figur Koleksi Nimons Series 2',
-        'price' => 89000,
-        'store' => 'Nimon Lab',
-        'location' => 'Kota Bandung',
-        'tag' => 'Terlaris',
-        'rating' => 4.8,
-        'sold' => '870',
-        'label' => 'Cashback 5%'
-    ],
-    [
-        'name' => 'Sticker Pack Nimons Limited',
-        'price' => 18000,
-        'store' => 'Nimons Creative Hub',
-        'location' => 'Kota Jakarta',
-        'tag' => 'Promo',
-        'rating' => 4.7,
-        'sold' => '540',
-        'label' => 'Bebas Ongkir'
-    ],
-    [
-        'name' => 'Aksesoris Gadget Nimons',
-        'price' => 62000,
-        'store' => 'Nimons Tech',
-        'location' => 'Kota Surabaya',
-        'tag' => 'Pilihan Pembeli',
-        'rating' => 4.9,
-        'sold' => '2,1 rb',
-        'label' => 'Cicilan 0%'
-    ],
-    [
-        'name' => 'Apparel Nimons Everyday Tee',
-        'price' => 99000,
-        'store' => 'Nimons Apparel',
-        'location' => 'Kota Yogyakarta',
-        'tag' => 'Baru',
-        'rating' => 4.6,
-        'sold' => '320',
-        'label' => 'Diskon 20%'
-    ],
-    [
-        'name' => 'Poster Nimons Wall Art',
-        'price' => 35000,
-        'store' => 'Nimonspace Gallery',
-        'location' => 'Kota Malang',
-        'tag' => 'Favorit',
-        'rating' => 4.8,
-        'sold' => '610',
-        'label' => 'Siap Kirim'
-    ],
-];
-
-$fallbackCategories = [
-    ['name' => 'Nimons Collectibles'],
-    ['name' => 'Merchandise'],
-    ['name' => 'Apparel'],
-    ['name' => 'Aksesoris Gadget'],
-    ['name' => 'Dekorasi'],
-    ['name' => 'Peralatan Kreatif'],
-    ['name' => 'Digital Goods'],
-    ['name' => 'Bundel Spesial'],
-];
-
-$categoryPreviews = (is_array($categories) && !empty($categories))
-    ? array_slice($categories, 0, 8)
-    : $fallbackCategories;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -299,8 +221,6 @@ $categoryPreviews = (is_array($categories) && !empty($categories))
                             value="<?php echo htmlspecialchars($maxPrice); ?>">
                     </div>
                 </div>
-            </div>
-        </section>
 
                 <div class="quick-filters">
                     <button class="quick-filter-btn" data-min="0" data-max="100000">
@@ -317,7 +237,6 @@ $categoryPreviews = (is_array($categories) && !empty($categories))
                     </button>
                 </div>
             </div>
-        </section>
 
             <div class="modal-footer">
                 <button class="modal-button-clear" id="modalClearBtn">Hapus</button>

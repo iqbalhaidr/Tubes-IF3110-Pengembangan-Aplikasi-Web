@@ -17,7 +17,7 @@ INSERT INTO "user" (name, email, password_hash, role, balance, address) VALUES
 ('Oscar Pranata', 'oscar.buyer@example.com', 'password_terenkripsi', 'BUYER', 2000000, 'Jl. Pembeli 4, Yogyakarta'),
 ('Rina Hartati', 'rina.buyer@example.com', 'password_terenkripsi', 'BUYER', 3000000, 'Jl. Pembeli 5, Medan');
 
-INSERT INTO store (owner_id, store_name, store_description) VALUES
+INSERT INTO store (user_id, store_name, store_description) VALUES
 (1, 'Budi Elektronik', 'Menjual barang elektronik ori dan bergaransi.'),
 (2, 'Citra Fashion', 'Fashion wanita terkini dan termurah.'),
 (3, 'Toko Buku Dedi', 'Menjual buku fiksi, non-fiksi, dan komik.'),
