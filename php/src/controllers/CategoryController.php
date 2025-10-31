@@ -20,5 +20,9 @@ class CategoryController {
         }
         exit;
     }
+
+    public function getCategoryData() {
+        return $this->categoryModel->getAllCategories();
+    }
 }
 ?>
