@@ -1,17 +1,21 @@
 <?php
-
-require_once __DIR__ . '/../utils/Database.php';
-
 class Category {
-    public static function findAll() {
-        $dbconn = Database::getInstance();
+    private $db;
 
+    public function __construct(PDO $db) {
+        $this->db = $db;
+    }
+
+    public function getAllCategories() {
         try {
-            $statement = $dbconn->query('SELECT category_id, name FROM category ORDER BY name ASC');
-            return $statement->fetchAll();
-        } catch (PDOException $exception) {
-            // Surface an empty result set to keep the caller flow intact
+            $query = "SELECT category_id, category_name FROM category ORDER BY category_name ASC";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error fetching categories: " . $e->getMessage());
             return [];
         }
     }
 }
+?>

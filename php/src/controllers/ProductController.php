@@ -1,0 +1,42 @@
+<?php
+class ProductController {
+    private $productModel;
+    private $db;
+
+    public function __construct() {
+        $this->db = Database::getInstance();
+        $this->productModel = new Product($this->db);
+    }
+
+    public function getProducts() {
+        header('Content-Type: application/json');
+        try {
+            $validLimits = [4, 8, 12, 20];
+            $limit = 12;
+            if (isset($_GET['limit']) && in_array((int)$_GET['limit'], $validLimits)) {
+                $limit = (int)$_GET['limit'];
+            }
+
+            $filters = [
+                'search'    => $_GET['search'] ?? null,
+                'category'  => $_GET['category'] ?? null,
+                'min_price' => $_GET['min_price'] ?? null,
+                'max_price' => $_GET['max_price'] ?? null
+            ];
+            $page = $_GET['page'] ?? 1;
+
+            $result = $this->productModel->getProducts($filters, $page, $limit);
+            
+            echo json_encode(['success' => true, 'data' => $result]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function showProductDetail($id) {
+    }
+}
+?>

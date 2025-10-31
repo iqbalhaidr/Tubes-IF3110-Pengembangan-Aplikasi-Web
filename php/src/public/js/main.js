@@ -8,8 +8,6 @@ const categoryFilter = document.getElementById('categoryFilter');
 const priceFilter = document.getElementById('priceFilter');
 const productsGrid = document.getElementById('productsGrid');
 const logoutBtn = document.getElementById('logoutBtn');
-const prevPageBtn = document.getElementById('prevPage');
-const nextPageBtn = document.getElementById('nextPage');
 
 // Mobile Menu Toggle
 if (mobileMenuToggle && navbarMenu) {
@@ -82,21 +80,6 @@ if (logoutBtn) {
     });
 }
 
-// Pagination
-if (prevPageBtn) {
-    prevPageBtn.addEventListener('click', () => {
-        console.log('Previous page clicked');
-        // TODO: Implement pagination
-    });
-}
-
-if (nextPageBtn) {
-    nextPageBtn.addEventListener('click', () => {
-        console.log('Next page clicked');
-        // TODO: Implement pagination
-    });
-}
-
 // Check if user is logged in and update navbar
 async function checkAuthStatus() {
     try {
@@ -158,23 +141,7 @@ function formatCurrency(amount) {
     return new Intl.NumberFormat('id-ID').format(amount);
 }
 
-// Load products (placeholder for when backend is ready)
-function loadProducts() {
-    // TODO: Implement product loading from backend
-    console.log('Loading products...');
-}
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthStatus();
-    // loadProducts(); // Uncomment when backend is ready
-});
-
-// Add to cart functionality (placeholder)
-document.addEventListener('click', (e) => {
-    const addButton = e.target.closest('[data-action="add-to-cart"]');
-    if (addButton) {
-        console.log('Add to cart clicked');
-        // TODO: Implement add to cart
-    }
 });

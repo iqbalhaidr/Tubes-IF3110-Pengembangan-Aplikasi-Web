@@ -103,6 +103,18 @@ if ($route_parts[0] === 'auth') {
 } elseif ($route_parts[0] === 'home' || $route_parts[0] === '') {
     $controller = new HomeController();
     $controller->index();
+} elseif ($route_parts[0] === 'api') {
+    if ($route_parts[1] === 'products' && $method === 'GET') {
+        $controller = new ProductController();
+        $controller->getProducts();
+    } elseif ($route_parts[1] === 'categories' && $method === 'GET') {
+        $controller = new CategoryController();
+        $controller->getAllCategories();
+    } else {
+        header("HTTP/1.0 404 Not Found");
+        echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
+        exit;
+    }
 } elseif ($route_parts[0] === 'buyer') {
     $controller = new HomeController();
 
