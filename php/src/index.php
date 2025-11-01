@@ -1,10 +1,4 @@
 <?php
-session_start();
-
-// START SESSION FIRST - Before anything else!
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 // A simple router
 $uri = $_SERVER['REQUEST_URI'];
@@ -104,7 +98,6 @@ if ($route_parts[0] === 'auth') {
     } elseif ($route_parts[1] === 'change-password' && $method === 'POST') {
         $authController->changePassword();
     } else {
-        // Auth route not found
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';
     }
@@ -121,13 +114,11 @@ if ($route_parts[0] === 'auth') {
         } elseif ($route_parts[1] === 'items') {
             $cartController->fetchItems();
         } else {
-            // Invalid path
             header("HTTP/1.0 404 Not Found");
             require_once __DIR__ . '/views/404.php';
         }
 
     } elseif ($method === 'POST') {
-        // await api.post('/cart', { product_id: {value} });
         $cartController->addItem();
 
     } elseif ($method === 'PUT') {
@@ -135,7 +126,6 @@ if ($route_parts[0] === 'auth') {
             $cart_item_id = $route_parts[1];
             $cartController->updateItem($cart_item_id);
         } else {
-            // Invalid path
             header("HTTP/1.0 404 Not Found");
             require_once __DIR__ . '/views/404.php';
         }
@@ -145,7 +135,6 @@ if ($route_parts[0] === 'auth') {
         $cartController->deleteItem($cart_item_id);
 
     } else {
-        // Cart route not found
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';
     }
@@ -157,6 +146,20 @@ if ($route_parts[0] === 'auth') {
     } elseif ($route_parts[1] === 'categories' && $method === 'GET') {
         $controller = new CategoryController();
         $controller->getAllCategories();
+    } elseif ($route_parts[1] === 'seller' && isset($route_parts[2])) {
+        if ($route_parts[2] === 'products' && $method === 'GET') {
+            (new ProductController())->getProductBySeller();
+        } elseif ($route_parts[2] === 'products' && ($route_parts[3] ?? '') === 'create' && $method === 'POST') {
+            (new ProductController())->createProduct();
+        } elseif ($route_parts[2] === 'product' && ($route_parts[3] ?? '') === 'delete' && $method === 'POST') {
+            (new ProductController())->deleteProduct();
+        } elseif ($route_parts[2] === 'products' && ($route_parts[3] ?? '') === 'update' && isset($route_parts[4]) && is_numeric($route_parts[4]) && $method === 'POST') {
+            $id = (int)$route_parts[4];
+            (new ProductController())->updateProduct($id);
+            
+        } else {
+            Response::error('Seller API endpoint not found', null, 404);
+        }
     } else {
         header("HTTP/1.0 404 Not Found");
         echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
@@ -164,8 +167,8 @@ if ($route_parts[0] === 'auth') {
     }
 } elseif ($route_parts[0] === 'product') {
     if (isset($route_parts[1]) && is_numeric($route_parts[1])) {
+        $controller = new ProductController();
         if ($method === 'GET') {
-            $controller = new ProductController();
             $id = (int)$route_parts[1];
             $controller->showProductDetail($id);
         } else {
@@ -193,7 +196,6 @@ if ($route_parts[0] === 'auth') {
     $controller = new HomeController();
 
     if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'home') {
-        // Redirect to unified home page
         header('Location: /home');
         exit;
     } elseif ($route_parts[1] === 'profile') {
@@ -209,6 +211,19 @@ if ($route_parts[0] === 'auth') {
         $controller->sellerDashboard();
     } elseif ($route_parts[1] === 'profile') {
         $controller->sellerProfile();
+    } elseif ($route_parts[1] === 'products' && $method === 'GET') {
+        $productController = new ProductController();
+        if (!isset($route_parts[2]) && $method === 'GET') {
+            $productController->showProductManagement();
+        } elseif (($route_parts[2] ?? '') === 'add' && $method === 'GET') {
+            $productController->showAddProductPage();
+        } elseif (($route_parts[2] ?? '') === 'edit' && isset($route_parts[3]) && is_numeric($route_parts[3]) && $method === 'GET') {
+            $id = (int)$route_parts[3];
+            $productController->showEditProductPage($id);
+            
+        } else {
+            Response::error('Page not found', null, 404);
+        }
     } else {
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';
