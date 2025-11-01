@@ -86,7 +86,7 @@ $activeLink = 'dashboard';
                         <p>Review new orders, approve, reject, and set delivery times.</p>
                         <span class="action-link">View All →</span>
                     </a>
-                    <a class="action-card" href="/seller/product/add">
+                    <a class="action-card" href="/seller/products/add">
                         <div class="action-icon">➕</div>
                         <h3>Tambah Produk Baru</h3>
                         <p>Create a new product listing and reach more buyers faster.</p>

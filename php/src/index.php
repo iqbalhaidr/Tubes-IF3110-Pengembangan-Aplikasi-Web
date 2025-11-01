@@ -159,6 +159,7 @@ if ($route_parts[0] === 'auth') {
             
         } else {
             Response::error('Seller API endpoint not found', null, 404);
+        }
     } elseif ($route_parts[1] === 'cartcounter' && $method === 'GET') {
         $controller = new CartController();
         $controller->getUniqueItemCount();
@@ -253,6 +254,7 @@ if ($route_parts[0] === 'auth') {
             
         } else {
             Response::error('Page not found', null, 404);
+        }
     } elseif ($route_parts[1] === 'update-store' && $method === 'POST') {
         $controller->updateStore();
     } elseif ($route_parts[1] === 'orders') {
