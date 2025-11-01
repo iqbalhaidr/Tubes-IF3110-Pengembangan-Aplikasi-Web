@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../utils/Helper.php';
 
 class AuthController {
     private $userModel;
@@ -124,7 +125,7 @@ class AuthController {
         $address = isset($_POST['address']) ? trim($_POST['address']) : '';
         $store_name = isset($_POST['store_name']) ? trim($_POST['store_name']) : '';
         $store_description_raw = isset($_POST['store_description']) ? $_POST['store_description'] : '';
-        $store_description = $this->sanitizeRichText($store_description_raw);
+        $store_description = Helper::sanitizeRichText($store_description_raw);
         $store_logo = isset($_FILES['store_logo']) ? $_FILES['store_logo'] : null;
 
         $validator = Validator::validateRegisterSeller(
@@ -275,23 +276,6 @@ class AuthController {
         if ($absolutePath && file_exists($absolutePath)) {
             unlink($absolutePath);
         }
-    }
-
-    private function sanitizeRichText($html) {
-        if (!is_string($html) || $html === '') {
-            return '';
-        }
-
-        $allowedTags = '<p><strong><b><em><i><u><s><ol><ul><li><br><blockquote><span><a>';
-        $sanitized = strip_tags($html, $allowedTags);
-
-        // Remove inline event handlers, style attributes, and custom data attributes
-        $sanitized = preg_replace('/\s(on\w+|style|data-[^=]+)="[^"]*"/i', '', $sanitized);
-
-        // Neutralize javascript: URLs inside href attributes
-        $sanitized = preg_replace('/href="javascript:[^"]*"/i', 'href="#"', $sanitized);
-
-        return trim($sanitized);
     }
 
     /**

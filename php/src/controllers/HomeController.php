@@ -118,20 +118,69 @@ class HomeController {
             exit;
         }
 
-        $stats = [
-            'total_products' => 0,
-            'pending_orders' => 0,
-            'low_stock' => 0,
-            'total_revenue' => 0,
-        ];
-
-        $navLinks = [
-            ['label' => 'Dashboard', 'href' => '/seller/dashboard', 'key' => 'dashboard'],
-            ['label' => 'Produk', 'href' => 'javascript:void(0);', 'key' => 'products'],
-            ['label' => 'Orders', 'href' => '/seller/orders', 'key' => 'orders'],
-        ];
+        // Calculate dashboard statistics
+        $stats = $this->calculateDashboardStats($store['store_id']);
 
         require_once __DIR__ . '/../views/seller/dashboard.php';
+    }
+
+    /**
+     * Calculate dashboard statistics for seller
+     */
+    private function calculateDashboardStats($store_id) {
+        try {
+            // 1. Total unique products (not quantity)
+            $productQuery = 'SELECT COUNT(DISTINCT p.product_id) as total_products 
+                            FROM product p 
+                            WHERE p.store_id = :store_id AND p.deleted_at IS NULL';
+            $productStmt = $this->db->prepare($productQuery);
+            $productStmt->execute([':store_id' => $store_id]);
+            $productResult = $productStmt->fetch(PDO::FETCH_ASSOC);
+            $total_products = (int)($productResult['total_products'] ?? 0);
+
+            // 2. Pending orders (WAITING_APPROVAL)
+            $pendingQuery = 'SELECT COUNT(*) as pending_count 
+                            FROM "order" 
+                            WHERE store_id = :store_id AND status = :status';
+            $pendingStmt = $this->db->prepare($pendingQuery);
+            $pendingStmt->execute([':store_id' => $store_id, ':status' => 'WAITING_APPROVAL']);
+            $pendingResult = $pendingStmt->fetch(PDO::FETCH_ASSOC);
+            $pending_orders = (int)($pendingResult['pending_count'] ?? 0);
+
+            // 3. Products with low stock (< 10)
+            $lowStockQuery = 'SELECT COUNT(DISTINCT p.product_id) as low_stock_count 
+                             FROM product p 
+                             WHERE p.store_id = :store_id AND p.stock < 10 AND p.deleted_at IS NULL';
+            $lowStockStmt = $this->db->prepare($lowStockQuery);
+            $lowStockStmt->execute([':store_id' => $store_id]);
+            $lowStockResult = $lowStockStmt->fetch(PDO::FETCH_ASSOC);
+            $low_stock = (int)($lowStockResult['low_stock_count'] ?? 0);
+
+            // 4. Total revenue (sum of all RECEIVED orders)
+            $revenueQuery = 'SELECT COALESCE(SUM(o.total_price), 0) as total_revenue 
+                            FROM "order" o 
+                            WHERE o.store_id = :store_id AND o.status = :status';
+            $revenueStmt = $this->db->prepare($revenueQuery);
+            $revenueStmt->execute([':store_id' => $store_id, ':status' => 'RECEIVED']);
+            $revenueResult = $revenueStmt->fetch(PDO::FETCH_ASSOC);
+            $total_revenue = (int)($revenueResult['total_revenue'] ?? 0);
+
+            return [
+                'total_products' => $total_products,
+                'pending_orders' => $pending_orders,
+                'low_stock' => $low_stock,
+                'total_revenue' => $total_revenue,
+            ];
+
+        } catch (Exception $e) {
+            // Return default stats if there's an error
+            return [
+                'total_products' => 0,
+                'pending_orders' => 0,
+                'low_stock' => 0,
+                'total_revenue' => 0,
+            ];
+        }
     }
 
     public function buyerProfile() {
@@ -191,20 +240,6 @@ class HomeController {
         }
     }
 
-    private function formatRichTextField($html) {
-        if (!is_string($html) || trim($html) === '') {
-            return '';
-        }
-
-        $allowedTags = '<p><strong><b><em><i><u><s><ol><ul><li><br><blockquote><span><a>';
-        $clean = strip_tags($html, $allowedTags);
-
-        // Remove empty paragraphs that Quill can generate
-        $clean = preg_replace('/<p>\s*<\/p>/', '', $clean);
-
-        return trim($clean);
-    }
-
     public function updateStore() {
         AuthMiddleware::requireRole('SELLER', '/auth/login');
 
@@ -222,7 +257,7 @@ class HomeController {
 
         $storeName = isset($_POST['store_name']) ? trim($_POST['store_name']) : '';
         $storeDescriptionRaw = isset($_POST['store_description']) ? $_POST['store_description'] : '';
-        $storeDescription = $this->formatRichTextField($storeDescriptionRaw);
+        $storeDescription = Helper::sanitizeRichText($storeDescriptionRaw);
         $storeLogo = isset($_FILES['store_logo']) ? $_FILES['store_logo'] : null;
 
         // Validate store name

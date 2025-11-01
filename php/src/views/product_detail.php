@@ -36,7 +36,7 @@
 
                 <div class="product-description">
                     <h3>Deskripsi Produk</h3>
-                    <div><?php echo $clean_description; ?></div>
+                    <div class="description-content"><?php echo $clean_description; ?></div>
                 </div>
                 
                 <div class="store-info">

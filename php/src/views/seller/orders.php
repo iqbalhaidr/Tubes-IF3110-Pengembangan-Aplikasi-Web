@@ -94,9 +94,9 @@ $activeLink = 'orders';
 
             <!-- Pagination -->
             <div class="pagination-container" id="paginationContainer">
-                <button type="button" class="btn btn-secondary btn-sm" id="prevBtn">← Previous</button>
+                <button type="button" class="pagination-button" id="prevBtn" title="Previous page">← Previous</button>
                 <span class="pagination-info" id="paginationInfo">Page 1</span>
-                <button type="button" class="btn btn-secondary btn-sm" id="nextBtn">Next →</button>
+                <button type="button" class="pagination-button" id="nextBtn" title="Next page">Next →</button>
             </div>
         </div>
     </main>
