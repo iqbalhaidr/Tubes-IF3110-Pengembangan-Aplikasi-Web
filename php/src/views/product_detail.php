@@ -36,7 +36,7 @@
 
                 <div class="product-description">
                     <h3>Deskripsi Produk</h3>
-                    <p><?php echo nl2br(htmlspecialchars($product['description'])); ?></p>
+                    <div><?php echo $clean_description; ?></div>
                 </div>
                 
                 <div class="store-info">
