@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../utils/Helper.php';
+
 class ProductController {
     private $productModel;
     private $db;
@@ -66,6 +68,10 @@ class ProductController {
             $categoryArray = $this->productModel->findCategoriesByProductId($id);
             $categoryNames = array_column($categoryArray, 'name');
             $categories = implode(', ', $categoryNames);
+            
+            // Clean and prepare description - allow safe HTML from Quill.js
+            $clean_description = Helper::sanitizeRichText($product['description']);
+            
             require __DIR__ . '/../views/product_detail.php';
     
         } catch (Exception $e) {

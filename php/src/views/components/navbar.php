@@ -23,13 +23,11 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                 <a href="/seller/dashboard" class="navbar-brand">Nimonspedia</a>
                 <div class="navbar-links" id="navbarMenu">
                     <?php 
-                    $defaultSellerLinks = [
+                    $sellerLinks = [
                         ['href' => '/seller/dashboard', 'label' => 'Dashboard', 'key' => 'dashboard'],
                         ['href' => '/seller/products', 'label' => 'Produk', 'key' => 'products'],
-                        ['href' => 'javascript:void(0);', 'label' => 'Orders', 'key' => 'orders'],
-                        ['href' => '/seller/profile', 'label' => 'Profile', 'key' => 'profile'],
+                        ['href' => '/seller/orders', 'label' => 'Orders', 'key' => 'orders'],
                     ];
-                    $sellerLinks = $navLinks ?? $defaultSellerLinks;
                     ?>
                     <?php foreach ($sellerLinks as $link): ?>
                         <a href="<?= htmlspecialchars($link['href']) ?>" 

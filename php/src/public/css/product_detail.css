@@ -63,6 +63,66 @@
     color: var(--text-medium);
 }
 
+/* Rich text formatting from Quill.js */
+.description-content {
+    line-height: 1.8;
+    color: var(--text-medium);
+    word-wrap: break-word;
+}
+
+.description-content p {
+    margin: 12px 0;
+    line-height: 1.8;
+    color: var(--text-medium);
+}
+
+.description-content strong,
+.description-content b {
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.description-content em,
+.description-content i {
+    font-style: italic;
+}
+
+.description-content u {
+    text-decoration: underline;
+}
+
+.description-content s {
+    text-decoration: line-through;
+}
+
+.description-content ul,
+.description-content ol {
+    margin: 12px 0 12px 20px;
+    line-height: 1.8;
+}
+
+.description-content li {
+    margin: 6px 0;
+    color: var(--text-medium);
+}
+
+.description-content blockquote {
+    margin: 12px 0;
+    padding-left: 15px;
+    border-left: 4px solid var(--primary-green);
+    color: var(--text-medium);
+    font-style: italic;
+}
+
+.description-content a {
+    color: var(--primary-green);
+    text-decoration: none;
+}
+
+.description-content a:hover {
+    text-decoration: underline;
+}
+
 .store-info-header {
     display: flex;
     justify-content: space-between;
