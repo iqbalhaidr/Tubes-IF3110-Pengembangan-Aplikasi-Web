@@ -220,10 +220,12 @@ function renderOrdersTable(orders) {
     orders.forEach(order => {
         const row = document.createElement('tr');
         
-        // Product list
-        const productsList = order.items
-            .map(item => `${item.product_name} x${item.quantity}`)
-            .join(', ');
+        // Product list - handle undefined items
+        const productsList = (order.items && Array.isArray(order.items))
+            ? order.items
+                .map(item => `${item.product_name} x${item.quantity}`)
+                .join(', ')
+            : 'N/A';
 
         row.innerHTML = `
             <td class="order-id">#${order.order_id}</td>

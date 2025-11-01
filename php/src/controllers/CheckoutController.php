@@ -79,7 +79,7 @@ class CheckoutController {
         if ($result['success']) {
             Response::success(
                 $result['message'], 
-                ['redirect' => '/orders/history'],
+                ['redirect' => '/buyer/order-history'],
                 200
             );
         } else {

@@ -67,7 +67,7 @@ class Order {
             $subtotal = $quantity * $price_at_purchase;
 
             $query = '
-                INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase, subtotal)
+                INSERT INTO order_item (order_id, product_id, quantity, price_at_purchase, subtotal)
                 VALUES (:order_id, :product_id, :quantity, :price_at_purchase, :subtotal)
             ';
             $statement = $this->db->prepare($query);
@@ -124,7 +124,7 @@ class Order {
                     oi.subtotal,
                     p.product_name,
                     p.main_image_path
-                FROM order_items oi
+                FROM order_item oi
                 LEFT JOIN product p ON oi.product_id = p.product_id
                 WHERE oi.order_id = :order_id
             ';
@@ -189,6 +189,26 @@ class Order {
         $total = 0;
         if (count($results) > 0) {
             $total = $results[0]['total_count'];
+        }
+
+        // Fetch items for each order
+        foreach ($results as &$order) {
+            $itemsQuery = '
+                SELECT 
+                    oi.order_item_id,
+                    oi.product_id,
+                    oi.quantity,
+                    oi.price_at_purchase,
+                    oi.subtotal,
+                    p.product_name,
+                    p.main_image_path
+                FROM order_item oi
+                LEFT JOIN product p ON oi.product_id = p.product_id
+                WHERE oi.order_id = :order_id
+            ';
+            $itemsStatement = $this->db->prepare($itemsQuery);
+            $itemsStatement->execute([':order_id' => $order['order_id']]);
+            $order['items'] = $itemsStatement->fetchAll(PDO::FETCH_ASSOC);
         }
 
         return [
@@ -457,7 +477,7 @@ class Order {
                     oi.subtotal,
                     p.product_name,
                     p.main_image_path
-                FROM order_items oi
+                FROM order_item oi
                 LEFT JOIN product p ON oi.product_id = p.product_id
                 WHERE oi.order_id = :order_id
             ';
@@ -506,6 +526,7 @@ class Order {
         }
 
         return $counts;
+    }
     /**
      * Checkout logic
      */

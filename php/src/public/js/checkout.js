@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast('Checkout successful! Redirecting to your orders...', 'success');
                     // Redirect to the URL provided by the backend
                     setTimeout(() => {
-                        window.location.href = result.data.redirect || '/orders/history';
+                        window.location.href = result.data.redirect || '/buyer/order-history';
                     }, 2000);
                 } else {
                     // This else block might not be hit if api.post throws on non-2xx
