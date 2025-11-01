@@ -24,6 +24,7 @@
 
         <main class="main-content">
             <div class="container">
+                <h1>Cart</h1>
                 <div class="cart-page-wrapper">
                 
                     <div class="cart-empty-state" id="cart-empty-state" <?php if ($cartData["grandtotal_items"] > 0): ?>style="display: none;"<?php endif; ?>>
@@ -139,9 +140,9 @@
                             </div>
             
                             <div class="summary-actions">
-                                <button id="checkout-button" class="button-primary checkout-btn">
+                                <a href="/checkout" id="checkout-button" class="button-primary checkout-btn">
                                     Checkout (<?php echo htmlspecialchars($cartData['grandtotal_items']); ?>)
-                                </button>
+                                </a>
                             </div>
                         </div> 
             

@@ -38,6 +38,12 @@ body {
     padding: 0;
 }
 
+.main-content h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
 /* * -------------------
  * Button Base Styles
  * -------------------

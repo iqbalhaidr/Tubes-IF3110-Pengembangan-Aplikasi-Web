@@ -301,16 +301,13 @@ if ($route_parts[0] === 'auth') {
         Response::error('Not found', null, 404);
     }
 } elseif ($route_parts[0] === 'checkout') {
-    $orderController = new OrderController();
+    $checkoutController = new CheckoutController();
 
     if ($method === 'GET') {
-        // This is the new method to show the page
-        $orderController->showCheckoutPage();
+        $checkoutController->index();
     } elseif ($method === 'POST') {
-        // This is the API endpoint to process the checkout
-        $orderController->processCheckout();
+        $checkoutController->checkout();
     } else {
-        // A GET /checkout page isn't defined, only the POST action
         Response::error('Method not allowed', null, 405);
     }
 } else {
