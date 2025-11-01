@@ -21,8 +21,8 @@ class Order {
 
             // Create order
             $query = '
-                INSERT INTO "order" (buyer_id, store_id, total_price, shipping_address, status, created_at, updated_at)
-                VALUES (:buyer_id, :store_id, :total_price, :shipping_address, :status, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                INSERT INTO "order" (buyer_id, store_id, total_price, shipping_address, status, created_at)
+                VALUES (:buyer_id, :store_id, :total_price, :shipping_address, :status, CURRENT_TIMESTAMP)
                 RETURNING order_id
             ';
             $statement = $this->db->prepare($query);
@@ -49,17 +49,38 @@ class Order {
      * Add an item to an order
      */
     public function addOrderItem($order_id, $product_id, $quantity, $price_at_purchase) {
-        $query = '
-            INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase)
-            VALUES (:order_id, :product_id, :quantity, :price_at_purchase)
-        ';
-        $statement = $this->db->prepare($query);
-        return $statement->execute([
-            ':order_id' => $order_id,
-            ':product_id' => $product_id,
-            ':quantity' => $quantity,
-            ':price_at_purchase' => $price_at_purchase
-        ]);
+        try {
+            // Validate inputs
+            if (!$order_id || !$product_id || !$quantity || !isset($price_at_purchase)) {
+                throw new Exception('Invalid order item data');
+            }
+
+            if ($quantity <= 0) {
+                throw new Exception('Quantity must be greater than 0');
+            }
+
+            if ($price_at_purchase < 0) {
+                throw new Exception('Price cannot be negative');
+            }
+
+            // Calculate subtotal
+            $subtotal = $quantity * $price_at_purchase;
+
+            $query = '
+                INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase, subtotal)
+                VALUES (:order_id, :product_id, :quantity, :price_at_purchase, :subtotal)
+            ';
+            $statement = $this->db->prepare($query);
+            return $statement->execute([
+                ':order_id' => $order_id,
+                ':product_id' => $product_id,
+                ':quantity' => $quantity,
+                ':price_at_purchase' => $price_at_purchase,
+                ':subtotal' => $subtotal
+            ]);
+        } catch (Exception $e) {
+            throw $e;
+        }
     }
 
     /**
@@ -76,8 +97,9 @@ class Order {
                 o.status,
                 o.confirmed_at,
                 o.reject_reason,
+                o.delivery_time,
+                o.received_at,
                 o.created_at,
-                o.updated_at,
                 u.name as buyer_name,
                 u.email as buyer_email,
                 s.store_name,
@@ -99,8 +121,9 @@ class Order {
                     oi.product_id,
                     oi.quantity,
                     oi.price_at_purchase,
+                    oi.subtotal,
                     p.product_name,
-                    p.product_image
+                    p.main_image_path
                 FROM order_items oi
                 LEFT JOIN product p ON oi.product_id = p.product_id
                 WHERE oi.order_id = :order_id
@@ -140,7 +163,7 @@ class Order {
 
         $params = [':store_id' => $store_id];
 
-        if (!empty($status)) {
+        if (!empty($status) && $status !== 'all') {
             $query .= ' AND o.status = :status';
             $params[':status'] = $status;
         }
@@ -183,7 +206,7 @@ class Order {
     public function updateStatus($order_id, $status, $confirmed_at = null) {
         $query = '
             UPDATE "order" 
-            SET status = :status, confirmed_at = :confirmed_at, updated_at = CURRENT_TIMESTAMP
+            SET status = :status, confirmed_at = :confirmed_at
             WHERE order_id = :order_id
             RETURNING *
         ';
@@ -206,7 +229,7 @@ class Order {
             // Update order status
             $query = '
                 UPDATE "order" 
-                SET status = :status, confirmed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                SET status = :status, confirmed_at = CURRENT_TIMESTAMP
                 WHERE order_id = :order_id
                 RETURNING *
             ';
@@ -241,7 +264,7 @@ class Order {
             // Update order status with reject reason
             $query = '
                 UPDATE "order" 
-                SET status = :status, reject_reason = :reject_reason, updated_at = CURRENT_TIMESTAMP
+                SET status = :status, reject_reason = :reject_reason
                 WHERE order_id = :order_id
             ';
             $statement = $this->db->prepare($query);
@@ -280,7 +303,7 @@ class Order {
 
             $query = '
                 UPDATE "order" 
-                SET status = :status, delivery_time = :delivery_time, updated_at = CURRENT_TIMESTAMP
+                SET status = :status, delivery_time = :delivery_time
                 WHERE order_id = :order_id
                 RETURNING *
             ';
@@ -310,7 +333,7 @@ class Order {
             // Update order status
             $query = '
                 UPDATE "order" 
-                SET status = :status, received_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                SET status = :status, received_at = CURRENT_TIMESTAMP
                 WHERE order_id = :order_id
             ';
             $statement = $this->db->prepare($query);
@@ -353,6 +376,119 @@ class Order {
         ';
         $statement = $this->db->prepare($query);
         $statement->execute([':store_id' => $store_id]);
+        $results = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        // Initialize all statuses with 0
+        $counts = [
+            'WAITING_APPROVAL' => 0,
+            'APPROVED' => 0,
+            'ON_DELIVERY' => 0,
+            'RECEIVED' => 0,
+            'REJECTED' => 0
+        ];
+
+        // Update with actual counts
+        foreach ($results as $row) {
+            $counts[$row['status']] = $row['count'];
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Get orders by buyer with filtering and pagination
+     */
+    public function getOrdersByBuyer($buyer_id, $status = null, $page = 1, $limit = 10) {
+        $offset = ($page - 1) * $limit;
+        
+        $query = '
+            SELECT 
+                o.order_id,
+                o.buyer_id,
+                o.store_id,
+                o.total_price,
+                o.shipping_address,
+                o.status,
+                o.confirmed_at,
+                o.reject_reason,
+                o.delivery_time,
+                o.received_at,
+                o.created_at,
+                s.store_name,
+                COUNT(*) OVER() as total_count
+            FROM "order" o
+            LEFT JOIN store s ON o.store_id = s.store_id
+            WHERE o.buyer_id = :buyer_id
+        ';
+
+        $params = [':buyer_id' => $buyer_id];
+
+        if (!empty($status) && $status !== 'all') {
+            $query .= ' AND o.status = :status';
+            $params[':status'] = $status;
+        }
+
+        $query .= ' ORDER BY o.created_at DESC LIMIT :limit OFFSET :offset';
+
+        $statement = $this->db->prepare($query);
+        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
+        
+        foreach ($params as $key => $value) {
+            $statement->bindValue($key, $value);
+        }
+
+        $statement->execute();
+        $results = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        $total = 0;
+        if (count($results) > 0) {
+            $total = $results[0]['total_count'];
+        }
+
+        // Fetch items for each order
+        foreach ($results as &$order) {
+            $itemsQuery = '
+                SELECT 
+                    oi.order_item_id,
+                    oi.product_id,
+                    oi.quantity,
+                    oi.price_at_purchase,
+                    oi.subtotal,
+                    p.product_name,
+                    p.main_image_path
+                FROM order_items oi
+                LEFT JOIN product p ON oi.product_id = p.product_id
+                WHERE oi.order_id = :order_id
+            ';
+            $itemsStatement = $this->db->prepare($itemsQuery);
+            $itemsStatement->execute([':order_id' => $order['order_id']]);
+            $order['items'] = $itemsStatement->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        return [
+            'orders' => $results,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit,
+            'total_pages' => ceil($total / $limit)
+        ];
+    }
+
+    /**
+     * Get order count grouped by status for a buyer
+     */
+    public function getOrderCountByStatusForBuyer($buyer_id) {
+        $query = '
+            SELECT 
+                status,
+                COUNT(*) as count
+            FROM "order"
+            WHERE buyer_id = :buyer_id
+            GROUP BY status
+        ';
+        $statement = $this->db->prepare($query);
+        $statement->execute([':buyer_id' => $buyer_id]);
         $results = $statement->fetchAll(PDO::FETCH_ASSOC);
 
         // Initialize all statuses with 0

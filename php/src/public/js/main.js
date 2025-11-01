@@ -12,7 +12,25 @@ const logoutBtn = document.getElementById('logoutBtn');
 // Mobile Menu Toggle
 if (mobileMenuToggle && navbarMenu) {
     mobileMenuToggle.addEventListener('click', () => {
+        mobileMenuToggle.classList.toggle('active');
         navbarMenu.classList.toggle('active');
+    });
+
+    // Close menu when a link is clicked
+    const navLinks = navbarMenu.querySelectorAll('a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenuToggle.classList.remove('active');
+            navbarMenu.classList.remove('active');
+        });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!mobileMenuToggle.contains(e.target) && !navbarMenu.contains(e.target)) {
+            mobileMenuToggle.classList.remove('active');
+            navbarMenu.classList.remove('active');
+        }
     });
 }
 

@@ -145,10 +145,9 @@ function setupModalHandlers() {
 
 async function loadOrderCounts() {
     try {
-        const response = await fetch('/api/orders?status=all&limit=1');
-        const data = await response.json();
+        const data = await api.get('/api/orders?status=all&limit=1');
 
-        if (response.ok && data.success) {
+        if (data.success) {
             // Count totals for each status from first page
             orderCountsData = {
                 all: data.data.total || 0
@@ -157,9 +156,8 @@ async function loadOrderCounts() {
             // Load counts for each status
             const statuses = ['WAITING_APPROVAL', 'APPROVED', 'ON_DELIVERY', 'RECEIVED', 'REJECTED'];
             for (const status of statuses) {
-                const statusResponse = await fetch(`/api/orders?status=${status}&limit=1`);
-                const statusData = await statusResponse.json();
-                if (statusResponse.ok && statusData.success) {
+                const statusData = await api.get(`/api/orders?status=${status}&limit=1`);
+                if (statusData.success) {
                     const statusKey = status.toLowerCase().replace(/_/g, '');
                     const countId = `count${status.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')}`;
                     const countElement = document.getElementById(countId);
@@ -194,13 +192,7 @@ async function loadOrders() {
             url += `&search=${encodeURIComponent(currentSearch)}`;
         }
 
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (!response.ok) {
-            showEmptyState('Failed to load orders');
-            return;
-        }
+        const data = await api.get(url);
 
         if (data.success && data.data.orders && data.data.orders.length > 0) {
             renderOrdersTable(data.data.orders);
@@ -280,13 +272,7 @@ function updatePagination(data) {
 
 async function viewOrderDetail(orderId) {
     try {
-        const response = await fetch(`/api/orders/detail?order_id=${orderId}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-            showToast('Failed to load order details', 'error');
-            return;
-        }
+        const data = await api.get(`/api/orders/detail?order_id=${orderId}`);
 
         const order = data.data;
         const detailBody = document.getElementById('orderDetailBody');
@@ -411,22 +397,9 @@ async function confirmApprove() {
     confirmBtn.textContent = 'Processing...';
 
     try {
-        const response = await fetch('/api/orders/approve', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                order_id: parseInt(orderId)
-            })
+        const data = await api.post('/api/orders/approve', {
+            order_id: parseInt(orderId)
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            showToast(data.message || 'Failed to approve order', 'error');
-            return;
-        }
 
         showToast('Order approved successfully!', 'success');
         document.getElementById('approveModal').classList.add('hidden');
@@ -462,23 +435,10 @@ async function confirmReject() {
     confirmBtn.textContent = 'Processing...';
 
     try {
-        const response = await fetch('/api/orders/reject', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                order_id: parseInt(orderId),
-                reject_reason: reason
-            })
+        const data = await api.post('/api/orders/reject', {
+            order_id: parseInt(orderId),
+            reject_reason: reason
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            showToast(data.message || 'Failed to reject order', 'error');
-            return;
-        }
 
         showToast('Order rejected and buyer refunded successfully!', 'success');
         document.getElementById('rejectModal').classList.add('hidden');
@@ -519,23 +479,10 @@ async function confirmDelivery() {
     confirmBtn.textContent = 'Processing...';
 
     try {
-        const response = await fetch('/api/orders/delivery-time', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                order_id: parseInt(orderId),
-                delivery_time: isoTime
-            })
+        const data = await api.post('/api/orders/delivery-time', {
+            order_id: parseInt(orderId),
+            delivery_time: isoTime
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            showToast(data.message || 'Failed to set delivery time', 'error');
-            return;
-        }
 
         showToast('Delivery time set successfully!', 'success');
         document.getElementById('deliveryModal').classList.add('hidden');

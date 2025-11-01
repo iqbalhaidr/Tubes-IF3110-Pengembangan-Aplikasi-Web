@@ -12,13 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
         editStoreBtn.addEventListener('click', async () => {
             // Load store data
             try {
-                const response = await fetch('/api/store/get-store-info', {
-                    method: 'GET'
-                });
+                const data = await api.get('/api/store/get-store-info');
                 
-                const data = await response.json();
-                
-                if (response.ok && data.success) {
+                if (data.success) {
                     // Populate form fields
                     const storeNameInput = document.getElementById('edit_store_name');
                     if (storeNameInput) {

@@ -21,6 +21,11 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                 </div>
             <?php elseif ($navbarType === 'seller'): ?>
                 <a href="/seller/dashboard" class="navbar-brand">Nimonspedia</a>
+                <button class="burger-menu" id="mobileMenuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
                 <div class="navbar-links" id="navbarMenu">
                     <?php 
                     $sellerLinks = [
@@ -58,7 +63,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                     </button>
                     <div class="user-dropdown-menu" id="userDropdownMenu">
                         <a href="/buyer/profile" class="dropdown-item">Profile</a>
-                        <a href="javascript:void(0);" class="dropdown-item">Order History</a>
+                        <a href="/buyer/order-history" class="dropdown-item">Order History</a>
                         <a href="/auth/logout" class="dropdown-item">Logout</a>
                     </div>
                 </div>

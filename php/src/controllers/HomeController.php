@@ -441,5 +441,184 @@ class HomeController {
             'store_logo_path' => $store['store_logo_path']
         ], 200);
     }
+
+    /**
+     * Display buyer order history page
+     */
+    public function buyerOrderHistory() {
+        AuthMiddleware::requireRole('BUYER', '/auth/login');
+        $currentUser = AuthMiddleware::getCurrentUser();
+
+        $navbarType = 'buyer';
+        $activeLink = 'order-history';
+
+        require_once __DIR__ . '/../views/buyer/order_history.php';
+    }
+
+    /**
+     * API: Get buyer orders with filtering, searching, and pagination
+     */
+    public function getBuyerOrders() {
+        AuthMiddleware::requireRole('BUYER');
+        $currentUser = AuthMiddleware::getCurrentUser();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+
+        // Get query parameters
+        $status = $_GET['status'] ?? null;
+        $page = (int)($_GET['page'] ?? 1);
+        $limit = (int)($_GET['limit'] ?? 10);
+
+        // Validate page and limit
+        if ($page < 1) $page = 1;
+        if ($limit < 1 || $limit > 100) $limit = 10;
+
+        try {
+            $orderModel = new Order($this->db);
+            $result = $orderModel->getOrdersByBuyer(
+                $currentUser['user_id'],
+                $status,
+                $page,
+                $limit
+            );
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to fetch orders',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Get buyer order detail
+     */
+    public function getBuyerOrderDetail() {
+        AuthMiddleware::requireRole('BUYER');
+        $currentUser = AuthMiddleware::getCurrentUser();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+
+        $order_id = $_GET['order_id'] ?? null;
+
+        if (!$order_id || !is_numeric($order_id)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid order ID']);
+            exit;
+        }
+
+        try {
+            $orderModel = new Order($this->db);
+            $order = $orderModel->getOrderById($order_id);
+
+            if (!$order) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Order not found']);
+                exit;
+            }
+
+            // Verify order belongs to buyer
+            if ($order['buyer_id'] != $currentUser['user_id']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+                exit;
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $order
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to fetch order detail',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Confirm order received (ON_DELIVERY → RECEIVED)
+     */
+    public function confirmOrderReceived() {
+        AuthMiddleware::requireRole('BUYER');
+        $currentUser = AuthMiddleware::getCurrentUser();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $order_id = $data['order_id'] ?? null;
+
+        if (!$order_id || !is_numeric($order_id)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid order ID']);
+            exit;
+        }
+
+        try {
+            $orderModel = new Order($this->db);
+            $order = $orderModel->getOrderById($order_id);
+
+            if (!$order) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Order not found']);
+                exit;
+            }
+
+            // Verify order belongs to buyer
+            if ($order['buyer_id'] != $currentUser['user_id']) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+                exit;
+            }
+
+            // Verify order status
+            if ($order['status'] !== 'ON_DELIVERY') {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Only orders in ON_DELIVERY status can be marked as received'
+                ]);
+                exit;
+            }
+
+            // Mark order as received
+            $result = $orderModel->markReceived($order_id, $order['store_id'], $order['total_price']);
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Order marked as received successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to confirm order received',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }
 ?>
