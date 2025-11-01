@@ -109,14 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.textContent = 'Saving...';
 
         try {
-            const response = await fetch('/api/store/update', {
-                method: 'POST',
-                body: formData
-            });
+            const data = await api.post('/api/store/update', formData);
 
-            const data = await response.json();
-
-            if (!response.ok) {
+            if (!data.success) {
                 if (data.errors && typeof data.errors === 'object') {
                     // Show field-specific errors
                     for (const [field, message] of Object.entries(data.errors)) {

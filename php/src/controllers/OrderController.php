@@ -59,13 +59,10 @@ class OrderController {
      */
     public function getOrders() {
         // Require seller role
-        AuthMiddleware::requireRole('SELLER');
-        $currentUser = $_SESSION['user'] ?? null;
-
-        if (!$currentUser) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-            exit;
+        $currentUser = AuthMiddleware::getCurrentUser();
+        
+        if (!$currentUser || $currentUser['role'] !== 'SELLER') {
+            Response::error('Unauthorized', null, 401);
         }
 
         // Get store info
@@ -118,13 +115,10 @@ class OrderController {
      */
     public function getOrderDetail() {
         // Require seller role
-        AuthMiddleware::requireRole('SELLER');
-        $currentUser = $_SESSION['user'] ?? null;
-
-        if (!$currentUser) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-            exit;
+        $currentUser = AuthMiddleware::getCurrentUser();
+        
+        if (!$currentUser || $currentUser['role'] !== 'SELLER') {
+            Response::error('Unauthorized', null, 401);
         }
 
         $order_id = $_GET['order_id'] ?? null;
@@ -175,13 +169,10 @@ class OrderController {
      */
     public function approve() {
         // Require seller role
-        AuthMiddleware::requireRole('SELLER');
-        $currentUser = $_SESSION['user'] ?? null;
-
-        if (!$currentUser) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-            exit;
+        $currentUser = AuthMiddleware::getCurrentUser();
+        
+        if (!$currentUser || $currentUser['role'] !== 'SELLER') {
+            Response::error('Unauthorized', null, 401);
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -253,13 +244,10 @@ class OrderController {
      */
     public function reject() {
         // Require seller role
-        AuthMiddleware::requireRole('SELLER');
-        $currentUser = $_SESSION['user'] ?? null;
-
-        if (!$currentUser) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-            exit;
+        $currentUser = AuthMiddleware::getCurrentUser();
+        
+        if (!$currentUser || $currentUser['role'] !== 'SELLER') {
+            Response::error('Unauthorized', null, 401);
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -343,13 +331,10 @@ class OrderController {
      */
     public function setDeliveryTime() {
         // Require seller role
-        AuthMiddleware::requireRole('SELLER');
-        $currentUser = $_SESSION['user'] ?? null;
-
-        if (!$currentUser) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-            exit;
+        $currentUser = AuthMiddleware::getCurrentUser();
+        
+        if (!$currentUser || $currentUser['role'] !== 'SELLER') {
+            Response::error('Unauthorized', null, 401);
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

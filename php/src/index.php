@@ -111,7 +111,7 @@ if ($route_parts[0] === 'auth') {
     if ($method === 'GET') {
         if (empty($route_parts[1])) {
             $cartController->index();
-        } elseif ($route_parts[1] === 'items') {
+        } elseif (isset($route_parts[1]) && $route_parts[1] === 'items') {
             $cartController->fetchItems();
         } else {
             header("HTTP/1.0 404 Not Found");
@@ -131,8 +131,13 @@ if ($route_parts[0] === 'auth') {
         }
 
     } elseif ($method === 'DELETE') {
-        $cart_item_id = $route_parts[1];
-        $cartController->deleteItem($cart_item_id);
+        if (isset($route_parts[1])) {
+            $cart_item_id = $route_parts[1];
+            $cartController->deleteItem($cart_item_id);
+        } else {
+            header("HTTP/1.0 404 Not Found");
+            require_once __DIR__ . '/views/404.php';
+        }
 
     } else {
         header("HTTP/1.0 404 Not Found");
@@ -165,9 +170,9 @@ if ($route_parts[0] === 'auth') {
         $controller->getUniqueItemCount();
     } elseif ($route_parts[1] === 'store') {
         $controller = new HomeController();
-        if ($route_parts[2] === 'get-store-info' && $method === 'GET') {
+        if (isset($route_parts[2]) && $route_parts[2] === 'get-store-info' && $method === 'GET') {
             $controller->getStoreInfo();
-        } elseif ($route_parts[2] === 'update' && $method === 'POST') {
+        } elseif (isset($route_parts[2]) && $route_parts[2] === 'update' && $method === 'POST') {
             $controller->updateStore();
         } else {
             header("HTTP/1.0 404 Not Found");
@@ -176,16 +181,29 @@ if ($route_parts[0] === 'auth') {
         }
     } elseif ($route_parts[1] === 'orders') {
         $orderController = new OrderController();
-        if ($route_parts[2] === 'detail' && $method === 'GET') {
+        if (isset($route_parts[2]) && $route_parts[2] === 'detail' && $method === 'GET') {
             $orderController->getOrderDetail();
-        } elseif ($route_parts[2] === 'approve' && $method === 'POST') {
+        } elseif (isset($route_parts[2]) && $route_parts[2] === 'approve' && $method === 'POST') {
             $orderController->approve();
-        } elseif ($route_parts[2] === 'reject' && $method === 'POST') {
+        } elseif (isset($route_parts[2]) && $route_parts[2] === 'reject' && $method === 'POST') {
             $orderController->reject();
-        } elseif ($route_parts[2] === 'delivery-time' && $method === 'POST') {
+        } elseif (isset($route_parts[2]) && $route_parts[2] === 'delivery-time' && $method === 'POST') {
             $orderController->setDeliveryTime();
         } elseif ($method === 'GET' && !isset($route_parts[2])) {
             $orderController->getOrders();
+        } else {
+            header("HTTP/1.0 404 Not Found");
+            echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
+            exit;
+        }
+    } elseif ($route_parts[1] === 'buyer-orders') {
+        $homeController = new HomeController();
+        if (isset($route_parts[2]) && $route_parts[2] === 'detail' && $method === 'GET') {
+            $homeController->getBuyerOrderDetail();
+        } elseif (isset($route_parts[2]) && $route_parts[2] === 'confirm' && $method === 'POST') {
+            $homeController->confirmOrderReceived();
+        } elseif ($method === 'GET' && !isset($route_parts[2])) {
+            $homeController->getBuyerOrders();
         } else {
             header("HTTP/1.0 404 Not Found");
             echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
@@ -231,6 +249,12 @@ if ($route_parts[0] === 'auth') {
         exit;
     } elseif ($route_parts[1] === 'profile') {
         $controller->buyerProfile();
+    } elseif ($route_parts[1] === 'order-history') {
+        if ($method === 'GET') {
+            $controller->buyerOrderHistory();
+        } else {
+            Response::error('Method not allowed', null, 405);
+        }
     } else {
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';
