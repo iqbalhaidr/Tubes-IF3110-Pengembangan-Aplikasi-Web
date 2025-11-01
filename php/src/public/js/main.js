@@ -121,7 +121,49 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+// Cart badge counter
+async function updateGlobalCartBadge() {
+    const cartBadge = document.getElementById('cartBadge');
+    if (!cartBadge) return;
+
+    try {
+        const response = await window.api.get('/api/cartcounter');
+        
+        if (response && response.success && response.data) {
+            const uniqueItemCount = response.data.unique_item_count || 0;
+            
+            cartBadge.textContent = uniqueItemCount;
+            if (uniqueItemCount > 0) {
+                cartBadge.style.display = 'flex';
+            } else {
+                cartBadge.style.display = 'none';
+            }
+        } else {
+            cartBadge.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Failed to fetch cart badge count:', error);
+        if (cartBadge) cartBadge.style.display = 'none';
+    }
+}
+
+// Check if user is logged in and update cart badge counter
+async function checkCartBadgeCounter() {
+    if (!window.api || typeof window.api.get !== 'function') {
+        return;
+    }
+
+    const data = await window.api.get('/auth/me');
+    
+    if (data && data.success && data.data) {
+        if (data.data.role === 'BUYER') {
+            updateGlobalCartBadge();
+        }
+    }      
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthStatus();
+    checkCartBadgeCounter();
 });

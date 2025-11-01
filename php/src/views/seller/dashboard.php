@@ -1,5 +1,6 @@
 <?php 
 $mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css');
+$dashboardCssVersion = filemtime(__DIR__ . '/../../public/css/dashboard.css');
 $navbarType = 'seller';
 $activeLink = 'dashboard';
 ?>
@@ -10,15 +11,36 @@ $activeLink = 'dashboard';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nimonspedia - Seller Dashboard</title>
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
+    <link rel="stylesheet" href="/public/css/dashboard.css?v=<?= $dashboardCssVersion ?>">
 </head>
 <body class="seller-dashboard">
     <?php include __DIR__ . '/../components/navbar.php'; ?>
 
     <main class="dashboard-content">
         <div class="container">
+            <!-- Store Header Info Section -->
             <header class="dashboard-header">
-                <h1>Dashboard</h1>
-                <p class="dashboard-subtitle">Welcome back! Here's a quick look at how your store is doing.</p>
+                <div class="store-header-content">
+                    <div class="store-header-left">
+                        <div class="store-logo-container">
+                            <?php if (!empty($store['store_logo_path'])): ?>
+                                <img src="/public/<?= htmlspecialchars($store['store_logo_path']) ?>" alt="<?= htmlspecialchars($store['store_name']) ?>" class="store-header-logo">
+                            <?php else: ?>
+                                <div class="store-logo-placeholder">
+                                    <span><?= strtoupper(substr($store['store_name'], 0, 2)) ?></span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="store-header-info">
+                            <h1><?= htmlspecialchars($store['store_name']) ?></h1>
+                            <p class="store-header-status">Store Status: <span class="status-badge status-active">Active</span></p>
+                            <p class="store-header-member-since">Member since <?= date('F Y', strtotime($store['created_at'])) ?></p>
+                        </div>
+                    </div>
+                    <div class="store-header-right">
+                        <button type="button" class="btn btn-secondary" id="editStoreBtn">Edit Store Info</button>
+                    </div>
+                </div>
             </header>
 
             <section class="dashboard-summary">
@@ -42,29 +64,80 @@ $activeLink = 'dashboard';
 
             <section class="dashboard-grid">
                 <div class="dashboard-panel">
-                    <h2>Store Activity</h2>
+                    <h2>Recent Activity</h2>
                     <p class="panel-description">Track recent orders, fulfillment performance, and customer activity.</p>
-                    <div class="panel-placeholder" aria-hidden="true">Analytics coming soon</div>
+                    <div class="panel-placeholder" aria-hidden="true">
+                        <div class="placeholder-content">
+                            <span>📊 Analytics Dashboard</span>
+                            <p>Coming soon</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="dashboard-actions">
-                    <a class="action-card" href="javascript:void(0);">
-                        <h3>Product Management</h3>
-                        <p>Keep your catalog up to date with the latest items.</p>
+                    <a class="action-card" href="/seller/products">
+                        <div class="action-icon">📦</div>
+                        <h3>Kelola Produk</h3>
+                        <p>Manage your product catalog, update prices, and monitor stock levels.</p>
+                        <span class="action-link">View All →</span>
                     </a>
-                    <a class="action-card" href="javascript:void(0);">
-                        <h3>Order Management</h3>
-                        <p>Review new orders and keep customers informed.</p>
+                    <a class="action-card" href="/seller/orders">
+                        <div class="action-icon">📋</div>
+                        <h3>Lihat Orders</h3>
+                        <p>Review new orders, approve, reject, and set delivery times.</p>
+                        <span class="action-link">View All →</span>
                     </a>
-                    <a class="action-card" href="javascript:void(0);">
-                        <h3>Add Product</h3>
-                        <p>Quickly list a new product and reach buyers faster.</p>
+                    <a class="action-card" href="/seller/product/add">
+                        <div class="action-icon">➕</div>
+                        <h3>Tambah Produk Baru</h3>
+                        <p>Create a new product listing and reach more buyers faster.</p>
+                        <span class="action-link">Add Now →</span>
                     </a>
                 </div>
             </section>
         </div>
     </main>
 
+    <!-- Edit Store Profile Modal -->
+    <div id="editStoreModal" class="modal hidden">
+        <div class="modal-overlay" id="editStoreOverlay"></div>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Edit Store Information</h2>
+                <button type="button" class="modal-close" id="editStoreClose">&times;</button>
+            </div>
+            <form id="editStoreForm" class="modal-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="edit_store_name">Store Name</label>
+                    <input type="text" id="edit_store_name" name="store_name" required placeholder="Your store name">
+                    <div class="error-message" id="edit_store_nameError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="edit_store_logo">Store Logo</label>
+                    <input type="file" id="edit_store_logo" name="store_logo" accept="image/jpeg,image/png,image/webp">
+                    <div class="logo-upload-preview" id="logoPreview">
+                        <span>Logo preview</span>
+                    </div>
+                    <div class="error-message" id="edit_store_logoError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="edit_store_description">Store Description</label>
+                    <div class="rich-text-wrapper" id="storeDescriptionWrapper">
+                        <div id="storeDescriptionEditor"></div>
+                    </div>
+                    <div class="error-message" id="edit_store_descriptionError"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="editStoreCancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="editStoreSubmit">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
     <script src="/public/js/api.js"></script>
     <script src="/public/js/main.js"></script>
+    <script src="/public/js/dashboard.js"></script>
+    <script src="/public/js/dashboard-edit-store.js"></script>
 </body>
 </html>

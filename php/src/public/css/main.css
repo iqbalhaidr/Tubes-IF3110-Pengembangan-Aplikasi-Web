@@ -432,6 +432,17 @@ body {
     color: var(--text-dark);
 }
 
+/* Store Logo Display in Profile */
+.profile-detail-row .store-logo-display {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: block;
+}
+
 .summary-card {
     position: sticky;
     top: 120px;
@@ -1656,6 +1667,12 @@ body.seller-dashboard {
     .summary-card {
         position: static;
     }
+
+    /* Responsive logo for tablets */
+    .profile-detail-row .store-logo-display {
+        width: 160px;
+        height: 160px;
+    }
 }
 
 @media (max-width: 640px) {
@@ -1687,6 +1704,12 @@ body.seller-dashboard {
 
     .profile-detail-row dt {
         flex: none;
+    }
+
+    /* Responsive logo for mobile */
+    .profile-detail-row .store-logo-display {
+        width: 140px;
+        height: 140px;
     }
 }
 

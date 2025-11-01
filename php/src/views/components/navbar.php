@@ -38,14 +38,6 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                         </a>
                     <?php endforeach; ?>
                 </div>
-                <?php 
-                    $storeModel = new Store();
-                    $store = $storeModel->findBySeller($current_user['user_id']);
-                    $storeBalance = $store['balance'] ?? 0;
-                ?>
-                <div class="store-balance-display">
-                    <span class="balance-label">Balance: Rp <?= number_format($storeBalance, 0, ',', '.') ?></span>
-                </div>
             <?php endif; ?>
         </div>
         
@@ -56,7 +48,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                     <a href="/auth/register" class="navbar-link">Daftar</a>
                 </div>
             <?php elseif ($navbarType === 'buyer'): ?>
-                <a href="javascript:void(0);" class="cart-icon" title="Shopping Cart">
+                <a href="/cart" class="cart-icon" title="Shopping Cart">
                     <span class="cart-badge" id="cartBadge">0</span>
                     🛒
                 </a>
