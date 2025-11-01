@@ -11,7 +11,7 @@ class CartController {
      * Endpoint for index displaying Cart page ()
      */
     public function index() {
-        AuthMiddleware::requireLogin();
+        AuthMiddleware::requireRole('BUYER', '/auth/login');
         $current_user = AuthMiddleware::getCurrentUser();
         $buyer_id = $current_user['user_id'];
 
@@ -19,7 +19,7 @@ class CartController {
         if (!$data['success']) {
             Response::error($data['message'], null, 500);
         }
-        $cartData = $this->_structure_cart_data($data['items']);
+        $cartData = Helper::structure_cart_data($data['items']);
         
         require_once __DIR__ . '/../views/cart/cart.php';
     }
@@ -120,7 +120,7 @@ class CartController {
         if (!$data['success']) {
             Response::error($data['message'], null, 500);
         }
-        $structuredCartData = $this->_structure_cart_data($data['items']);
+        $structuredCartData = Helper::structure_cart_data($data['items']);
 
         Response::success('Get items in cart successful', $structuredCartData, 200);
     }
@@ -141,56 +141,6 @@ class CartController {
         }
 
         Response::success('Get items in cart successful', $data, 200);
-    }
-
-    /**
-     * Helper function for structuring data
-     */
-    private function _structure_cart_data($cartItems) {
-        $cartData = [
-            "grandtotal_items" => 0,
-            "grandtotal_price" => 0.0,
-            "stores" => []
-        ];
-
-        if (empty($cartItems)) {
-            return $cartData;
-        }
-
-        foreach ($cartItems as $item) {
-            $store_id = $item['store_id'];
-            $cart_item_id = $item['cart_item_id'];
-
-            if (!isset($cartData['stores'][$store_id])) {
-                $cartData['stores'][$store_id] = [
-                    "store_logo_path" => $item['store_logo_path'],
-                    "store_name"      => $item['store_name'],
-                    "total_items"     => 0,
-                    "total_price"     => 0.0,
-                    "items"           => []
-                ];
-            }
-
-            $item_quantity = (int) $item['quantity'];
-            $item_price    = (float) $item['price'];
-            $item_subtotal = $item_price * $item_quantity;
-
-            $cartData['stores'][$store_id]['items'][$cart_item_id] = [
-                "main_image_path" => $item['main_image_path'],
-                "product_name"    => $item['product_name'],
-                "price"           => $item_price,
-                "quantity"        => $item_quantity,
-                "stock"           => (int) $item['stock']
-            ];
-
-            $cartData['stores'][$store_id]['total_items'] += $item_quantity;
-            $cartData['stores'][$store_id]['total_price'] += $item_subtotal;
-
-            $cartData['grandtotal_items'] += $item_quantity;
-            $cartData['grandtotal_price'] += $item_subtotal;
-        }
-
-        return $cartData;
     }
 
 }
