@@ -108,5 +108,166 @@ class Product {
         $stmt->execute([':product_id' => $productId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getProductsForSeller($store_id, $filters = [], $page = 1, $limit = 10) {
+        $offset = ($page - 1) * $limit;
+        
+        $baseSql = 'FROM product p 
+                    LEFT JOIN category_item ci ON p.product_id = ci.product_id 
+                    LEFT JOIN category c ON ci.category_id = c.category_id';
+        
+        $whereConditions = ['p.store_id = :store_id', 'p.deleted_at IS NULL'];
+        $params = [':store_id' => $store_id];
+
+        if (!empty($filters['search'])) {
+            $whereConditions[] = '(p.product_name ILIKE :search)';
+            $params[':search'] = '%' . $filters['search'] . '%';
+        }
+
+        if (!empty($filters['category'])) {
+            $whereConditions[] = 'c.category_id = :category';
+            $params[':category'] = $filters['category'];
+        }
+
+        $whereSql = 'WHERE ' . implode(' AND ', $whereConditions);
+        $countSql = "SELECT COUNT(DISTINCT p.product_id) 
+                     FROM product p 
+                     LEFT JOIN category_item ci ON p.product_id = ci.product_id 
+                     LEFT JOIN category c ON ci.category_id = c.category_id 
+                     $whereSql";
+        
+        $countStmt = $this->db->prepare($countSql);
+        $countStmt->execute($params);
+        $totalProducts = (int) $countStmt->fetchColumn();
+        $totalPages = $totalProducts > 0 ? ceil($totalProducts / $limit) : 1;
+
+        $validSorts = ['name' => 'p.product_name', 'price' => 'p.price', 'stock' => 'p.stock'];
+        $sortBy = $validSorts[$filters['sort_by']] ?? 'p.product_id';
+        $sortOrder = strtoupper($filters['sort_order']) === 'ASC' ? 'ASC' : 'DESC';
+        $orderBy = "ORDER BY $sortBy $sortOrder";
+
+        $productSql = "SELECT p.product_id, p.product_name, p.price, p.stock, p.main_image_path,
+                       STRING_AGG(c.category_name, ', ') AS categories
+                       $baseSql 
+                       $whereSql 
+                       GROUP BY p.product_id 
+                       $orderBy 
+                       LIMIT :limit OFFSET :offset";
+                       
+        $params[':limit'] = $limit;
+        $params[':offset'] = $offset;
+
+        $productStmt = $this->db->prepare($productSql);
+        $productStmt->execute($params);
+        $products = $productStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            'products' => $products,
+            'pagination' => [
+                'total_products' => $totalProducts,
+                'total_pages' => $totalPages,
+                'current_page' => (int) $page,
+                'limit' => $limit
+            ]
+        ];
+    }
+
+    public function softDeleteProduct($product_id, $store_id) {
+        $sql = "UPDATE product 
+                SET deleted_at = NOW() 
+                WHERE product_id = :product_id AND store_id = :store_id";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            ':product_id' => $product_id,
+            ':store_id' => $store_id
+        ]);
+        
+        return $stmt->rowCount(); 
+    }
+
+    public function createProduct($store_id, $name, $description, $price, $stock, $image_path = null) {
+        $sql = "INSERT INTO product (store_id, product_name, description, price, stock, main_image_path)
+                VALUES (:store_id, :name, :description, :price, :stock, :image_path)
+                RETURNING product_id";
+        
+        $stmt = $this->db->prepare($sql);
+        
+        $stmt->execute([
+            ':store_id' => (int)$store_id,
+            ':name' => (string)$name,
+            ':description' => (string)$description,
+            ':price' => (int)$price,
+            ':stock' => (int)$stock,
+            ':image_path' => $image_path
+        ]);
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$result || !isset($result['product_id'])) {
+            throw new Exception("Gagal mendapatkan product_id dari database");
+        }
+        
+        return (int)$result['product_id'];
+    }
+
+    public function updateProductImage($product_id, $image_path) {
+        $sql = "UPDATE product SET main_image_path = :image_path WHERE product_id = :product_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            ':image_path' => $image_path,
+            ':product_id' => $product_id
+        ]);
+    }
+
+    public function updateProduct($product_id, $store_id, $data) {
+        $sql = "UPDATE product 
+                SET 
+                    product_name = :name, 
+                    description = :description, 
+                    price = :price, 
+                    stock = :stock, 
+                    main_image_path = :image_path,
+                    updated_at = NOW()
+                WHERE 
+                    product_id = :product_id AND store_id = :store_id";
+        
+        $stmt = $this->db->prepare($sql);
+        $result = $stmt->execute([
+            ':name' => $data['name'],
+            ':description' => $data['description'],
+            ':price' => $data['price'],
+            ':stock' => $data['stock'],
+            ':image_path' => $data['image_path'],
+            ':product_id' => $product_id,
+            ':store_id' => $store_id
+        ]);
+        
+        if (!$result) {
+            throw new Exception("Gagal mengupdate database.");
+        }
+        
+        return $stmt->rowCount();
+    }
+
+    public function deleteProduct($product_id) {
+        $sql = "DELETE FROM product WHERE product_id = :product_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':product_id' => $product_id]);
+    }
+
+    public function connectCategoriesToProduct($product_id, $category_ids) {
+        $this->db->prepare("DELETE FROM category_item WHERE product_id = ?")
+             ->execute([$product_id]);
+        
+        $sql = "INSERT INTO category_item (product_id, category_id) VALUES (?, ?)";
+        $stmt = $this->db->prepare($sql);
+        
+        foreach ($category_ids as $category_id) {
+            if (!empty($category_id)) {
+                $stmt->execute([$product_id, (int)$category_id]);
+            }
+        }
+    }
 }
 ?>

@@ -101,7 +101,15 @@
                                     </div>
                                     <div class="product-store">
                                         <span class="info-label">Nama Toko:</span>
-                                        <span class="info-value"><?= htmlspecialchars($product['store']); ?></span>
+                                        
+                                        <?php
+                                        $storeUrl = "/store/" . htmlspecialchars($product['store_id']);
+                                        ?>
+
+                                        <span class="info-value store-link" data-store-url="<?= $storeUrl; ?>">
+                                            <?= htmlspecialchars($product['store']); ?>
+                                        </span>
+
                                     </div>
                                 </div>
                             </div>

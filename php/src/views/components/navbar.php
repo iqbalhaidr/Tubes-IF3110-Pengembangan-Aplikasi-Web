@@ -25,8 +25,9 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                     <?php 
                     $defaultSellerLinks = [
                         ['href' => '/seller/dashboard', 'label' => 'Dashboard', 'key' => 'dashboard'],
-                        ['href' => 'javascript:void(0);', 'label' => 'Produk', 'key' => 'products'],
-                        ['href' => '/seller/orders', 'label' => 'Orders', 'key' => 'orders'],
+                        ['href' => '/seller/products', 'label' => 'Produk', 'key' => 'products'],
+                        ['href' => 'javascript:void(0);', 'label' => 'Orders', 'key' => 'orders'],
+                        ['href' => '/seller/profile', 'label' => 'Profile', 'key' => 'profile'],
                     ];
                     $sellerLinks = $navLinks ?? $defaultSellerLinks;
                     ?>

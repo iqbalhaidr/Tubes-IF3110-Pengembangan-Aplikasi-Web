@@ -109,3 +109,12 @@
         gap: 10px;
     }
 }
+.product-card .store-link {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.product-card .store-link:hover {
+    color: #007BFF;
+    text-decoration: underline;
+}

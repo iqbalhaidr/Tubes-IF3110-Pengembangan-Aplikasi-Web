@@ -35,6 +35,8 @@ async function fetchProducts() {
             renderProducts(productsGrid, result.data.products);
             renderPagination(paginationContainer, result.data.pagination);
             updateFilterUI();
+            
+            setupStoreLinkListener();
         } else {
             throw new Error(result.message || 'Failed to fetch data');
         }
@@ -82,9 +84,14 @@ function renderProducts(productsGrid, products) {
         const isOutOfStock = product.stock === 0;
         const stockClass = isOutOfStock ? 'out-of-stock' : '';
         const imageUrl = product.image || '/public/images/default.png';
-        const formattedPrice = Number(product.price).toLocaleString('id-ID');
+        
+        const formattedPrice = new Intl.NumberFormat('id-ID', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(Number(product.price));
         
         const allCategories = product.categories;
+        const storeUrl = `/store/${product.store_id}`;
 
         productHTML += `
             <a class="product-card ${stockClass}" 
@@ -109,7 +116,9 @@ function renderProducts(productsGrid, products) {
                         </div>
                         <div class="product-store">
                             <span class="info-label">Nama Toko:</span>
-                            <span class="info-value">${product.store}</span>
+                            <span class="info-value store-link" data-store-url="${storeUrl}">
+                                ${product.store}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -248,12 +257,17 @@ function updateFilterUI() {
 
     let filterText = "Filter Harga";
     if (isPriceFilterActive) {
+        const formatPrice = (price) => new Intl.NumberFormat('id-ID', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(Number(price));
+
         if (minPrice && maxPrice) {
-            filterText = `Rp ${Number(minPrice).toLocaleString('id-ID')} - Rp ${Number(maxPrice).toLocaleString('id-ID')}`;
+            filterText = `Rp ${formatPrice(minPrice)} - Rp ${formatPrice(maxPrice)}`;
         } else if (minPrice) {
-            filterText = `> Rp ${Number(minPrice).toLocaleString('id-ID')}`;
+            filterText = `> Rp ${formatPrice(minPrice)}`;
         } else if (maxPrice) {
-            filterText = `< Rp ${Number(maxPrice).toLocaleString('id-ID')}`;
+            filterText = `< Rp ${formatPrice(maxPrice)}`;
         }
         openBtn.classList.add('active');
     } else {
@@ -289,6 +303,34 @@ function handleResetPrice() {
     fetchProducts();
 }
 
+function setupStoreLinkListener() {
+    const productsGrid = document.getElementById('productsGrid');
+
+    if (!productsGrid) return;
+
+    const oldListener = productsGrid._storeLinkListener;
+    if (oldListener) {
+        productsGrid.removeEventListener('click', oldListener);
+    }
+
+    const newListener = function(event) {
+        const storeLink = event.target.closest('.store-link');
+
+        if (storeLink) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const storeUrl = storeLink.dataset.storeUrl;
+            if (storeUrl) {
+                window.location.href = storeUrl;
+            }
+        }
+    };
+
+    productsGrid._storeLinkListener = newListener;
+    productsGrid.addEventListener('click', newListener);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const categoryFilterBtn = document.getElementById('categoryFilter');
@@ -307,6 +349,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalClearBtn = document.getElementById('modalClearBtn');
     const quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
     const initialResetBtn = document.getElementById('resetPriceFilter');
+
+    setupStoreLinkListener();
 
     if (searchInput) {
         searchInput.addEventListener('input', debounce(() => {
@@ -431,5 +475,4 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (modalMinInput) modalMinInput.value = currentState.min_price;
     if (modalMaxInput) modalMaxInput.value = currentState.max_price;
-
 });
