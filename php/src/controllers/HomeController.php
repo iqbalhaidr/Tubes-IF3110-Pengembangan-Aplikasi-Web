@@ -100,6 +100,24 @@ class HomeController {
     public function sellerDashboard() {
         AuthMiddleware::requireRole('SELLER', '/auth/login');
 
+        $currentUser = AuthMiddleware::getCurrentUser();
+        
+        if (!$currentUser) {
+            header('Location: /auth/login');
+            exit;
+        }
+
+        // Get store info
+        $storeModel = new Store();
+        $store = $storeModel->findBySeller($currentUser['user_id']);
+
+        if (!$store) {
+            // Store doesn't exist - this is a new seller who hasn't created a store yet
+            // For now, redirect them to login (they should create store during registration)
+            header('Location: /auth/login');
+            exit;
+        }
+
         $stats = [
             'total_products' => 0,
             'pending_orders' => 0,
@@ -110,7 +128,7 @@ class HomeController {
         $navLinks = [
             ['label' => 'Dashboard', 'href' => '/seller/dashboard', 'key' => 'dashboard'],
             ['label' => 'Produk', 'href' => 'javascript:void(0);', 'key' => 'products'],
-            ['label' => 'Orders', 'href' => 'javascript:void(0);', 'key' => 'orders'],
+            ['label' => 'Orders', 'href' => '/seller/orders', 'key' => 'orders'],
         ];
 
         require_once __DIR__ . '/../views/seller/dashboard.php';

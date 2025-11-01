@@ -26,7 +26,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                     $defaultSellerLinks = [
                         ['href' => '/seller/dashboard', 'label' => 'Dashboard', 'key' => 'dashboard'],
                         ['href' => 'javascript:void(0);', 'label' => 'Produk', 'key' => 'products'],
-                        ['href' => 'javascript:void(0);', 'label' => 'Orders', 'key' => 'orders'],
+                        ['href' => '/seller/orders', 'label' => 'Orders', 'key' => 'orders'],
                     ];
                     $sellerLinks = $navLinks ?? $defaultSellerLinks;
                     ?>
@@ -37,10 +37,6 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                         </a>
                     <?php endforeach; ?>
                 </div>
-                <?php 
-                    $storeModel = new Store();
-                    $store = $storeModel->findBySeller($current_user['user_id']);
-                ?>
             <?php endif; ?>
         </div>
         

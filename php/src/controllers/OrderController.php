@@ -15,7 +15,7 @@ class OrderController {
     public function index() {
         // Require seller role
         AuthMiddleware::requireRole('SELLER', '/auth/login');
-        $currentUser = $_SESSION['user'] ?? null;
+        $currentUser = AuthMiddleware::getCurrentUser();
 
         if (!$currentUser) {
             header('Location: /auth/login');
@@ -23,16 +23,27 @@ class OrderController {
         }
 
         // Get store info
-        $storeModel = new Store($this->db);
+        $storeModel = new Store();
         $store = $storeModel->findBySeller($currentUser['user_id']);
 
         if (!$store) {
-            header('Location: /seller/profile');
+            header('Location: /auth/login');
             exit;
         }
 
-        // Get order counts by status
-        $orderCounts = $this->orderModel->getOrderCountByStatus($store['store_id']);
+        // Get order counts by status - THIS REQUIRES Order model to work properly
+        try {
+            $orderCounts = $this->orderModel->getOrderCountByStatus($store['store_id']);
+        } catch (Exception $e) {
+            // If there's an error getting counts, still show the page
+            $orderCounts = [
+                'WAITING_APPROVAL' => 0,
+                'APPROVED' => 0,
+                'ON_DELIVERY' => 0,
+                'RECEIVED' => 0,
+                'REJECTED' => 0
+            ];
+        }
 
         // Set view data
         $navbarType = 'seller';
@@ -58,7 +69,7 @@ class OrderController {
         }
 
         // Get store info
-        $storeModel = new Store($this->db);
+        $storeModel = new Store();
         $store = $storeModel->findBySeller($currentUser['user_id']);
 
         if (!$store) {
@@ -134,7 +145,7 @@ class OrderController {
             }
 
             // Verify order belongs to seller's store
-            $storeModel = new Store($this->db);
+            $storeModel = new Store();
             $store = $storeModel->findBySeller($currentUser['user_id']);
 
             if (!$store || $order['store_id'] != $store['store_id']) {
@@ -199,7 +210,7 @@ class OrderController {
             }
 
             // Verify order belongs to seller's store
-            $storeModel = new Store($this->db);
+            $storeModel = new Store();
             $store = $storeModel->findBySeller($currentUser['user_id']);
 
             if (!$store || $order['store_id'] != $store['store_id']) {
@@ -290,7 +301,7 @@ class OrderController {
             }
 
             // Verify order belongs to seller's store
-            $storeModel = new Store($this->db);
+            $storeModel = new Store();
             $store = $storeModel->findBySeller($currentUser['user_id']);
 
             if (!$store || $order['store_id'] != $store['store_id']) {
@@ -382,7 +393,7 @@ class OrderController {
             }
 
             // Verify order belongs to seller's store
-            $storeModel = new Store($this->db);
+            $storeModel = new Store();
             $store = $storeModel->findBySeller($currentUser['user_id']);
 
             if (!$store || $order['store_id'] != $store['store_id']) {
