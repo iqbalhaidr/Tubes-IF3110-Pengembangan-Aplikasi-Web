@@ -196,7 +196,7 @@ class ProductController {
                 throw new Exception("Nama produk tidak valid.");
             }
             
-            if (empty($description) || strlen($description) > 5000) {
+            if (empty($description) || strlen($description) > 1000) {
                 throw new Exception("Deskripsi tidak valid.");
             }
             
@@ -325,7 +325,7 @@ class ProductController {
             $category_ids = json_decode($_POST['categories'] ?? '[]', true);
             
             if (empty($name) || strlen($name) > 200) throw new Exception("Nama produk tidak valid.");
-            if (empty($description) || strlen($description) > 5000) throw new Exception("Deskripsi tidak valid.");
+            if (empty($description) || strlen($description) > 1000) throw new Exception("Deskripsi tidak valid.");
             if ($price === false || $price < 1000) throw new Exception("Harga tidak valid. Minimal Rp 1.000.");
             if ($stock === false || $stock < 0) throw new Exception("Stok tidak valid. Minimal 0.");
             if (empty($category_ids) || !is_array($category_ids)) throw new Exception("Pilih minimal satu kategori.");

@@ -33,10 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const length = quillStoreEditor.getLength() - 1;
             const errorDiv = document.getElementById('store-desc-error');
             
-            if (length > 5000) {
-                quillStoreEditor.deleteText(5000, length);
+            if (length > 1000) {
+                quillStoreEditor.deleteText(1000, length);
                 if (errorDiv) {
-                    errorDiv.textContent = 'Maximum 5000 characters';
+                    errorDiv.textContent = 'Maximum 1000 characters';
                     errorDiv.style.display = 'block';
                 }
             } else {
@@ -157,8 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (quillStoreEditor) {
             const descLength = quillStoreEditor.getLength() - 1;
-            if (descLength > 5000) {
-                showFieldError('store_description', 'Description cannot exceed 5000 characters');
+            if (descLength > 1000) {
+                showFieldError('store_description', 'Description cannot exceed 1000 characters');
                 return;
             }
         }

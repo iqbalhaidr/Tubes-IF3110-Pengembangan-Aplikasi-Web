@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resetSubmitButton();
             return;
         }
-        if (quill.root.innerHTML.length > 5000) {
+        if (quill.root.innerHTML.length > 1000) {
             descError.textContent = 'Deskripsi terlalu panjang.';
             resetSubmitButton();
             return;

@@ -29,7 +29,7 @@
             </div>
 
             <div class="form-group">
-                <label for="quill-editor">Deskripsi Produk (Max 5000 karakter)</label>
+                <label for="quill-editor">Deskripsi Produk (Max 1000 karakter)</label>
                 <div id="quill-editor"></div>
                 <input type="hidden" id="description" name="description">
                 <div id="desc-error" class="validation-error"></div>
