@@ -266,6 +266,8 @@ if ($route_parts[0] === 'auth') {
         $controller->sellerDashboard();
     } elseif ($route_parts[1] === 'profile') {
         $controller->sellerProfile();
+    } elseif ($route_parts[1] === 'export-performance' && $method === 'GET') {
+        $controller->exportPerformanceReport();
     } elseif ($route_parts[1] === 'products' && $method === 'GET') {
         $productController = new ProductController();
         if (!isset($route_parts[2]) && $method === 'GET') {

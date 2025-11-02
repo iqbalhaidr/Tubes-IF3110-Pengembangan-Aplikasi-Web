@@ -585,5 +585,107 @@ class HomeController {
             ]);
         }
     }
+
+    /**
+     * API: Handle Seller Performance Report Export
+     */
+    public function exportPerformanceReport() {
+        AuthMiddleware::requireRole('SELLER', '/auth/login');
+
+        try {
+            $currentUser = AuthMiddleware::getCurrentUser();
+            
+            $storeModel = new Store();
+            $store = $storeModel->findBySeller($currentUser['user_id']);
+
+            if (!$store) {
+                http_response_code(404);
+                echo "Store not found.";
+                exit;
+            }
+
+            $reportData = $this->getSellerPerformanceReport($store['store_id'], $store);
+
+            $storeNameSanitized = preg_replace('/[^a-zA-Z0-9_ -]/', '', $store['store_name']);
+            $fileName = "performance_report_" . str_replace(' ', '_', $storeNameSanitized) . "_" . date("Ymd") . ".csv";
+
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            $output = fopen('php://output', 'w');
+
+            fputcsv($output, ['Metric', 'Value']);
+
+            foreach ($reportData as $key => $value) {
+                fputcsv($output, [$key, $value]);
+            }
+            
+            fclose($output);
+            exit;
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo "Failed to generate report: " . $e->getMessage();
+            exit;
+        }
+    }
+
+    /**
+     * Get detailed performance report data for a store
+     */
+    private function getSellerPerformanceReport($store_id, $storeInfo) {
+        $report = [];
+
+        $report['Store Name'] = $storeInfo['store_name'];
+        $report['Store Balance'] = 'Rp ' . number_format($storeInfo['balance'] ?? 0, 0, ',', '.');
+        $report['Report Generated At'] = date("d M Y H:i:s");
+        
+        $productStatsQuery = 'SELECT
+                                COUNT(*) as total_products,
+                                COUNT(CASE WHEN stock < 10 THEN 1 END) as low_stock_products,
+                                COALESCE(SUM(price * stock), 0) as total_stock_value
+                            FROM product
+                            WHERE store_id = :store_id AND deleted_at IS NULL';
+        $productStmt = $this->db->prepare($productStatsQuery);
+        $productStmt->execute([':store_id' => $store_id]);
+        $productStats = $productStmt->fetch(PDO::FETCH_ASSOC);
+
+        $report['--- Products ---'] = '---'; // Separator
+        $report['Total Active Products'] = (int)($productStats['total_products'] ?? 0);
+        $report['Products with Low Stock (<10)'] = (int)($productStats['low_stock_products'] ?? 0);
+        $report['Total Stock Value'] = 'Rp ' . number_format((int)($productStats['total_stock_value'] ?? 0), 0, ',', '.');
+
+
+        $orderStatsQuery = "SELECT
+                                COALESCE(SUM(CASE WHEN status = 'RECEIVED' THEN total_price ELSE 0 END), 0) as total_revenue,
+                                COALESCE(SUM(CASE WHEN status IN ('APPROVED', 'ON_DELIVERY') THEN total_price ELSE 0 END), 0) as pending_revenue,
+                                COUNT(*) as all_time_orders,
+                                COUNT(CASE WHEN status = 'RECEIVED' THEN 1 END) as total_orders_completed,
+                                COUNT(CASE WHEN status = 'WAITING_APPROVAL' THEN 1 END) as total_orders_pending_approval,
+                                COUNT(CASE WHEN status = 'APPROVED' THEN 1 END) as total_orders_to_ship,
+                                COUNT(CASE WHEN status = 'ON_DELIVERY' THEN 1 END) as total_orders_in_delivery,
+                                COUNT(CASE WHEN status = 'REJECTED' THEN 1 END) as total_orders_rejected
+                            FROM \"order\"
+                            WHERE store_id = :store_id";
+        $orderStmt = $this->db->prepare($orderStatsQuery);
+        $orderStmt->execute([':store_id' => $store_id]);
+        $orderStats = $orderStmt->fetch(PDO::FETCH_ASSOC);
+
+        $report['--- Revenue ---'] = '---'; // Separator
+        $report['Total Revenue (Completed Orders)'] = 'Rp ' . number_format((int)($orderStats['total_revenue'] ?? 0), 0, ',', '.');
+        $report['Pending Revenue (In Progress)'] = 'Rp ' . number_format((int)($orderStats['pending_revenue'] ?? 0), 0, ',', '.');
+        
+        $report['--- Orders ---'] = '---'; // Separator
+        $report['Total All-Time Orders'] = (int)($orderStats['all_time_orders'] ?? 0);
+        $report['Orders Pending Approval'] = (int)($orderStats['total_orders_pending_approval'] ?? 0);
+        $report['Orders To Ship (Approved)'] = (int)($orderStats['total_orders_to_ship'] ?? 0);
+        $report['Orders In Delivery'] = (int)($orderStats['total_orders_in_delivery'] ?? 0);
+        $report['Orders Completed (Received)'] = (int)($orderStats['total_orders_completed'] ?? 0);
+        $report['Orders Rejected'] = (int)($orderStats['total_orders_rejected'] ?? 0);
+
+        return $report;
+    }
 }
 ?>

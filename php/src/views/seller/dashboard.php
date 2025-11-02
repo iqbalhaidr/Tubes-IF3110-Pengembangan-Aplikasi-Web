@@ -40,6 +40,7 @@ $activeLink = 'dashboard';
                         </div>
                     </div>
                     <div class="store-header-right">
+                        <a href="/seller/export-performance" class="btn btn-primary" style="text-decoration: none; margin-right: 10px;">Export CSV</a>
                         <button type="button" class="btn btn-secondary" id="editStoreBtn">Edit Store Info</button>
                     </div>
                 </div>
