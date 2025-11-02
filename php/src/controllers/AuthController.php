@@ -62,7 +62,7 @@ class AuthController {
         AuthMiddleware::login($result['user']);
 
         // Redirect based on role
-        $redirect_url = $result['user']['role'] === 'SELLER' ? '/seller/dashboard' : '/buyer/home';
+        $redirect_url = $result['user']['role'] === 'SELLER' ? '/seller/dashboard' : '/home';
         Response::success('Login successful', ['redirect' => $redirect_url], 200);
     }
 
@@ -107,7 +107,7 @@ class AuthController {
         // Create session
         AuthMiddleware::login($result['user']);
 
-        Response::success('Registration successful', ['redirect' => '/buyer/home'], 201);
+        Response::success('Registration successful', ['redirect' => '/home'], 201);
     }
 
     /**
