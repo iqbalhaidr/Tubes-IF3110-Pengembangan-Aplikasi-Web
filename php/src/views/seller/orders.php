@@ -12,6 +12,7 @@ $activeLink = 'orders';
     <title>Nimonspedia - Order Management</title>
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/orders.css?v=<?= $ordersCssVersion ?>">
+    <link rel="stylesheet" href="/public/css/logout-modal.css">
 </head>
 <body class="seller-orders">
     <?php include __DIR__ . '/../components/navbar.php'; ?>

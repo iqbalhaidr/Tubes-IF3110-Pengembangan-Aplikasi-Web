@@ -6,6 +6,7 @@
     <title>Checkout - Nimonspedia</title>
     <link rel="stylesheet" href="/public/css/main.css">
     <link rel="stylesheet" href="/public/css/checkout.css">
+    <link rel="stylesheet" href="/public/css/logout-modal.css">
 </head>
 <body class="buyer-page">
     

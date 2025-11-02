@@ -6,6 +6,7 @@
         <title>Nimonspedia - Your Cart</title>
         <link rel="stylesheet" href="/public/css/main.css">
         <link rel="stylesheet" href="/public/css/cart.css">
+        <link rel="stylesheet" href="/public/css/logout-modal.css">
     </head>
     <body>
 

@@ -12,6 +12,7 @@ $activeLink = 'order-history';
     <title>Nimonspedia - Order History</title>
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/order_history.css?v=<?= $orderHistoryCssVersion ?>">
+    <link rel="stylesheet" href="/public/css/logout-modal.css">
 </head>
 <body class="buyer-order-history">
     <?php include __DIR__ . '/../components/navbar.php'; ?>

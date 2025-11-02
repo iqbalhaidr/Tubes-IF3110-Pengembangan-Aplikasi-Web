@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/public/css/main.css">
     <link rel="stylesheet" href="/public/css/home.css">
     <link rel="stylesheet" href="/public/css/product-card.css">
+    <link rel="stylesheet" href="/public/css/logout-modal.css">
 </head>
 <?php $basePath = '/home'; ?>
 <body class="<?= $bodyClass ?>">

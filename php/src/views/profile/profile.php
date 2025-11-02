@@ -18,6 +18,7 @@ $activeLink = 'profile';
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/modal.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/profile.css?v=<?= $mainCssVersion ?>">
+    <link rel="stylesheet" href="/public/css/logout-modal.css?v=<?= $mainCssVersion ?>">
 </head>
 <body class="profile-page">
     <?php include __DIR__ . '/../components/navbar.php'; ?>

@@ -9,11 +9,15 @@ let currentStatus = 'all';
 let currentSearch = '';
 let totalPages = 1;
 let orderCountsData = {};
+let countRefreshInterval = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeEventListeners();
     loadOrderCounts();
     loadOrders();
+    
+    // Refresh order counts every 5 seconds
+    countRefreshInterval = setInterval(loadOrderCounts, 5000);
 });
 
 // ================================================================
@@ -145,34 +149,42 @@ function setupModalHandlers() {
 
 async function loadOrderCounts() {
     try {
-        const data = await api.get('/api/orders?status=all&limit=1');
+        // Fetch all statuses in parallel for better performance
+        const statuses = ['all', 'WAITING_APPROVAL', 'APPROVED', 'ON_DELIVERY', 'RECEIVED', 'REJECTED'];
+        
+        const promises = statuses.map(status => {
+            const url = status === 'all' 
+                ? '/api/orders?status=all&limit=1'
+                : `/api/orders?status=${status}&limit=1`;
+            return api.get(url).then(data => ({ status, data }));
+        });
 
-        if (data.success) {
-            // Count totals for each status from first page
-            orderCountsData = {
-                all: data.data.total || 0
-            };
+        const results = await Promise.all(promises);
 
-            // Load counts for each status
-            const statuses = ['WAITING_APPROVAL', 'APPROVED', 'ON_DELIVERY', 'RECEIVED', 'REJECTED'];
-            for (const status of statuses) {
-                const statusData = await api.get(`/api/orders?status=${status}&limit=1`);
-                if (statusData.success) {
-                    const statusKey = status.toLowerCase().replace(/_/g, '');
-                    const countId = `count${status.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')}`;
+        // Update counts for each status
+        results.forEach(({ status, data }) => {
+            if (data && data.success && data.data) {
+                const total = data.data.total || 0;
+                
+                if (status === 'all') {
+                    orderCountsData.all = total;
+                    const countAll = document.getElementById('countAll');
+                    if (countAll) countAll.textContent = total;
+                } else {
+                    // Map status to count element ID
+                    // e.g., WAITING_APPROVAL -> countWaitingApproval
+                    const countId = 'count' + status
+                        .split('_')
+                        .map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase())
+                        .join('');
+                    
                     const countElement = document.getElementById(countId);
                     if (countElement) {
-                        countElement.textContent = statusData.data.total || 0;
+                        countElement.textContent = total;
                     }
                 }
             }
-
-            // Update all count
-            const countAll = document.getElementById('countAll');
-            if (countAll) {
-                countAll.textContent = orderCountsData.all;
-            }
-        }
+        });
     } catch (error) {
         console.error('Error loading order counts:', error);
     }

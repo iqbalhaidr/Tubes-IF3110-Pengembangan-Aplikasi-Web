@@ -12,6 +12,7 @@ $activeLink = 'dashboard';
     <title>Nimonspedia - Seller Dashboard</title>
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/dashboard.css?v=<?= $dashboardCssVersion ?>">
+    <link rel="stylesheet" href="/public/css/logout-modal.css">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 </head>
 <body class="seller-dashboard">

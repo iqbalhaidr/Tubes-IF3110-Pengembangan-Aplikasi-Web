@@ -12,6 +12,7 @@ $storeDetailCssVersion = filemtime(__DIR__ . '/../public/css/store_detail.css');
     <link rel="stylesheet" href="/public/css/home.css?v=<?= filemtime(__DIR__ . '/../public/css/home.css') ?>">
     <link rel="stylesheet" href="/public/css/product-card.css?v=<?= filemtime(__DIR__ . '/../public/css/product-card.css') ?>">
     <link rel="stylesheet" href="/public/css/store_detail.css?v=<?= $storeDetailCssVersion ?>">
+    <link rel="stylesheet" href="/public/css/logout-modal.css">
 </head>
 
 <?php $basePath = '/store/' . $store['id']; ?>
@@ -24,6 +25,14 @@ $storeDetailCssVersion = filemtime(__DIR__ . '/../public/css/store_detail.css');
     ?>
 
     <div class="store-header">
+        <div class="store-logo-section">
+            <?php if (!empty($store['logo_path'])): ?>
+                <img src="<?php echo htmlspecialchars($store['logo_path']); ?>" 
+                     alt="<?php echo htmlspecialchars($store['name']); ?> Logo" 
+                     class="store-logo-image"
+                     onerror="this.style.display='none'">
+            <?php endif; ?>
+        </div>
         <div class="store-info">
             <h1><?php echo htmlspecialchars($store['name']); ?></h1>
             <div class="store-description">

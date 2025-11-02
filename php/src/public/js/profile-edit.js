@@ -2,6 +2,53 @@
  * Profile Edit Modal Management
  */
 
+/**
+ * Show toast notification
+ */
+function showToast(message, type = 'info', duration = 5000) {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    // Icon map
+    const iconMap = {
+        success: '✓',
+        error: '✕',
+        info: 'ℹ',
+        warning: '⚠'
+    };
+
+    toast.innerHTML = `
+        <span class="toast-icon">${iconMap[type] || '•'}</span>
+        <span class="toast-message">${message}</span>
+        <button class="toast-close" type="button">×</button>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    // Close button handler
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+        toast.classList.add('leaving');
+        setTimeout(() => toast.remove(), 300);
+    });
+
+    // Auto remove after duration
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.classList.add('leaving');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, duration);
+}
+
 function togglePassword(inputId, button) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -208,6 +255,7 @@ function initializeBuyerProfileEdit() {
                 if (response.success) {
                     currentUserData = { name, address };
                     closeModal('editProfileModal');
+                    showToast('Profile updated successfully! 🎉', 'success', 3000);
                     // Reload page to show updated data
                     setTimeout(() => {
                         window.location.reload();
@@ -217,8 +265,9 @@ function initializeBuyerProfileEdit() {
                         Object.keys(response.errors).forEach(field => {
                             showFieldError(field, response.errors[field], 'edit');
                         });
+                        showToast(response.message || 'Failed to update profile', 'error');
                     } else {
-                        alert(response.message || 'Failed to update profile');
+                        showToast(response.message || 'Failed to update profile', 'error');
                     }
                 }
             } catch (error) {
@@ -227,8 +276,9 @@ function initializeBuyerProfileEdit() {
                     Object.keys(error.errors).forEach(field => {
                         showFieldError(field, error.errors[field], 'edit');
                     });
+                    showToast(error.message || 'An error occurred', 'error');
                 } else {
-                    alert(error.message || 'An error occurred while updating profile');
+                    showToast(error.message || 'An error occurred while updating profile', 'error');
                 }
             } finally {
                 submitBtn.disabled = false;
@@ -332,7 +382,7 @@ function initializeBuyerProfileEdit() {
                 if (response.success) {
                     closeModal('changePasswordModal');
                     closeModal('passwordConfirmModal');
-                    alert('Password changed successfully');
+                    showToast('Password changed successfully! 🔐', 'success', 3000);
                     changePasswordForm.reset();
                 } else {
                     if (response.errors) {
@@ -340,8 +390,9 @@ function initializeBuyerProfileEdit() {
                             const mappedField = field === 'old_password' ? 'current_password' : field;
                             showFieldError(mappedField, response.errors[field], '');
                         });
+                        showToast(response.message || 'Failed to change password', 'error');
                     } else {
-                        alert(response.message || 'Failed to change password');
+                        showToast(response.message || 'Failed to change password', 'error');
                     }
                 }
             } catch (error) {
@@ -351,8 +402,9 @@ function initializeBuyerProfileEdit() {
                         const mappedField = field === 'old_password' ? 'current_password' : field;
                         showFieldError(mappedField, error.errors[field], '');
                     });
+                    showToast(error.message || 'An error occurred', 'error');
                 } else {
-                    alert(error.message || 'An error occurred');
+                    showToast(error.message || 'An error occurred', 'error');
                 }
             } finally {
                 submitBtn.disabled = false;

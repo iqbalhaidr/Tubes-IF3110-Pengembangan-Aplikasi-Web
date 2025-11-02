@@ -7,6 +7,7 @@
     <title>Manajemen Produk</title>
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/product_management.css">
+    <link rel="stylesheet" href="/public/css/logout-modal.css">
 </head>
 <body class="seller-page">
     

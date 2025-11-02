@@ -105,6 +105,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (result.success) {
                     showToast('Checkout successful! Redirecting to your orders...', 'success');
+                    
+                    // Refresh user data to update balance in navbar
+                    try {
+                        const userData = await api.get('/auth/me');
+                        if (userData && userData.success && userData.data) {
+                            // Update navbar balance display
+                            const balanceAmount = document.getElementById('balanceAmount');
+                            if (balanceAmount && userData.data.balance !== undefined) {
+                                const formatter = new Intl.NumberFormat('id-ID');
+                                balanceAmount.textContent = 'Balance: Rp ' + formatter.format(userData.data.balance);
+                            }
+                            
+                            // Dispatch custom event for other components to listen to
+                            window.dispatchEvent(new CustomEvent('balance:updated', {
+                                detail: { balance: userData.data.balance }
+                            }));
+                        }
+                    } catch (err) {
+                        console.log('Could not refresh user data, balance may not update in navbar');
+                    }
+                    
                     setTimeout(() => {
                         window.location.href = result.data.redirect || '/buyer/order-history';
                     }, 2000);

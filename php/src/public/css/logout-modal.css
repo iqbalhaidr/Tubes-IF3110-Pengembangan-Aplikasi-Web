@@ -1,0 +1,143 @@
+/* ================================================================
+   LOGOUT CONFIRMATION MODAL
+   ================================================================ */
+
+.logout-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.logout-modal-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.logout-modal-content {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 32px 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease;
+}
+
+.logout-modal-content h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+}
+
+.logout-modal-content p {
+    font-size: 14px;
+    color: var(--text-medium);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-btn-secondary {
+    background: var(--light-gray);
+    color: var(--text-dark);
+}
+
+.modal-btn-secondary:hover {
+    background: var(--border-color);
+}
+
+.modal-btn-danger {
+    background: var(--accent-red);
+    color: var(--white);
+}
+
+.modal-btn-danger:hover {
+    background: #c82a33;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================================================================
+   LOGOUT BUTTON STYLING
+   ================================================================ */
+
+.logout-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+    font-size: inherit;
+    font-family: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.logout-link:hover {
+    color: var(--error-red);
+}
+
+.logout-link:focus {
+    outline: none;
+}
+
+/* Dropdown item logout button */
+.dropdown-item[type="button"] {
+    background: none !important;
+    border: none !important;
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-dark);
+    transition: background-color 0.2s ease;
+    font-family: inherit;
+    display: block !important;
+    text-decoration: none;
+    appearance: button;
+}
+
+.dropdown-item[type="button"]:hover {
+    background-color: var(--background-gray) !important;
+}
+
+.dropdown-item[type="button"]:focus {
+    outline: none;
+}

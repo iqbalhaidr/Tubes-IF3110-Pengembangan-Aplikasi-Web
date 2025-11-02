@@ -7,6 +7,7 @@
     <title>Tambah Produk Baru</title>
     <link rel="stylesheet" href="/../public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/../public/css/product_management.css">
+    <link rel="stylesheet" href="/public/css/logout-modal.css">
     
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/add_product.css">

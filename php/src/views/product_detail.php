@@ -7,6 +7,7 @@
     <title><?php echo htmlspecialchars($product['name']); ?></title>
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/product_detail.css">
+    <link rel="stylesheet" href="/public/css/logout-modal.css">
 </head>
 <body class="product-detail-page">
 

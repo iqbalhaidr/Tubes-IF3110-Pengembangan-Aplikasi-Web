@@ -180,6 +180,15 @@ async function checkCartBadgeCounter() {
     }      
 }
 
+// Listen for balance updates from checkout or top-up
+window.addEventListener('balance:updated', (event) => {
+    const balanceAmount = document.getElementById('balanceAmount');
+    if (balanceAmount && event.detail && event.detail.balance !== undefined) {
+        const formatter = new Intl.NumberFormat('id-ID');
+        balanceAmount.textContent = 'Balance: Rp ' + formatter.format(event.detail.balance);
+    }
+});
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthStatus();
