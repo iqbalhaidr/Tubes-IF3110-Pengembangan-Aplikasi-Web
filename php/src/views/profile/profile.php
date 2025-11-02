@@ -17,6 +17,7 @@ $activeLink = 'profile';
     <title>Nimonspedia - Profile</title>
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/modal.css?v=<?= $mainCssVersion ?>">
+    <link rel="stylesheet" href="/public/css/profile.css?v=<?= $mainCssVersion ?>">
 </head>
 <body class="profile-page">
     <?php include __DIR__ . '/../components/navbar.php'; ?>
@@ -140,6 +141,24 @@ $activeLink = 'profile';
                         <button type="submit" class="btn btn-primary" id="changePasswordSubmit">Change Password</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Password Confirmation Modal -->
+        <div id="passwordConfirmModal" class="modal hidden">
+            <div class="modal-overlay" id="passwordConfirmOverlay"></div>
+            <div class="modal-content modal-small password-confirm-modal">
+                <div class="modal-header">
+                    <h2>Confirm Password Change</h2>
+                    <button type="button" class="modal-close" id="passwordConfirmClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="confirm-text">Are you sure you want to change your password? This action cannot be undone.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="passwordConfirmCancel">No, Cancel</button>
+                    <button type="button" class="btn btn-primary" id="passwordConfirmSubmit">Yes</button>
+                </div>
             </div>
         </div>
     <?php endif; ?>

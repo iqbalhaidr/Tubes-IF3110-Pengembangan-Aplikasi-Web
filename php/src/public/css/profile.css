@@ -1,0 +1,269 @@
+/* Profile Page Styles */
+
+.profile-page {
+    background: var(--background-gray);
+    min-height: 100vh;
+}
+
+.profile-main {
+    padding: 60px 0;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.profile-kicker {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary-green);
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.profile-title {
+    font-size: 34px;
+    margin-bottom: 12px;
+}
+
+.profile-subtitle {
+    color: var(--text-medium);
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.profile-panels {
+    display: grid;
+    gap: 24px;
+}
+
+.profile-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 8px 24px rgba(15, 15, 15, 0.04);
+}
+
+.profile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.profile-card h2 {
+    font-size: 20px;
+}
+
+.profile-details {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.profile-detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.profile-detail-row dt {
+    font-weight: 600;
+    color: var(--text-medium);
+    flex: 0 0 180px;
+}
+
+.profile-detail-row dd {
+    margin: 0;
+    flex: 1;
+    color: var(--text-dark);
+}
+
+/* Store Logo Display in Profile */
+.profile-detail-row .store-logo-display {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: block;
+}
+
+.summary-card {
+    position: sticky;
+    top: 120px;
+}
+
+.profile-actions {
+    margin-top: 24px;
+    display: grid;
+    gap: 12px;
+}
+
+.profile-actions .btn {
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-card {
+        top: 140px;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-main {
+        padding: 40px 0;
+    }
+
+    .profile-header {
+        margin-bottom: 30px;
+    }
+
+    .profile-title {
+        font-size: 28px;
+    }
+
+    .profile-card {
+        padding: 20px;
+    }
+
+    .profile-detail-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .profile-detail-row dt {
+        flex: 0 0 auto;
+    }
+
+    .profile-detail-row .store-logo-display {
+        width: 150px;
+        height: 150px;
+    }
+
+    .summary-card {
+        top: auto;
+        position: static;
+    }
+}
+
+@media (max-width: 640px) {
+    .profile-main {
+        padding: 30px 0;
+    }
+
+    .profile-header {
+        margin-bottom: 20px;
+    }
+
+    .profile-title {
+        font-size: 24px;
+    }
+
+    .profile-kicker {
+        font-size: 12px;
+    }
+
+    .profile-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .profile-card h2 {
+        font-size: 18px;
+    }
+
+    .profile-details {
+        gap: 12px;
+    }
+
+    .profile-detail-row dt {
+        font-size: 13px;
+        flex: 0 0 120px;
+    }
+
+    .profile-detail-row dd {
+        font-size: 13px;
+    }
+
+    .profile-detail-row .store-logo-display {
+        width: 120px;
+        height: 120px;
+    }
+
+    .profile-actions {
+        gap: 8px;
+    }
+}
+
+/* Password Confirmation Modal Responsive Styles */
+.password-confirm-modal .confirm-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.password-confirm-modal .modal-header h2 {
+    font-size: 18px;
+}
+
+/* Tablet and below */
+@media (max-width: 768px) {
+    .modal-content.modal-small {
+        max-width: calc(100vw - 32px);
+        margin: 0 16px;
+    }
+
+    .password-confirm-modal .confirm-text {
+        font-size: 13px;
+    }
+
+    .password-confirm-modal .modal-header h2 {
+        font-size: 16px;
+    }
+}
+
+/* Mobile devices */
+@media (max-width: 480px) {
+    .modal-content.modal-small {
+        max-width: calc(100vw - 24px);
+        margin: 0 12px;
+        padding: 20px 16px;
+    }
+
+    .password-confirm-modal .confirm-text {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .password-confirm-modal .modal-header h2 {
+        font-size: 15px;
+        margin-bottom: 12px;
+    }
+
+    .modal-actions {
+        gap: 8px;
+    }
+
+    .modal-actions .btn {
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+}

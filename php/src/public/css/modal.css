@@ -41,6 +41,10 @@
     max-width: 600px;
 }
 
+.modal-content.modal-small {
+    max-width: 400px;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;

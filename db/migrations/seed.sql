@@ -17,17 +17,17 @@ INSERT INTO "user" (name, email, password_hash, role, balance, address) VALUES
 ('Oscar Pranata', 'oscar.buyer@example.com', 'password_terenkripsi', 'BUYER', 2000000, 'Jl. Pembeli 4, Yogyakarta'),
 ('Rina Hartati', 'rina.buyer@example.com', 'password_terenkripsi', 'BUYER', 3000000, 'Jl. Pembeli 5, Medan');
 
-INSERT INTO store (user_id, store_name, store_description) VALUES
-(1, 'Budi Elektronik', 'Menjual barang elektronik ori dan bergaransi.'),
-(2, 'Citra Fashion', 'Fashion wanita terkini dan termurah.'),
-(3, 'Toko Buku Dedi', 'Menjual buku fiksi, non-fiksi, dan komik.'),
-(4, 'Dapur Eka', 'Perlengkapan dapur dan rumah tangga modern.'),
-(5, 'Fajar Sport', 'Alat olahraga dan jersey original.'),
-(6, 'Gita Gadget', 'Gadget terbaru, smartphone, dan aksesoris.'),
-(7, 'Haris Pakaian Pria', 'Spesialis pakaian pria kasual dan formal.'),
-(8, 'Indah Perabot', 'Furniture minimalis dan dekorasi rumah.'),
-(9, 'Jaya Olahraga', 'Pusat alat fitness dan olahraga outdoor.'),
-(10, 'Warung Buku Kartika', 'Menjual buku lokal dan impor.');
+INSERT INTO store (user_id, store_name, store_description, store_logo_path) VALUES
+(1, 'Budi Elektronik', 'Menjual barang elektronik ori dan bergaransi.', 'public/images/store-logos/1.jpg'),
+(2, 'Citra Fashion', 'Fashion wanita terkini dan termurah.', 'public/images/store-logos/2.jpg'),
+(3, 'Toko Buku Dedi', 'Menjual buku fiksi, non-fiksi, dan komik.', 'public/images/store-logos/3.jpg'),
+(4, 'Dapur Eka', 'Perlengkapan dapur dan rumah tangga modern.', 'public/images/store-logos/4.png'),
+(5, 'Fajar Sport', 'Alat olahraga dan jersey original.', 'public/images/store-logos/5.png'),
+(6, 'Gita Gadget', 'Gadget terbaru, smartphone, dan aksesoris.', 'public/images/store-logos/6.png'),
+(7, 'Haris Pakaian Pria', 'Spesialis pakaian pria kasual dan formal.', 'public/images/store-logos/7.png'),
+(8, 'Indah Perabot', 'Furniture minimalis dan dekorasi rumah.', 'public/images/store-logos/8.png'),
+(9, 'Jaya Olahraga', 'Pusat alat fitness dan olahraga outdoor.', 'public/images/store-logos/9.png'),
+(10, 'Warung Buku Kartika', 'Menjual buku lokal dan impor.', 'public/images/store-logos/10.png');
 
 INSERT INTO product (store_id, product_name, description, price, stock) VALUES
 (1, 'TV LED 50 inch Smart 4K', 'TV 4K dengan OS Android, Netflix ready.', 4500000, 20),
