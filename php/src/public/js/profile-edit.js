@@ -11,6 +11,60 @@ function togglePassword(inputId, button) {
     button.textContent = isHidden ? '🙈' : '👁️';
 }
 
+/**
+ * Show password confirmation modal (yes/no confirmation)
+ * Returns true if user confirms, false if cancelled
+ */
+function showPasswordConfirmationModal() {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('passwordConfirmModal');
+        const confirmBtn = document.getElementById('passwordConfirmSubmit');
+        const cancelBtn = document.getElementById('passwordConfirmCancel');
+        const closeBtn = document.getElementById('passwordConfirmClose');
+
+        if (!modal || !confirmBtn || !cancelBtn) {
+            console.warn('Password confirmation modal elements not found');
+            resolve(false);
+            return;
+        }
+
+        // Show modal
+        openModal('passwordConfirmModal');
+
+        const handleConfirm = () => {
+            closeModal('passwordConfirmModal');
+            cleanup();
+            resolve(true);
+        };
+
+        const handleCancel = () => {
+            closeModal('passwordConfirmModal');
+            cleanup();
+            resolve(false);
+        };
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCancel();
+            }
+        };
+
+        const cleanup = () => {
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            closeBtn.removeEventListener('click', handleCancel);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+
+        // Add event listeners
+        confirmBtn.addEventListener('click', handleConfirm);
+        cancelBtn.addEventListener('click', handleCancel);
+        closeBtn.addEventListener('click', handleCancel);
+        document.addEventListener('keydown', handleKeyDown);
+    });
+}
+
 function clearFieldError(fieldName, prefix = '') {
     const fullName = prefix ? prefix + '_' + fieldName : fieldName;
     const input = document.getElementById(fullName);
@@ -238,8 +292,29 @@ function initializeBuyerProfileEdit() {
             const submitBtn = document.getElementById('changePasswordSubmit');
             const originalText = submitBtn.textContent;
 
+            // Clear previous errors
+            clearFieldError('current_password', '');
+            clearFieldError('new_password', '');
+            clearFieldError('confirm_new_password', '');
+
+            // Validate: Password mismatch
             if (newPassword !== confirmPassword) {
-                showFieldError('new_password_confirm', 'Passwords do not match', '');
+                showFieldError('new_password', 'Passwords do not match', '');
+                showFieldError('confirm_new_password', 'Passwords do not match', '');
+                return;
+            }
+
+            // Validate: New password same as current password
+            if (oldPassword === newPassword) {
+                showFieldError('new_password', 'New password must be different from current password', '');
+                return;
+            }
+
+            // Show password confirmation modal
+            const confirmResult = await showPasswordConfirmationModal();
+            
+            if (!confirmResult) {
+                // User cancelled
                 return;
             }
 
@@ -256,6 +331,7 @@ function initializeBuyerProfileEdit() {
 
                 if (response.success) {
                     closeModal('changePasswordModal');
+                    closeModal('passwordConfirmModal');
                     alert('Password changed successfully');
                     changePasswordForm.reset();
                 } else {
