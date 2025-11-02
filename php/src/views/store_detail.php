@@ -1,4 +1,7 @@
-<?php $mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css'); ?>
+<?php 
+$mainCssVersion = filemtime(__DIR__ . '/../public/css/main.css');
+$storeDetailCssVersion = filemtime(__DIR__ . '/../public/css/store_detail.css');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,9 +9,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($store['name']); ?> - Nimonspedia</title>
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
-    <link rel="stylesheet" href="/public/css/home.css">
-    <link rel="stylesheet" href="/public/css/product-card.css">
-    <link rel="stylesheet" href="/public/css/store_detail.css">
+    <link rel="stylesheet" href="/public/css/home.css?v=<?= filemtime(__DIR__ . '/../public/css/home.css') ?>">
+    <link rel="stylesheet" href="/public/css/product-card.css?v=<?= filemtime(__DIR__ . '/../public/css/product-card.css') ?>">
+    <link rel="stylesheet" href="/public/css/store_detail.css?v=<?= $storeDetailCssVersion ?>">
 </head>
 
 <?php $basePath = '/store/' . $store['id']; ?>
@@ -22,8 +25,21 @@
 
     <div class="store-header">
         <div class="container">
-            <h1><?php echo htmlspecialchars($store['name']); ?></h1>
-            <p><?php echo nl2br(htmlspecialchars($store['description'])); ?></p>
+            <div class="store-header-content">
+                <div class="store-logo-container">
+                    <?php if (!empty($store['logo_path'])): ?>
+                        <img src="<?= htmlspecialchars('/' . $store['logo_path']) ?>" 
+                             alt="<?= htmlspecialchars($store['name']) ?>" 
+                             class="store-logo-circle">
+                    <?php else: ?>
+                        <div class="store-logo-circle placeholder">🏪</div>
+                    <?php endif; ?>
+                </div>
+                <div class="store-header-text">
+                    <h1><?php echo htmlspecialchars($store['name']); ?></h1>
+                    <p><?php echo nl2br(htmlspecialchars($store['description'])); ?></p>
+                </div>
+            </div>
         </div>
     </div>
 

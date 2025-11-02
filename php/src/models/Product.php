@@ -91,7 +91,7 @@ class Product {
     }
 
     public function findStoreById($storeId) {
-        $sql = 'SELECT store_id AS id, store_name AS name, store_description AS description
+        $sql = 'SELECT store_id AS id, store_name AS name, store_description AS description, store_logo_path AS logo_path
                 FROM store
                 WHERE store_id = :store_id';
         $stmt = $this->db->prepare($sql);
