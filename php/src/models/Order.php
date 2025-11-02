@@ -306,6 +306,19 @@ class Order {
                 ':buyer_id' => $order['buyer_id']
             ]);
 
+            $update_stock_sql = "UPDATE product SET stock = stock + :quantity WHERE product_id = :product_id";
+            $update_stock_stmt = $this->db->prepare($update_stock_sql);
+
+            foreach ($order['items'] as $item) {
+                // Hanya kembalikan stok jika produk masih ada (belum dihapus permanen)
+                if (!empty($item['product_id'])) { 
+                    $update_stock_stmt->execute([
+                        ':quantity' => $item['quantity'],
+                        ':product_id' => $item['product_id']
+                    ]);
+                }
+            }
+
             $this->db->commit();
             return true;
         } catch (Exception $e) {
