@@ -71,6 +71,12 @@ function initializeEventListeners() {
         }
     });
 
+    document.getElementById('pageSizeSelector').addEventListener('change', (e) => {
+        currentLimit = parseInt(e.target.value, 10);
+        currentPage = 1; // Reset to first page when changing limit
+        loadOrders();
+    });
+
     // Modal close buttons
     setupModalHandlers();
 }
@@ -272,12 +278,31 @@ function getActionButtons(order) {
 function updatePagination(data) {
     totalPages = data.total_pages || 1;
     const paginationInfo = document.getElementById('paginationInfo');
+    const paginationPageInfo = document.getElementById('paginationPageInfo'); // New
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
 
-    paginationInfo.textContent = `Page ${data.page} of ${totalPages}`;
+    // Calculate showing counts
+    const total = data.total || 0;
+    const start = total > 0 ? (data.page - 1) * data.limit + 1 : 0;
+    const end = Math.min(data.page * data.limit, total);
+
+    // Update "Showing X-Y of Z orders"
+    if (paginationInfo) {
+        paginationInfo.textContent = `Showing ${start} - ${end} of ${total} orders`;
+    }
+
+    // Update "Page X of Y"
+    if (paginationPageInfo) {
+        paginationPageInfo.textContent = `Page ${data.page} of ${totalPages}`;
+    }
+
+    // Update button states
     prevBtn.disabled = data.page <= 1;
     nextBtn.disabled = data.page >= totalPages;
+
+    // Ensure the dropdown reflects the current limit
+    document.getElementById('pageSizeSelector').value = data.limit;
 }
 
 // ================================================================

@@ -375,11 +375,6 @@ class Order {
                 throw new Exception('Order not found.');
             }
 
-            // 2. Validasi Otorisasi
-            if ($order['buyer_id'] != $buyer_id) {
-                throw new Exception('You are not authorized to confirm this order.');
-            }
-
             // 3. Validasi Status
             if ($order['status'] !== 'ON_DELIVERY') {
                 throw new Exception('Order cannot be marked as received. It is not currently on delivery.');

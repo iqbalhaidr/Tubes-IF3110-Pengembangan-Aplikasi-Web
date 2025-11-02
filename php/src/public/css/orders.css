@@ -358,12 +358,13 @@
 
 .pagination-container {
     display: flex;
-    justify-content: center;
+    justify-content: space-between; /* Changed from 'center' */
     align-items: center;
     gap: 16px;
     margin-top: 24px;
     padding-top: 24px;
     border-top: 1px solid var(--border-color);
+    flex-wrap: wrap; /* Added for mobile */
 }
 
 .pagination-info {
@@ -402,6 +403,63 @@
 .pagination-button:active:not(:disabled) {
     transform: translateY(0);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pagination-info,
+.page-size-selector {
+    color: var(--text-medium);
+    font-size: 14px;
+}
+
+.pagination-page-info {
+    color: var(--text-medium);
+    font-size: 14px;
+    min-width: 80px;
+    text-align: center;
+}
+
+.page-size-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Use a simple class for the select, pulling from main.css */
+.page-size-selector .filter-select {
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--text-dark);
+    cursor: pointer;
+    background: var(--white);
+}
+
+/* Responsive adjustment for the new layout */
+@media (max-width: 768px) {
+    .pagination-container {
+        justify-content: center; /* Stack in center on mobile */
+    }
+
+    .pagination-nav {
+        order: 1; /* Put buttons in the middle */
+        width: 100%;
+        justify-content: center;
+    }
+
+    .pagination-info {
+        order: 2; /* Put "Showing..." text at the bottom */
+    }
+
+    .page-size-selector {
+        order: 0; /* Put "Per Halaman" at the top */
+    }
 }
 
 /* ================================================================

@@ -95,9 +95,23 @@ $activeLink = 'orders';
 
             <!-- Pagination -->
             <div class="pagination-container" id="paginationContainer">
-                <button type="button" class="pagination-button" id="prevBtn" title="Previous page">← Previous</button>
-                <span class="pagination-info" id="paginationInfo">Page 1</span>
-                <button type="button" class="pagination-button" id="nextBtn" title="Next page">Next →</button>
+                <span class="pagination-info" id="paginationInfo">Loading...</span>
+                
+                <div class="pagination-nav">
+                    <button type="button" class="pagination-button" id="prevBtn" title="Previous page">← Previous</button>
+                    <span class="pagination-page-info" id="paginationPageInfo"></span>
+                    <button type="button" class="pagination-button" id="nextBtn" title="Next page">Next →</button>
+                </div>
+
+                <div class="page-size-selector">
+                    <label for="pageSizeSelector">Per Halaman:</label>
+                    <select id="pageSizeSelector" class="filter-select">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
             </div>
         </div>
     </main>
