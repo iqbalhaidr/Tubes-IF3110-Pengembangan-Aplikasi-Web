@@ -19,7 +19,7 @@ CREATE TABLE store (
     user_id INT UNIQUE NOT NULL,
     store_name VARCHAR(255) UNIQUE NOT NULL,
     store_description TEXT,
-    store_logo_path VARCHAR(255),
+    store_logo_path VARCHAR(255) UNIQUE NOT NULL,
     balance INT DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
