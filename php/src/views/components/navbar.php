@@ -21,6 +21,13 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                 </div>
             <?php elseif ($navbarType === 'seller'): ?>
                 <a href="/seller/dashboard" class="navbar-brand">Nimonspedia</a>
+                <?php if (isset($store) && $store): ?>
+                <div class="balance-display seller-balance-display">
+                    <span class="balance-label" id="storeBalanceAmount">
+                        Store Balance: Rp <?= number_format($store['balance'] ?? 0, 0, ',', '.') ?>
+                    </span>
+                </div>
+                <?php endif; ?>
                 <button class="burger-menu" id="mobileMenuToggle">
                     <span></span>
                     <span></span>
