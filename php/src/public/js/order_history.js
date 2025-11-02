@@ -24,6 +24,48 @@ const statusBadgeClasses = {
     'REJECTED': 'rejected'
 };
 
+// Get the relevant timestamp based on order status
+function getStatusTimestamp(order) {
+    switch (order.status) {
+        case 'WAITING_APPROVAL':
+            return order.created_at;
+        case 'APPROVED':
+            return order.confirmed_at || order.created_at;
+        case 'ON_DELIVERY':
+            return order.delivery_time || order.confirmed_at || order.created_at;
+        case 'RECEIVED':
+            return order.received_at || order.delivery_time || order.created_at;
+        case 'REJECTED':
+            return order.created_at;
+        default:
+            return order.created_at;
+    }
+}
+
+// Format timestamp to readable format
+function formatStatusTimestamp(timestamp) {
+    if (!timestamp) return 'N/A';
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const dateStr = date.toLocaleDateString('id-ID');
+    const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    
+    const dateOnly = date.toLocaleDateString('id-ID');
+    const todayStr = today.toLocaleDateString('id-ID');
+    const yesterdayStr = yesterday.toLocaleDateString('id-ID');
+    
+    if (dateOnly === todayStr) {
+        return `Today at ${timeStr}`;
+    } else if (dateOnly === yesterdayStr) {
+        return `Yesterday at ${timeStr}`;
+    } else {
+        return `${dateStr} at ${timeStr}`;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
     loadOrders(currentStatus, 1);
@@ -163,6 +205,7 @@ function createOrderCard(order) {
     const statusLabel = statusLabels[order.status] || order.status;
     const statusBadgeClass = statusBadgeClasses[order.status] || '';
     const totalPrice = parseInt(order.total_price).toLocaleString('id-ID');
+    const statusTimestamp = formatStatusTimestamp(getStatusTimestamp(order));
 
     // Create product items HTML
     const productsHtml = (order.items || []).map(item => {
@@ -182,6 +225,25 @@ function createOrderCard(order) {
     let actionButton = '';
     if (order.status === 'ON_DELIVERY') {
         actionButton = `<button type="button" class="btn btn-primary btn-confirm" data-order-id="${order.order_id}">Confirm Received</button>`;
+    }
+
+    // Build refund info for rejected orders
+    let refundInfo = '';
+    if (order.status === 'REJECTED') {
+        refundInfo = `
+            <div class="order-refund">
+                <div class="refund-section">
+                    <span class="refund-label">Refunded Amount</span>
+                    <span class="refund-price">Rp ${totalPrice}</span>
+                </div>
+                ${order.reject_reason ? `
+                <div class="refund-reason">
+                    <span class="reason-label">Reason:</span>
+                    <span class="reason-text">${order.reject_reason}</span>
+                </div>
+                ` : ''}
+            </div>
+        `;
     }
 
     return `
@@ -212,6 +274,11 @@ function createOrderCard(order) {
                 <div class="order-total">
                     <span class="order-total-label">Total</span>
                     <span class="order-total-price">Rp ${totalPrice}</span>
+                </div>
+                ${refundInfo}
+                <div class="order-status-time">
+                    <span class="order-status-time-label">Status Updated</span>
+                    <span class="order-status-time-value">${statusTimestamp}</span>
                 </div>
             </div>
             <div class="order-actions">
@@ -248,6 +315,7 @@ function createDetailContent(order) {
     const statusBadgeClass = statusBadgeClasses[order.status] || '';
     const createdDate = new Date(order.created_at).toLocaleDateString('id-ID');
     const totalPrice = parseInt(order.total_price).toLocaleString('id-ID');
+    const statusTimestamp = formatStatusTimestamp(getStatusTimestamp(order));
 
     let deliveryInfo = '';
     if (order.delivery_time) {
@@ -300,6 +368,10 @@ function createDetailContent(order) {
         <div class="detail-section">
             <div class="detail-section-title">Order Status</div>
             <span class="status-badge ${statusBadgeClass}">${statusLabel}</span>
+            <div class="detail-row" style="margin-top: 12px;">
+                <span class="detail-label">Status Updated</span>
+                <span class="detail-value">${statusTimestamp}</span>
+            </div>
             ${rejectionInfo}
         </div>
 
