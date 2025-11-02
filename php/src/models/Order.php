@@ -361,6 +361,42 @@ class Order {
      */
     public function markReceived($order_id, $store_id, $total_price) {
         try {
+            // 1. Ambil detail pesanan yang tepercaya dari DB
+            $queryGet = '
+                SELECT store_id, total_price, status, delivery_time, buyer_id
+                FROM "order"
+                WHERE order_id = :order_id
+            ';
+            $stmtGet = $this->db->prepare($queryGet);
+            $stmtGet->execute([':order_id' => $order_id]);
+            $order = $stmtGet->fetch(PDO::FETCH_ASSOC);
+
+            if (!$order) {
+                throw new Exception('Order not found.');
+            }
+
+            // 2. Validasi Otorisasi
+            if ($order['buyer_id'] != $buyer_id) {
+                throw new Exception('You are not authorized to confirm this order.');
+            }
+
+            // 3. Validasi Status
+            if ($order['status'] !== 'ON_DELIVERY') {
+                throw new Exception('Order cannot be marked as received. It is not currently on delivery.');
+            }
+
+            if ($order['delivery_time'] !== null) {
+                $deliveryTime = new DateTime($order['delivery_time']);
+                $now = new DateTime();
+
+                if ($now < $deliveryTime) {
+                    throw new Exception('Cannot confirm receipt. The estimated delivery time has not passed yet.');
+                }
+            } else {
+                // Jika karena suatu alasan delivery_time-nya NULL, gagalkan.
+                throw new Exception('Order does not have a valid delivery time.');
+            }
+            
             $this->db->beginTransaction();
 
             // Update order status
