@@ -9,6 +9,7 @@ class StoreController {
     private $productModel;
     private $db;
     private $userModel;
+    private $storeModel;
 
     public function __construct() {
         $this->db = Database::getInstance(); 

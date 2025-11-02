@@ -43,7 +43,9 @@
                 <div class="store-info">
                     <h3>Info Toko</h3>
                     <div class="store-info-header">
-                        <h4><?php echo htmlspecialchars($store['name']); ?></h4>
+                        <a href="/store/<?php echo htmlspecialchars($product['store_id']); ?>" style="text-decoration: none; color: inherit;">
+                            <h4><?php echo htmlspecialchars($store['name']); ?></h4>
+                        </a>
                         <a href="/store/<?php echo htmlspecialchars($product['store_id']); ?>" class="btn btn-secondary">
                             Kunjungi Toko
                         </a>
@@ -94,6 +96,7 @@
     <div id="toast" class="toast"></div>
 
     <script src="/public/js/api.js"></script>
+    <script src="/public/js/balance.js"></script>
     <script src="/public/js/main.js"></script>
     <script src="/public/js/product_detail.js"></script> 
 </body>

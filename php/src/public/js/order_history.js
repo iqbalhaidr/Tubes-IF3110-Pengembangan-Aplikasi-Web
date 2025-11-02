@@ -197,7 +197,9 @@ function createOrderCard(order) {
                 </div>
                 <div class="order-store">
                     <span class="order-store-label">Store</span>
-                    <span class="order-store-value">${order.store_name || 'Unknown Store'}</span>
+                    <a href="/store/${order.store_id}" style="text-decoration: none; color: inherit;">
+                        <span class="order-store-value" style="cursor: pointer; text-decoration: underline;">${order.store_name || 'Unknown Store'}</span>
+                    </a>
                 </div>
                 <div style="display: flex; justify-content: flex-end;">
                     <span class="status-badge ${statusBadgeClass}">${statusLabel}</span>

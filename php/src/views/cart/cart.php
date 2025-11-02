@@ -46,7 +46,9 @@
                                             alt="<?php echo htmlspecialchars($storeData['store_name']); ?> Logo" 
                                             class="store-logo"
                                         >
-                                        <h3 class="store-name"><?php echo htmlspecialchars($storeData['store_name']); ?></h3>
+                                        <a href="/store/<?php echo htmlspecialchars($storeId); ?>" style="text-decoration: none; color: inherit;">
+                                            <h3 class="store-name"><?php echo htmlspecialchars($storeData['store_name']); ?></h3>
+                                        </a>
                                     </div>
             
                                     <div class="store-items">
@@ -169,9 +171,9 @@
             <div id="toast" class="toast"></div>
         </main>
 
-        <script src="/public/js/main.js"></script>
         <script src="/public/js/api.js"></script>
         <script src="/public/js/balance.js"></script>
+        <script src="/public/js/main.js"></script>
         <script src="/public/js/cart.js"></script>
         
     </body>

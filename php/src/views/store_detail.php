@@ -97,7 +97,9 @@ $storeDetailCssVersion = filemtime(__DIR__ . '/../public/css/store_detail.css');
                                     </div>
                                     <div class="product-store">
                                         <span class="info-label">Nama Toko:</span>
-                                        <span class="info-value"><?= htmlspecialchars($product['store']); ?></span>
+                                        <a href="/store/<?php echo htmlspecialchars($product['store_id']); ?>" style="text-decoration: none; color: inherit;">
+                                            <span class="info-value" style="cursor: pointer; text-decoration: underline;"><?= htmlspecialchars($product['store']); ?></span>
+                                        </a>
                                     </div>
                                 </div>
                             </div>

@@ -19,6 +19,12 @@
 
         injectModal();
         bindGlobalTriggers();
+        
+        // Re-cache elements after modal is injected
+        cacheElements();
+        
+        // Re-attach modal events
+        attachModalEvents();
     });
 
     function injectModal() {
@@ -237,7 +243,7 @@
 
         if (balanceDisplay && balanceAmount) {
             balanceDisplay.style.display = 'flex';
-            balanceAmount.textContent = formatCurrency(balanceValue);
+            balanceAmount.textContent = 'Balance: Rp ' + formatCurrency(balanceValue);
         }
     }
 
