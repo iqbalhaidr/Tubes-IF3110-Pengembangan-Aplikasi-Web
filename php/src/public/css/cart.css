@@ -1,13 +1,3 @@
-/*
- * ===============================================
- * CSS for Cart Page
- * ===============================================
- */
-
-/* * -------------------
- * Global Variables & Resets
- * -------------------
- */
 :root {
     --color-primary: #03ac0e; /* Example: Blue */
     --color-primary-dark: #00a000;
@@ -23,7 +13,6 @@
     --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* Base styles */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--color-background-light);
@@ -44,10 +33,6 @@ body {
     color: #333;
 }
 
-/* * -------------------
- * Button Base Styles
- * -------------------
- */
 .button-primary,
 .button-secondary,
 .button-danger {
@@ -87,26 +72,20 @@ body {
     background-color: var(--color-danger-dark);
 }
 
-/* Disabled state for checkout button */
 .checkout-btn:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
     opacity: 0.7;
 }
 
-/* * -------------------
- * Main Layout
- * -------------------
- */
 .cart-page-wrapper {
     max-width: 1200px;
     margin: 0 auto;
 }
 
-/* Main container for items + summary */
 .cart-content-container {
     display: grid;
-    grid-template-columns: 1fr; /* Stacks on mobile by default */
+    grid-template-columns: 1fr; 
     gap: 24px;
 }
 
@@ -116,10 +95,6 @@ body {
     gap: 24px;
 }
 
-/* * -------------------
- * Store Group Styling (AC #2)
- * -------------------
- */
 .cart-store-group {
     background: var(--color-white);
     border-radius: var(--border-radius);
@@ -148,13 +123,8 @@ body {
     font-weight: 600;
 }
 
-/* * -------------------
- * Cart Item Styling (AC #1)
- * -------------------
- */
 .cart-item {
     display: grid;
-    /* Defines 3 columns: Image | Info | Actions */
     grid-template-columns: auto 1fr auto;
     gap: 16px;
     padding: 16px;
@@ -166,7 +136,6 @@ body {
     border-bottom: none;
 }
 
-/* AC #7: Loading State */
 .cart-item.is-loading {
     opacity: 0.5;
     pointer-events: none;
@@ -199,10 +168,6 @@ body {
     color: var(--color-text-secondary);
 }
 
-/* * -------------------
- * Item Actions (Delete & Quantity)
- * -------------------
- */
 .item-col-alter {
     display: flex;
     flex-direction: column;
@@ -263,10 +228,9 @@ body {
     border: none;
     border-left: 1px solid var(--color-border);
     border-right: 1px solid var(--color-border);
-    padding-left: 5px; /* Adjust for centering */
+    padding-left: 5px;
 }
 
-/* Hide default number input arrows */
 .quantity-value::-webkit-outer-spin-button,
 .quantity-value::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -276,12 +240,6 @@ body {
     -moz-appearance: textfield;
 }
 
-/* * -------------------
- * Summary Panels (AC #5)
- * -------------------
- */
-
-/* Per-store summary */
 .store-summary {
     padding: 16px;
     background-color: var(--color-background-light);
@@ -291,15 +249,14 @@ body {
     gap: 8px;
 }
 
-/* Grandtotal summary */
 .cart-summary {
     background: var(--color-white);
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     padding: 24px;
-    height: fit-content; /* Makes it "stick" to the top */
+    height: fit-content; 
     position: sticky;
-    top: 20px; /* Sticks 20px from the top */
+    top: 20px; 
 }
 
 .summary-title {
@@ -342,10 +299,6 @@ body {
     padding: 14px;
 }
 
-/* * -------------------
- * Empty State (AC #6)
- * -------------------
- */
 .cart-empty-state {
     display: flex;
     flex-direction: column;
@@ -377,10 +330,6 @@ body {
     max-width: 300px;
 }
 
-/* * -------------------
- * Confirmation Modal (AC #4)
- * -------------------
- */
 .modal-backdrop {
     position: fixed;
     top: 0;
@@ -395,7 +344,6 @@ body {
     padding: 16px;
 }
 
-/* Hides the modal by default */
 .modal-backdrop[hidden] {
     display: none;
 }
@@ -427,41 +375,56 @@ body {
     gap: 12px;
 }
 
-/* * -------------------
- * Responsive Design
- * -------------------
- */
-
-/* On mobile, cart items are simpler */
 @media (max-width: 500px) {
     .cart-item {
-        /* Stack image/info on top of actions */
         grid-template-columns: 1fr;
         gap: 12px;
     }
     
     .item-col-image {
-        display: none; /* Hide image on very small screens to save space */
+        display: none; 
     }
 
     .item-col-alter {
-        flex-direction: row; /* Actions side-by-side */
+        flex-direction: row; 
         justify-content: space-between;
         align-items: center;
     }
 }
 
 
-/* On desktop (e.g., > 992px), use a 2-column layout */
 @media (min-width: 992px) {
     .cart-content-container {
-        /* Items list takes ~2/3, summary takes 1/3 */
         grid-template-columns: 2fr 1fr;
-        align-items: flex-start; /* Aligns top of items list and summary */
+        align-items: flex-start; 
     }
 
     .cart-item {
-        /* Image | Info (takes up space) | Actions */
         grid-template-columns: auto 1fr auto;
     }
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px); 
+    background-color: var(--text-dark); 
+    color: var(--color-white);
+    padding: 16px 24px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 1001;
+    visibility: hidden;
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+    display: block; 
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    visibility: visible;
+    opacity: 1;
 }

@@ -1,4 +1,3 @@
-/* Styles for the checkout page */
 body.buyer-page {
     background-color: #f4f4f4;
 }
@@ -21,7 +20,6 @@ body.buyer-page {
     gap: 30px;
 }
 
-/* Order Summary List (Left Column) */
 .order-summary-list {
     display: flex;
     flex-direction: column;
@@ -114,13 +112,13 @@ body.buyer-page {
     padding: 15px;
     border-top: 1px solid #f0f0f0;
     display: flex;
-    flex-direction: column; /* Stack lines vertically */
+    flex-direction: column;
     gap: 5px;
 }
 
 .store-total-line {
     display: flex;
-    justify-content: space-between; /* Label left, value right */
+    justify-content: space-between;
     font-size: 1.1rem;
     font-weight: 600;
     color: #555;
@@ -153,13 +151,12 @@ body.buyer-page {
     margin-bottom: 20px;
 }
 
-/* Checkout Summary (Right Column) */
 .checkout-summary {
     display: flex;
     flex-direction: column;
     gap: 20px;
     position: sticky;
-    top: 90px; /* Adjust based on navbar height */
+    top: 90px; 
     height: fit-content;
 }
 
@@ -188,7 +185,7 @@ body.buyer-page {
     line-height: 1.5;
     border: 1px solid #ccc;
     border-radius: 6px;
-    resize: vertical; /* Allow vertical resize */
+    resize: vertical;
     min-height: 80px;
 }
 .address-textarea:focus {
@@ -286,7 +283,6 @@ body.buyer-page {
     cursor: not-allowed;
 }
 
-/* Modal Styles */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -356,7 +352,6 @@ body.buyer-page {
 }
 
 
-/* Responsive */
 @media (max-width: 900px) {
     .checkout-layout {
         grid-template-columns: 1fr;
@@ -382,3 +377,27 @@ body.buyer-page {
     }
 }
 
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px); /* Start hidden */
+    background-color: var(--text-dark, #333); 
+    color: var(--white, #fff);
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 1001;
+    visibility: hidden;
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+    display: block; 
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    visibility: visible;
+    opacity: 1;
+}

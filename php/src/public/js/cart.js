@@ -118,32 +118,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendQuantityUpdate = (itemId, quantity, cartItemElement) => {
         console.log(`Debounced: Sending update for ${itemId} to quantity ${quantity}`);
 
-        // Set loading state (AC #7)
         cartItemElement.classList.add('is-loading');
 
         api.put('/cart/' + itemId, { quantity: quantity })
         .then(data => {
             if (!data.success) {
-                // Server-side error
                 throw new Error(data.message || 'Failed to update quantity.');
             }
-            // On success, we can re-sync totals from the server if needed,
-            // but our optimistic update should be close.
-            // For now, just remove the loading state.
+
             console.log('Server update successful:', data);
-            
-            // Re-sync totals from server response for 100% accuracy
-            // (This assumes your server sends back new totals)
-            // updateAllTotalsFromServer(data.totals);
+            showToast('Cart updated successfully.', 'success');
         })
         .catch(error => {
             console.error('Error updating quantity:', error);
-            // Optionally: revert the UI change on failure
-            // For now, just show an error
-            alert('Error updating cart. Please refresh and try again.');
+            showToast('Error updating cart. Please refresh and try again.', 'error');
         })
         .finally(() => {
-            // Remove loading state
             cartItemElement.classList.remove('is-loading');
         });
     };
@@ -181,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (newQuantity > stock) {
             newQuantity = stock;
-            alert(`You can only order a maximum of ${stock} items.`);
+            showToast(`Max stock reached: ${stock} items.`, 'error');
         }
 
         quantityInput.value = newQuantity;
@@ -216,10 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
             itemToDelete.remove();
 
             updateAllTotals();
+            showToast('Item removed from cart.', 'success');
         })
         .catch(error => {
             console.error('Error deleting item:', error);
-            alert('Error deleting item. Please refresh and try again.');
+            showToast('Error deleting item. Please refresh and try again.', 'error');
             if (itemToDelete) itemToDelete.classList.remove('is-loading');
         })
         .finally(() => {

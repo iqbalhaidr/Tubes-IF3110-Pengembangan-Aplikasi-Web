@@ -1,10 +1,3 @@
-<?php
-// Data passed from OrderController::showCheckoutPage()
-// $user (array)
-// $cartData (array)
-// $navbarType (string)
-// $activeLink (string)
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,15 +10,12 @@
 <body class="buyer-page">
     
     <?php 
-    // Include the navbar component
-    // $navbarType and $activeLink are set in OrderController
     include __DIR__ . '/../components/navbar.php'; 
     ?>
 
     <main class="checkout-container container">
         <h1>Checkout</h1>
 
-        <!-- AC 1: Order summary grouped by store -->
         <div class="checkout-layout">
             <div class="order-summary-list">
                 <?php if (empty($cartData['stores'])): ?>
@@ -74,15 +64,12 @@
                 <?php endif; ?>
             </div>
 
-            <!-- Checkout Summary Column -->
             <aside class="checkout-summary">
-                <!-- AC 2: Delivery address info -->
                 <div class="summary-card">
                     <h2>Delivery Address</h2>
                     <textarea id="shippingAddress" class="address-textarea" rows="4" placeholder="Enter your full shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
                 </div>
 
-                <!-- AC 1 & 3: Balance info and Grandtotal -->
                 <div class="summary-card">
                     <h2>Payment Details</h2>
                     <?php
@@ -91,9 +78,7 @@
                         $balance_after = $current_balance - $grand_total;
                         $is_sufficient = $balance_after >= 0;
                     ?>
-                    <!-- Pass data to JS -->
                     <script>
-                        // Make data available to checkout.js
                         window.checkoutData = {
                             currentUserBalance: <?= $current_balance ?>,
                             grandTotal: <?= $grand_total ?>,
@@ -115,7 +100,6 @@
                         </span>
                     </div>
 
-                    <!-- AC 3: Warning if not sufficient -->
                     <div class="balance-warning" id="balanceWarning" style="<?= $is_sufficient ? 'display: none;' : '' ?>">
                         Balance is not sufficient. 
                         <a href="#" data-action="open-topup">Top Up Balance</a>
@@ -124,7 +108,6 @@
                         Please add a delivery address.
                     </div>
 
-                    <!-- AC 4: Checkout button disabled -->
                     <button class="checkout-button" id="createOrderBtn">
                         Create Order
                     </button>
@@ -133,7 +116,6 @@
         </div>
     </main>
 
-    <!-- AC 6: Confirmation modal -->
     <div class="modal-overlay hidden" id="confirmCheckoutModal">
         <div class="modal-content">
             <h2 class="modal-title">Confirm Checkout</h2>
@@ -145,14 +127,12 @@
         </div>
     </div>
 
-    <!-- Toast Notification (from main.css) -->
     <div id="toast" class="toast"></div>
 
-    <!-- Include JavaScript files -->
-    <script src="/public/js/api.js"></script> <!-- Assuming you have this -->
-    <script src="/public/js/main.js"></script> <!-- For navbar and toast -->
-    <script src="/public/js/balance.js"></script> <!-- For top-up modal -->
-    <script src="/public/js/checkout.js"></script> <!-- New checkout script -->
+    <script src="/public/js/api.js"></script> 
+    <script src="/public/js/main.js"></script> 
+    <script src="/public/js/balance.js"></script> 
+    <script src="/public/js/checkout.js"></script>
 
 </body>
 </html>

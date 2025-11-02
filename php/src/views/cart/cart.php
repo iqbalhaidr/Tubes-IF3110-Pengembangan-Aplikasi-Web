@@ -164,6 +164,8 @@
                     </div>
                 </div>
             </div>
+
+            <div id="toast" class="toast"></div>
         </main>
 
         <script src="/public/js/main.js"></script>
