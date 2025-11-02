@@ -13,17 +13,22 @@
 
 <?php $basePath = '/store/' . $store['id']; ?>
 <body class="store-detail-page" 
-      data-base-path="<?= $basePath ?>"
-      data-store-id="<?= $store['id'] ?>">
+    data-base-path="<?= $basePath ?>"
+    data-store-id="<?= $store['id'] ?>">
 
-      <?php
-        require __DIR__ . '/components/navbar.php'; 
-        ?>
+    <?php
+    require __DIR__ . '/components/navbar.php'; 
+    ?>
 
     <div class="store-header">
-        <div class="container">
+        <div class="store-info">
             <h1><?php echo htmlspecialchars($store['name']); ?></h1>
-            <p><?php echo nl2br(htmlspecialchars($store['description'])); ?></p>
+            <div class="store-description">
+                <?php 
+                $clean_store_description = Helper::sanitizeRichText($store['description']); 
+                echo $clean_store_description;
+                ?>
+            </div>
         </div>
     </div>
 

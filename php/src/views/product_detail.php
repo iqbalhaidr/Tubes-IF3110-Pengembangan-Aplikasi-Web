@@ -47,7 +47,12 @@
                             Kunjungi Toko
                         </a>
                     </div>
-                    <p class="store-desc"><?php echo nl2br(htmlspecialchars($store['description'])); ?></p>
+                    <div class="store-desc">
+                        <?php 
+                        $clean_store_description = Helper::sanitizeRichText($store['description']); 
+                        echo $clean_store_description;
+                        ?>
+                    </div>
                 </div>
             </div>
 
