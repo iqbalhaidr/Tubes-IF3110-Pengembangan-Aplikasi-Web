@@ -16,29 +16,21 @@ $storeDetailCssVersion = filemtime(__DIR__ . '/../public/css/store_detail.css');
 
 <?php $basePath = '/store/' . $store['id']; ?>
 <body class="store-detail-page" 
-      data-base-path="<?= $basePath ?>"
-      data-store-id="<?= $store['id'] ?>">
+    data-base-path="<?= $basePath ?>"
+    data-store-id="<?= $store['id'] ?>">
 
-      <?php
-        require __DIR__ . '/components/navbar.php'; 
-        ?>
+    <?php
+    require __DIR__ . '/components/navbar.php'; 
+    ?>
 
     <div class="store-header">
-        <div class="container">
-            <div class="store-header-content">
-                <div class="store-logo-container">
-                    <?php if (!empty($store['logo_path'])): ?>
-                        <img src="<?= htmlspecialchars('/' . $store['logo_path']) ?>" 
-                             alt="<?= htmlspecialchars($store['name']) ?>" 
-                             class="store-logo-circle">
-                    <?php else: ?>
-                        <div class="store-logo-circle placeholder">🏪</div>
-                    <?php endif; ?>
-                </div>
-                <div class="store-header-text">
-                    <h1><?php echo htmlspecialchars($store['name']); ?></h1>
-                    <p><?php echo nl2br(htmlspecialchars($store['description'])); ?></p>
-                </div>
+        <div class="store-info">
+            <h1><?php echo htmlspecialchars($store['name']); ?></h1>
+            <div class="store-description">
+                <?php 
+                $clean_store_description = Helper::sanitizeRichText($store['description']); 
+                echo $clean_store_description;
+                ?>
             </div>
         </div>
     </div>

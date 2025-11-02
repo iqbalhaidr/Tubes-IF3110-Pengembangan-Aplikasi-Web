@@ -69,7 +69,6 @@ class ProductController {
             $categoryNames = array_column($categoryArray, 'name');
             $categories = implode(', ', $categoryNames);
             
-            // Clean and prepare description - allow safe HTML from Quill.js
             $clean_description = Helper::sanitizeRichText($product['description']);
             
             require __DIR__ . '/../views/product_detail.php';

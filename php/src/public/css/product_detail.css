@@ -57,13 +57,70 @@
     margin-bottom: 10px;
 }
 
-.product-description p, .store-info .store-desc {
+.product-description p {
     line-height: 1.7;
     white-space: pre-wrap;
     color: var(--text-medium);
 }
 
-/* Rich text formatting from Quill.js */
+.store-desc {
+    margin-top: 1rem;
+    line-height: 1.6;
+}
+
+.store-desc p {
+    margin-bottom: 0.75rem;
+}
+
+.store-desc strong,
+.store-desc b {
+    font-weight: 600;
+}
+
+.store-desc em,
+.store-desc i {
+    font-style: italic;
+}
+
+.store-desc u {
+    text-decoration: underline;
+}
+
+.store-desc s {
+    text-decoration: line-through;
+}
+
+.store-desc ul,
+.store-desc ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.store-desc li {
+    margin-bottom: 0.25rem;
+}
+
+.store-desc blockquote {
+    border-left: 4px solid #e0e0e0;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #666;
+    font-style: italic;
+}
+
+.store-desc h1,
+.store-desc h2,
+.store-desc h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.store-desc a {
+    color: #007bff;
+    text-decoration: underline;
+}
+
 .description-content {
     line-height: 1.8;
     color: var(--text-medium);
