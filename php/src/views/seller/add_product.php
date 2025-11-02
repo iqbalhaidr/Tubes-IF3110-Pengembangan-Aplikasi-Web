@@ -37,13 +37,15 @@
             </div>
 
             <div class="form-group">
-                <label for="categories">Kategori</label>
-                <select id="categories" name="categories[]" class="form-select" multiple required>
+                <label for="categories">Kategori <span style="color: #d32f2f;">*</span></label>
+                <select id="categories" name="categories[]" class="form-select" multiple required size="5">
                     <?php foreach ($categories as $category): ?>
-                        <option value="<?= $category['category_id'] ?>"><?= htmlspecialchars($category['category_name']) ?></option>
+                        <option value="<?= $category['category_id'] ?>" data-category-id="<?= $category['category_id'] ?>">
+                            <?= htmlspecialchars($category['category_name']) ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
-                <small>Bisa pilih lebih dari satu.</small>
+                <small>💡 Tip: Gunakan Ctrl+Click (Cmd+Click pada Mac) untuk memilih lebih dari satu kategori. Atau klik dan tahan kategori yang berbeda.</small>
             </div>
 
             <div class="form-group">
@@ -74,6 +76,22 @@
     </main>
 
     <div id="toast" class="toast"></div>
+
+    <!-- Add Product Confirmation Modal -->
+    <div id="addConfirmModal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <div class="modal-header">
+                <h4>Konfirmasi Tambah Produk</h4>
+            </div>
+            <div class="modal-body">
+                <p>Anda yakin ingin menambahkan produk baru ini ke toko?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelAddBtn">Batal</button>
+                <button type="button" class="btn btn-primary" id="confirmAddBtn">Ya, Tambahkan Produk</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="/public/js/api.js"></script>

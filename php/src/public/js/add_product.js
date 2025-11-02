@@ -62,12 +62,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Modal elements
+    const addConfirmModal = document.getElementById('addConfirmModal');
+    const confirmAddBtn = document.getElementById('confirmAddBtn');
+    const cancelAddBtn = document.getElementById('cancelAddBtn');
+    let pendingFormData = null;
+
+    function showAddModal() {
+        addConfirmModal.classList.add('is-visible');
+        addConfirmModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideAddModal() {
+        addConfirmModal.classList.remove('is-visible');
+        addConfirmModal.setAttribute('aria-hidden', 'true');
+        pendingFormData = null;
+    }
+
+    // Close modal when clicking cancel button
+    cancelAddBtn.addEventListener('click', hideAddModal);
+
+    // Close modal when clicking outside (on overlay)
+    addConfirmModal.addEventListener('click', function(e) {
+        if (e.target === addConfirmModal) {
+            hideAddModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && addConfirmModal.classList.contains('is-visible')) {
+            hideAddModal();
+        }
+    });
+
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        saveBtn.disabled = true;
-        saveBtn.classList.add('loading');
-        saveBtn.textContent = 'Menyimpan...';
 
         const description = quill.root.innerHTML;
         document.getElementById('description').value = description;
@@ -75,37 +105,54 @@ document.addEventListener('DOMContentLoaded', () => {
         const textLength = quill.getText().trim().length;
         if (textLength === 0) {
             descError.textContent = 'Deskripsi tidak boleh kosong.';
-            resetSubmitButton();
             return;
         }
         if (quill.root.innerHTML.length > 5000) {
             descError.textContent = 'Deskripsi terlalu panjang.';
-            resetSubmitButton();
             return;
         }
         descError.textContent = '';
 
-        const formData = new FormData(form);
-        
         const categorySelect = document.getElementById('categories');
         const selectedCategories = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
         
+        console.log('Selected Categories:', selectedCategories);
+        console.log('Total selected:', selectedCategories.length);
+        
         if (selectedCategories.length === 0) {
             showToast('Pilih minimal satu kategori', 'error');
-            resetSubmitButton();
+            categorySelect.focus();
+            categorySelect.style.boxShadow = '0 0 0 3px rgba(211, 47, 47, 0.3)';
+            setTimeout(() => {
+                categorySelect.style.boxShadow = '';
+            }, 2000);
             return;
         }
-        
-        formData.append('categories', JSON.stringify(selectedCategories));
+
+        // Prepare form data and store it
+        pendingFormData = new FormData(form);
+        pendingFormData.append('categories', JSON.stringify(selectedCategories));
+
+        // Show confirmation modal
+        showAddModal();
+    });
+
+    // Handle confirmation button
+    confirmAddBtn.addEventListener('click', async function() {
+        if (!pendingFormData) return;
+
+        confirmAddBtn.disabled = true;
+        confirmAddBtn.textContent = 'Menambahkan...';
 
         try {
-            console.log('Mengirim data produk baru...'); 
-            const result = await api.post('/api/seller/products/create', formData);
+            console.log('Mengirim data produk baru...');
+            const result = await api.post('/api/seller/products/create', pendingFormData);
         
-            console.log('Hasil dari server:', result); 
+            console.log('Hasil dari server:', result);
             
             if (result.success) {
                 showToast(result.message || 'Produk berhasil ditambahkan');
+                hideAddModal();
                 setTimeout(() => {
                     window.location.href = '/seller/products';
                 }, 1000);
@@ -121,7 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             showToast(error.message || 'Terjadi kesalahan', 'error');
-            resetSubmitButton();
+            confirmAddBtn.disabled = false;
+            confirmAddBtn.textContent = 'Ya, Tambahkan Produk';
         }
     });
 
@@ -140,4 +188,17 @@ document.addEventListener('DOMContentLoaded', () => {
             toast.className = 'toast';
         }, 3000);
     }
+
+    // Add visual feedback for category selection
+    const categorySelect = document.getElementById('categories');
+    
+    function updateCategoryFeedback() {
+        const selected = Array.from(categorySelect.selectedOptions);
+        console.log(`Category Selection Updated: ${selected.length} selected`);
+    }
+    
+    categorySelect.addEventListener('change', updateCategoryFeedback);
+    
+    // Initialize on page load
+    updateCategoryFeedback();
 });

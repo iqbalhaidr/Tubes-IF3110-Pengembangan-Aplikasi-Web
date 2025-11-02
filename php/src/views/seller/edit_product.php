@@ -38,18 +38,18 @@
             </div>
 
             <div class="form-group">
-                <label for="categories">Kategori</label>
-                <select id="categories" name="categories[]" class="form-select" multiple required>
+bo                <label for="categories">Kategori <span style="color: #d32f2f;">*</span></label>
+                <select id="categories" name="categories[]" class="form-select" multiple required size="5">
                     <?php foreach ($allCategories as $category): ?>
                         <?php 
                         $isSelected = in_array($category['category_id'], $productCategoryIds);
                         ?>
-                        <option value="<?= $category['category_id'] ?>" <?= $isSelected ? 'selected' : '' ?>>
+                        <option value="<?= $category['category_id'] ?>" <?= $isSelected ? 'selected' : '' ?> data-category-id="<?= $category['category_id'] ?>">
                             <?= htmlspecialchars($category['category_name']) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <small>Bisa pilih lebih dari satu.</small>
+                <small>💡 Tip: Gunakan Ctrl+Click (Cmd+Click pada Mac) untuk memilih lebih dari satu kategori. Atau klik dan tahan kategori yang berbeda.</small>
             </div>
 
             <div class="form-group">
@@ -83,6 +83,22 @@
     </main>
 
     <div id="toast" class="toast"></div>
+
+    <!-- Edit Confirmation Modal -->
+    <div id="editConfirmModal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <div class="modal-header">
+                <h4>Konfirmasi Perubahan Produk</h4>
+            </div>
+            <div class="modal-body">
+                <p>Anda yakin ingin menyimpan semua perubahan pada produk ini?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelConfirmBtn">Batal</button>
+                <button type="button" class="btn btn-primary" id="confirmEditBtn">Ya, Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="/public/js/api.js"></script>

@@ -1969,3 +1969,45 @@ body.seller-dashboard {
         border-color: var(--primary-green);
         box-shadow: 0 0 0 3px rgba(3, 172, 14, 0.18);
     }
+
+/* ================================================================
+   TOAST NOTIFICATION STYLES
+   ================================================================ */
+
+.toast {
+    position: fixed;
+    bottom: -100px; /* Start off-screen */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--text-dark);
+    color: var(--white);
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    transition: bottom 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    font-size: 14px;
+    font-weight: 600;
+    max-width: 90%;
+    word-wrap: break-word;
+}
+
+.toast.show {
+    bottom: 30px; /* Slide into view */
+}
+
+.toast.success {
+    background-color: var(--success-green);
+}
+
+.toast.error {
+    background-color: var(--accent-red);
+}
+
+.toast.warning {
+    background-color: #ff9800;
+}
+
+.toast.info {
+    background-color: #2196f3;
+}

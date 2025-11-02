@@ -23,6 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const descError = document.getElementById('desc-error');
     const photoError = document.getElementById('photo-error');
+    
+    // Confirmation modal elements
+    const confirmModal = document.getElementById('editConfirmModal');
+    const confirmBtn = document.getElementById('confirmEditBtn');
+    const cancelConfirmBtn = document.getElementById('cancelConfirmBtn');
+    
+    let pendingFormData = null;
 
     if (changePhotoBtn) {
         changePhotoBtn.addEventListener('click', () => {
@@ -60,57 +67,43 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        saveBtn.disabled = true;
-        saveBtn.classList.add('loading');
-        saveBtn.textContent = 'Menyimpan...';
-
         const description = quill.root.innerHTML;
         document.getElementById('description').value = description; 
 
         const textLength = quill.getText().trim().length;
         if (textLength === 0) {
             descError.textContent = 'Deskripsi tidak boleh kosong.';
-            resetSubmitButton();
             return;
         }
         if (quill.root.innerHTML.length > 5000) {
             descError.textContent = 'Deskripsi terlalu panjang.';
-            resetSubmitButton();
             return;
         }
         descError.textContent = '';
 
-        const formData = new FormData(form);
-        
         const categorySelect = document.getElementById('categories');
         const selectedCategories = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
         
+        console.log('Selected Categories:', selectedCategories); // Debug log
+        console.log('Total selected:', selectedCategories.length); // Debug log
+        
         if (selectedCategories.length === 0) {
             showToast('Pilih minimal satu kategori', 'error');
-            resetSubmitButton();
+            categorySelect.focus();
+            categorySelect.style.boxShadow = '0 0 0 3px rgba(211, 47, 47, 0.3)'; // Red highlight
+            setTimeout(() => {
+                categorySelect.style.boxShadow = '';
+            }, 2000);
             return;
         }
         
-        formData.append('categories', JSON.stringify(selectedCategories));
-        
-        const productId = form.dataset.productId;
-
-        try {
-            const result = await api.post(`/api/seller/products/update/${productId}`, formData);
-
-            if (result.success) {
-                showToast(result.message || 'Produk berhasil diupdate');
-                setTimeout(() => {
-                    window.location.href = '/seller/products';
-                }, 1000);
-            } else {
-                throw new Error(result.message || 'Gagal mengupdate produk');
-            }
-
-        } catch (error) {
-            console.error('TERJADI ERROR SAAT UPDATE:', error);
-            showToast(error.message || 'Terjadi kesalahan', 'error');
-            resetSubmitButton();
+        // Show confirmation modal instead of submitting directly
+        if (confirmModal) {
+            pendingFormData = new FormData(form);
+            pendingFormData.append('categories', JSON.stringify(selectedCategories));
+            console.log('Form data prepared with categories:', selectedCategories); // Debug log
+            confirmModal.classList.add('is-visible');
+            confirmModal.setAttribute('aria-hidden', 'false');
         }
     });
 
@@ -128,5 +121,84 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             toast.className = 'toast';
         }, 3000);
+    }
+
+    // Add visual feedback for category selection
+    const categorySelect = document.getElementById('categories');
+    
+    function updateCategoryFeedback() {
+        const selected = Array.from(categorySelect.selectedOptions);
+        console.log(`Category Selection Updated: ${selected.length} selected`);
+    }
+    
+    categorySelect.addEventListener('change', updateCategoryFeedback);
+    
+    // Initialize on page load
+    updateCategoryFeedback();
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async () => {
+            if (!pendingFormData) return;
+            
+            saveBtn.disabled = true;
+            saveBtn.classList.add('loading');
+            saveBtn.textContent = 'Menyimpan...';
+            
+            if (confirmModal) {
+                confirmModal.classList.remove('is-visible');
+                confirmModal.setAttribute('aria-hidden', 'true');
+            }
+            
+            const productId = form.dataset.productId;
+            
+            try {
+                const result = await api.post(`/api/seller/products/update/${productId}`, pendingFormData);
+
+                if (result.success) {
+                    showToast(result.message || 'Produk berhasil diupdate');
+                    setTimeout(() => {
+                        window.location.href = '/seller/products';
+                    }, 1500);
+                } else {
+                    throw new Error(result.message || 'Gagal mengupdate produk');
+                }
+
+            } catch (error) {
+                console.error('TERJADI ERROR SAAT UPDATE:', error);
+                showToast(error.message || 'Terjadi kesalahan', 'error');
+                resetSubmitButton();
+            } finally {
+                pendingFormData = null;
+            }
+        });
+    }
+    
+    if (cancelConfirmBtn) {
+        cancelConfirmBtn.addEventListener('click', () => {
+            if (confirmModal) {
+                confirmModal.classList.remove('is-visible');
+                confirmModal.setAttribute('aria-hidden', 'true');
+            }
+            pendingFormData = null;
+        });
+    }
+    
+    // Close modal on escape key
+    if (confirmModal) {
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && confirmModal.classList.contains('is-visible')) {
+                confirmModal.classList.remove('is-visible');
+                confirmModal.setAttribute('aria-hidden', 'true');
+                pendingFormData = null;
+            }
+        });
+        
+        // Close on overlay click
+        confirmModal.addEventListener('click', (event) => {
+            if (event.target === confirmModal) {
+                confirmModal.classList.remove('is-visible');
+                confirmModal.setAttribute('aria-hidden', 'true');
+                pendingFormData = null;
+            }
+        });
     }
 });
