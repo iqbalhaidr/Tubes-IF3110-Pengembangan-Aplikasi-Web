@@ -12,6 +12,7 @@ $activeLink = 'dashboard';
     <title>Nimonspedia - Seller Dashboard</title>
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/dashboard.css?v=<?= $dashboardCssVersion ?>">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 </head>
 <body class="seller-dashboard">
     <?php include __DIR__ . '/../components/navbar.php'; ?>
@@ -87,7 +88,6 @@ $activeLink = 'dashboard';
         </div>
     </main>
 
-    <!-- Edit Store Profile Modal -->
     <div id="editStoreModal" class="modal hidden">
         <div class="modal-overlay" id="editStoreOverlay"></div>
         <div class="modal-content modal-large">
@@ -98,24 +98,31 @@ $activeLink = 'dashboard';
             <form id="editStoreForm" class="modal-form" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="edit_store_name">Store Name</label>
-                    <input type="text" id="edit_store_name" name="store_name" required placeholder="Your store name">
+                    <input type="text" id="edit_store_name" name="store_name" required 
+                        placeholder="Your store name" maxlength="100">
                     <div class="error-message" id="edit_store_nameError"></div>
                 </div>
+                
                 <div class="form-group">
-                    <label for="edit_store_logo">Store Logo</label>
-                    <input type="file" id="edit_store_logo" name="store_logo" accept="image/jpeg,image/png,image/webp">
-                    <div class="logo-upload-preview" id="logoPreview">
-                        <span>Logo preview</span>
+                    <label for="edit_store_logo">Store Logo (Optional, Max 2MB)</label>
+                    <div id="current-logo-preview" class="logo-current-preview">
                     </div>
+                    <input type="file" id="edit_store_logo" name="store_logo" 
+                        accept="image/jpeg,image/png,image/webp">
+                    <div id="logo-preview-new" class="logo-upload-preview" style="display:none;">
+                        <img id="logo-preview-img" src="" alt="New logo preview">
+                    </div>
+                    <small>JPG, PNG, or WEBP. Max 2MB</small>
                     <div class="error-message" id="edit_store_logoError"></div>
                 </div>
                 <div class="form-group">
-                    <label for="edit_store_description">Store Description</label>
-                    <div class="rich-text-wrapper" id="storeDescriptionWrapper">
-                        <div id="storeDescriptionEditor"></div>
-                    </div>
-                    <div class="error-message" id="edit_store_descriptionError"></div>
+                    <label for="quill-editor-store">Store Description (Max 5000 karakter)</label>
+                    <div id="quill-editor-store"></div>
+                    <textarea id="edit_store_description" name="store_description" 
+                            style="display:none;"></textarea>
+                    <div id="store-desc-error" class="validation-error"></div>
                 </div>
+                
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" id="editStoreCancel">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="editStoreSubmit">Save Changes</button>
