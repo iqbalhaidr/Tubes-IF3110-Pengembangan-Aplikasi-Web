@@ -385,3 +385,23 @@ button:focus-visible {
         justify-content: center;
     }
 }
+
+.toast {
+    position: fixed;
+    bottom: -100px; /* Start off-screen */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--text-dark);
+    color: var(--white);
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    transition: bottom 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.toast.show {
+    bottom: 30px; /* Slide into view */
+}
