@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             descError.textContent = 'Deskripsi tidak boleh kosong.';
             return;
         }
-        if (quill.root.innerHTML.length > 5000) {
+        if (quill.root.innerHTML.length > 1000) {
             descError.textContent = 'Deskripsi terlalu panjang.';
             return;
         }

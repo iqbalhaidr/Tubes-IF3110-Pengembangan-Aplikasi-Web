@@ -31,7 +31,7 @@
             </div>
 
             <div class="form-group">
-                <label for="quill-editor">Deskripsi Produk (Max 5000 karakter)</label>
+                <label for="quill-editor">Deskripsi Produk (Max 1000 karakter)</label>
                 <div id="quill-editor"></div>
                 <textarea id="description" name="description" style="display:none;"><?= htmlspecialchars($product['description']) ?></textarea>
                 <div id="desc-error" class="validation-error"></div>

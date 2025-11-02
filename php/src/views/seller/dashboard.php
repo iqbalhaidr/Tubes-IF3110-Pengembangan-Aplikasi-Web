@@ -118,7 +118,7 @@ $activeLink = 'dashboard';
                     <div class="error-message" id="edit_store_logoError"></div>
                 </div>
                 <div class="form-group">
-                    <label for="quill-editor-store">Store Description (Max 5000 karakter)</label>
+                    <label for="quill-editor-store">Store Description (Max 1000 karakter)</label>
                     <div id="quill-editor-store"></div>
                     <textarea id="edit_store_description" name="store_description" 
                             style="display:none;"></textarea>

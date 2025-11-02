@@ -112,8 +112,8 @@ class StoreController {
                 throw new Exception("Store name must be between 1-100 characters.");
             }
             
-            if (strlen($description) > 5000) {
-                throw new Exception("Description cannot exceed 5000 characters.");
+            if (strlen($description) > 1000) {
+                throw new Exception("Description cannot exceed 1000 characters.");
             }
 
             $logoPath = null;
