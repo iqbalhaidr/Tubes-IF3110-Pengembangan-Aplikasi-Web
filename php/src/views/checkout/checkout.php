@@ -45,8 +45,8 @@
                             <div class="items-list">
                                 <?php foreach ($store['items'] as $item): ?>
                                     <div class="item-card" data-cart-item-id="<?= $item['cart_item_id'] ?>">
-                                        <img src="<?= htmlspecialchars($item['main_image_path'] ?? '/public/images/default-product.png') ?>" alt="Product Image" class="item-image"
-                                             onerror="this.src='/public/images/default-product.png'">
+                                        <img src="<?= htmlspecialchars($item['main_image_path'] ?? 'default.png') ?>" alt="Product Image" class="item-image"
+                                             onerror="this.src='/public/images/products/default.png'">
                                         <div class="item-details">
                                             <div class="item-name"><?= htmlspecialchars($item['product_name']) ?></div>
                                             <div class="item-price">Rp <?= number_format($item['price']) ?></div>

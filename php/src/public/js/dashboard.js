@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Load logo preview if exists
                     const logoPreview = document.getElementById('logoPreview');
                     if (data.data.store_logo_path && logoPreview) {
-                        logoPreview.innerHTML = `<img src="/public/${data.data.store_logo_path}" alt="Store logo" style="max-width: 100%; max-height: 100%; border-radius: 6px;">`;
+                        const logoPath = data.data.store_logo_path.startsWith('/') ? data.data.store_logo_path : '/' + data.data.store_logo_path;
+                        logoPreview.innerHTML = `<img src="${logoPath}" alt="Store logo" style="max-width: 100%; max-height: 100%; border-radius: 6px;">`;
                     }
                     
                     // Load description into Quill

@@ -392,7 +392,7 @@ class HomeController {
         }
 
         $baseDir = $publicDir;
-        $relativeDir = 'uploads' . DIRECTORY_SEPARATOR . 'store_logos';
+        $relativeDir = 'images' . DIRECTORY_SEPARATOR . 'store-logos';
         $targetDir = $baseDir . DIRECTORY_SEPARATOR . $relativeDir;
 
         if (!is_dir($targetDir) && !mkdir($targetDir, 0775, true)) {
@@ -411,7 +411,7 @@ class HomeController {
         }
 
         $response['success'] = true;
-        $response['relative_path'] = 'uploads/store_logos/' . $filename;
+        $response['relative_path'] = 'public/images/store-logos/' . $filename;
         $response['absolute_path'] = $targetPath;
         $response['message'] = null;
         return $response;

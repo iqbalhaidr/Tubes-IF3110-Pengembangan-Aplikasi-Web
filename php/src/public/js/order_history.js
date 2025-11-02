@@ -167,7 +167,7 @@ function createOrderCard(order) {
     // Create product items HTML
     const productsHtml = (order.items || []).map(item => {
         const itemPrice = parseInt(item.price_at_purchase).toLocaleString('id-ID');
-        const itemImage = item.main_image_path ? `/public/${item.main_image_path}` : '/public/images/placeholder.png';
+        const itemImage = item.main_image_path ? `${item.main_image_path}` : '/public/images/products/default.png';
         return `
             <div class="order-product-item">
                 <img src="${itemImage}" alt="${item.product_name}" class="product-thumbnail">
@@ -276,11 +276,11 @@ function createDetailContent(order) {
     const itemsHtml = (order.items || []).map(item => {
         const itemPrice = parseInt(item.price_at_purchase).toLocaleString('id-ID');
         const itemTotal = (parseInt(item.price_at_purchase) * parseInt(item.quantity)).toLocaleString('id-ID');
-        const imagePath = item.main_image_path ? `/public/${item.main_image_path}` : '/public/images/placeholder.png';
+        const imagePath = item.main_image_path ? `${item.main_image_path}` : '/public/images/products/default.png';
         return `
             <div class="detail-item">
                 <div class="detail-item-image">
-                    <img src="${imagePath}" alt="${item.product_name}" onerror="this.src='/public/images/placeholder.png'">
+                    <img src="${imagePath}" alt="${item.product_name}" onerror="this.src='/public/images/products/default.png'">
                 </div>
                 <div class="detail-item-info">
                     <div class="detail-item-name">${item.product_name}</div>

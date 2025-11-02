@@ -24,7 +24,7 @@ $activeLink = 'dashboard';
                     <div class="store-header-left">
                         <div class="store-logo-container">
                             <?php if (!empty($store['store_logo_path'])): ?>
-                                <img src="/public/<?= htmlspecialchars($store['store_logo_path']) ?>" alt="<?= htmlspecialchars($store['store_name']) ?>" class="store-header-logo">
+                                <img src="<?= htmlspecialchars('/' . $store['store_logo_path']) ?>" alt="<?= htmlspecialchars($store['store_name']) ?>" class="store-header-logo">
                             <?php else: ?>
                                 <div class="store-logo-placeholder">
                                     <span><?= strtoupper(substr($store['store_name'], 0, 2)) ?></span>
@@ -63,16 +63,6 @@ $activeLink = 'dashboard';
             </section>
 
             <section class="dashboard-grid">
-                <div class="dashboard-panel">
-                    <h2>Recent Activity</h2>
-                    <p class="panel-description">Track recent orders, fulfillment performance, and customer activity.</p>
-                    <div class="panel-placeholder" aria-hidden="true">
-                        <div class="placeholder-content">
-                            <span>📊 Analytics Dashboard</span>
-                            <p>Coming soon</p>
-                        </div>
-                    </div>
-                </div>
                 <div class="dashboard-actions">
                     <a class="action-card" href="/seller/products">
                         <div class="action-icon">📦</div>
