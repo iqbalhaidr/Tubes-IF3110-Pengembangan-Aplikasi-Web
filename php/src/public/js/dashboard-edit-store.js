@@ -54,36 +54,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
     editStoreBtn.addEventListener('click', async () => {
         try {
-            const response = await api.get('/api/store/data');
+            console.log('Fetching store data...'); // Debug
+            const response = await api.get('/api/store/get-store-info');
+            console.log('Response received:', response); // Debug
             
-            if (response.success && response.store) {
-                const store = response.store;
+            if (response.success && response.data) {
+                const store = response.data;
+                console.log('Store data:', store); // Debug
                 
-                document.getElementById('edit_store_name').value = store.store_name || '';
-                
-                if (quillStoreEditor && store.store_description) {
-                    quillStoreEditor.root.innerHTML = store.store_description;
+                // Fill store name
+                const storeNameInput = document.getElementById('edit_store_name');
+                if (storeNameInput) {
+                    storeNameInput.value = store.store_name || '';
+                    console.log('Store name set:', store.store_name); // Debug
                 }
                 
+                // Fill store description in Quill
+                if (quillStoreEditor) {
+                    if (store.store_description && store.store_description.trim() !== '') {
+                        console.log('Setting description:', store.store_description); // Debug
+                        
+                        // Try multiple methods to set content
+                        try {
+                            // Method 1: Direct innerHTML (fastest)
+                            quillStoreEditor.root.innerHTML = store.store_description;
+                        } catch (e) {
+                            console.error('innerHTML method failed:', e);
+                            try {
+                                // Method 2: Use clipboard to convert HTML to Delta
+                                const delta = quillStoreEditor.clipboard.convert(store.store_description);
+                                quillStoreEditor.setContents(delta, 'silent');
+                            } catch (e2) {
+                                console.error('Delta method failed:', e2);
+                                // Method 3: Fallback to plain text
+                                quillStoreEditor.setText(store.store_description);
+                            }
+                        }
+                    } else {
+                        console.log('No description to set');
+                        quillStoreEditor.setText('');
+                    }
+                }
+                
+                // Fill logo preview
                 const currentLogoPreview = document.getElementById('current-logo-preview');
                 if (currentLogoPreview) {
-                    if (store.store_logo_path) {
+                    console.log('Logo path:', store.store_logo_path); // Debug
+                    
+                    if (store.store_logo_path && store.store_logo_path.trim() !== '') {
+                        // Handle different path formats
+                        let logoPath = store.store_logo_path;
+                        
+                        // If path doesn't start with /, add it
+                        if (!logoPath.startsWith('/')) {
+                            logoPath = '/' + logoPath;
+                        }
+                        
+                        console.log('Using logo path:', logoPath); // Debug
+                        
                         currentLogoPreview.innerHTML = `
-                            <img src="/${store.store_logo_path}" alt="Current logo" 
-                                 style="max-width: 150px; max-height: 150px; border-radius: 8px;">
+                            <img src="${logoPath}" 
+                                 alt="Current logo" 
+                                 style="max-width: 150px; max-height: 150px; border-radius: 8px; object-fit: cover;"
+                                 onerror="console.error('Failed to load image:', this.src); this.style.display='none'; this.parentElement.innerHTML='<p style=color:#999;>Failed to load logo</p>';">
                             <p style="margin-top: 8px; font-size: 0.875rem; color: #666;">Current logo</p>
                         `;
                     } else {
                         currentLogoPreview.innerHTML = '<p style="color: #999;">No logo uploaded</p>';
                     }
                 }
+            } else {
+                console.error('Invalid response structure:', response);
+                showToast('Failed to load store data', 'error');
+                return;
             }
             
             editStoreModal.classList.remove('hidden');
             
         } catch (error) {
             console.error('Error loading store data:', error);
-            showToast('Failed to load store data', 'error');
+            showToast('Failed to load store data: ' + error.message, 'error');
         }
     });
 
@@ -93,6 +143,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (quillStoreEditor) {
             quillStoreEditor.setText('');
         }
+        
+        // Clear logo preview
+        const currentLogoPreview = document.getElementById('current-logo-preview');
+        if (currentLogoPreview) {
+            currentLogoPreview.innerHTML = '';
+        }
+        const logoPreviewNew = document.getElementById('logo-preview-new');
+        if (logoPreviewNew) {
+            logoPreviewNew.style.display = 'none';
+        }
+        
         clearAllErrors();
     };
 
