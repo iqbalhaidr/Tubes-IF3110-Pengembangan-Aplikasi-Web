@@ -87,17 +87,44 @@ class Helper {
         return $cartData;
     }
     
+    // public static function sanitizeRichText($html) {
+    //     if (!is_string($html) || trim($html) === '') {
+    //         return '';
+    //     }
+
+    //     $allowedTags = '<p><strong><b><em><i><u><s><ol><ul><li><br><blockquote><span><a><h1><h2><h3>';
+        
+    //     $clean = strip_tags($html, $allowedTags);
+    //     $clean = preg_replace('/<p>\s*<\/p>/', '', $clean);
+    //     $clean = preg_replace('/\s+style\s*=\s*["\'][^"\']*["\']/', '', $clean);
+    //     $clean = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/', '', $clean);
+        
+    //     return trim($clean);
+    // }
+
     public static function sanitizeRichText($html) {
         if (!is_string($html) || trim($html) === '') {
             return '';
         }
 
+        // 1. Define allowed tags
         $allowedTags = '<p><strong><b><em><i><u><s><ol><ul><li><br><blockquote><span><a><h1><h2><h3>';
-        
         $clean = strip_tags($html, $allowedTags);
-        $clean = preg_replace('/<p>\s*<\/p>/', '', $clean);
-        $clean = preg_replace('/\s+style\s*=\s*["\'][^"\']*["\']/', '', $clean);
-        $clean = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/', '', $clean);
+
+        // 2. Remove dangerous attributes. This is NOT a complete list and can be bypassed.
+        
+        // Remove style attributes (case-insensitive)
+        $clean = preg_replace('/\s+style\s*=\s*["\'][^"\']*["\']/i', '', $clean);
+        
+        // Remove on... event handlers (onclick, onerror, etc.) (case-insensitive)
+        $clean = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/i', '', $clean);
+
+        // 3. Neutralize dangerous href attributes (like javascript:...) (case-insensitive)
+        // This was the primary vulnerability in the original manual function.
+        $clean = preg_replace('/href\s*=\s*["\']\s*(javascript|data|vbscript):[^"\']*/i', 'href="#DANGEROUS-LINK-REMOVED"', $clean);
+
+        // 4. Remove empty <p> tags that Quill might create (case-insensitive)
+        $clean = preg_replace('/<p>\s*<\/p>/i', '', $clean);
         
         return trim($clean);
     }
