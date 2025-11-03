@@ -25,21 +25,23 @@ $storeDetailCssVersion = filemtime(__DIR__ . '/../public/css/store_detail.css');
     ?>
 
     <div class="store-header">
-        <div class="store-logo-section">
-            <?php if (!empty($store['logo_path'])): ?>
-                <img src="<?php echo htmlspecialchars($store['logo_path']); ?>" 
-                     alt="<?php echo htmlspecialchars($store['name']); ?> Logo" 
-                     class="store-logo-image"
-                     onerror="this.style.display='none'">
-            <?php endif; ?>
-        </div>
-        <div class="store-info">
-            <h1><?php echo htmlspecialchars($store['name']); ?></h1>
-            <div class="store-description">
-                <?php 
-                $clean_store_description = Helper::sanitizeRichText($store['description']); 
-                echo $clean_store_description;
-                ?>
+        <div class="container">
+            <div class="store-logo-section">
+                <?php if (!empty($store['logo_path'])): ?>
+                    <img src="<?php echo htmlspecialchars('/' . $store['logo_path']); ?>" 
+                         alt="<?php echo htmlspecialchars($store['name']); ?> Logo" 
+                         class="store-logo-image"
+                         onerror="this.style.display='none'">
+                <?php endif; ?>
+            </div>
+            <div class="store-info">
+                <h1><?php echo htmlspecialchars($store['name']); ?></h1>
+                <div class="store-description">
+                    <?php 
+                    $clean_store_description = Helper::sanitizeRichText($store['description']); 
+                    echo $clean_store_description;
+                    ?>
+                </div>
             </div>
         </div>
     </div>
@@ -97,9 +99,7 @@ $storeDetailCssVersion = filemtime(__DIR__ . '/../public/css/store_detail.css');
                                     </div>
                                     <div class="product-store">
                                         <span class="info-label">Nama Toko:</span>
-                                        <a href="/store/<?php echo htmlspecialchars($product['store_id']); ?>" style="text-decoration: none; color: inherit;">
-                                            <span class="info-value" style="cursor: pointer; text-decoration: underline;"><?= htmlspecialchars($product['store']); ?></span>
-                                        </a>
+                                        <span class="info-value"><?= htmlspecialchars($product['store']); ?></span>
                                     </div>
                                 </div>
                             </div>
