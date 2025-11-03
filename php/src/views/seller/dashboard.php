@@ -36,7 +36,7 @@ $activeLink = 'dashboard';
                         <div class="store-header-info">
                             <h1><?= htmlspecialchars($store['store_name']) ?></h1>
                             <p class="store-header-status">Store Status: <span class="status-badge status-active">Active</span></p>
-                            <p class="store-header-member-since">Member since <?= date('F Y', strtotime($store['created_at'])) ?></p>
+                            <p class="store-header-member-since" aria-label="Member since <?= date('F Y', strtotime($store['created_at'])) ?>">Member since <?= date('F Y', strtotime($store['created_at'])) ?></p>
                         </div>
                     </div>
                     <div class="store-header-right">
@@ -47,19 +47,19 @@ $activeLink = 'dashboard';
             </header>
 
             <section class="dashboard-summary">
-                <div class="summary-card">
+                <div class="summary-card" aria-label="Total unique products">
                     <span class="summary-title">Total unique products</span>
                     <span class="summary-value"><?= htmlspecialchars(number_format($stats['total_products'])) ?></span>
                 </div>
-                <div class="summary-card">
+                <div class="summary-card" aria-label="Pending orders">
                     <span class="summary-title">Pending orders</span>
                     <span class="summary-value"><?= htmlspecialchars(number_format($stats['pending_orders'])) ?></span>
                 </div>
-                <div class="summary-card">
+                <div class="summary-card" aria-label="Products under 10 stock">
                     <span class="summary-title">Products under 10 stock</span>
                     <span class="summary-value"><?= htmlspecialchars(number_format($stats['low_stock'])) ?></span>
                 </div>
-                <div class="summary-card">
+                <div class="summary-card" aria-label="Total revenue">
                     <span class="summary-title">Total revenue</span>
                     <span class="summary-value">Rp <?= htmlspecialchars(number_format($stats['total_revenue'])) ?></span>
                 </div>
@@ -69,19 +69,19 @@ $activeLink = 'dashboard';
                 <div class="dashboard-actions">
                     <a class="action-card" href="/seller/products">
                         <div class="action-icon">📦</div>
-                        <h3>Kelola Produk</h3>
+                        <h2>Kelola Produk</h2>
                         <p>Manage your product catalog, update prices, and monitor stock levels.</p>
                         <span class="action-link">View All →</span>
                     </a>
                     <a class="action-card" href="/seller/orders">
                         <div class="action-icon">📋</div>
-                        <h3>Lihat Orders</h3>
+                        <h2>Lihat Orders</h2>
                         <p>Review new orders, approve, reject, and set delivery times.</p>
                         <span class="action-link">View All →</span>
                     </a>
                     <a class="action-card" href="/seller/products/add">
                         <div class="action-icon">➕</div>
-                        <h3>Tambah Produk Baru</h3>
+                        <h2>Tambah Produk Baru</h2>
                         <p>Create a new product listing and reach more buyers faster.</p>
                         <span class="action-link">Add Now →</span>
                     </a>

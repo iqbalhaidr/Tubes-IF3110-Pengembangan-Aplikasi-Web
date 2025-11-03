@@ -68,6 +68,7 @@
     overflow-y: hidden;
     padding-bottom: 12px;
     scrollbar-width: none;
+    min-height: 44px; /* Reserve space to prevent layout shift */
 }
 
 .status-tabs::-webkit-scrollbar {
@@ -163,6 +164,12 @@
 
 .orders-table tbody tr:last-child td {
     border-bottom: none;
+}
+
+/* Orders Section - Reserve space for content to prevent layout shifts */
+.orders-section {
+    min-height: 400px;
+    margin-bottom: 24px;
 }
 
 /* Order ID */
@@ -292,6 +299,11 @@
     background: white;
     border-radius: 12px;
     border: 1px solid var(--border-color);
+    min-height: 400px; /* Match orders-section min-height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .empty-state.hidden {
@@ -325,6 +337,11 @@
     background: white;
     border-radius: 12px;
     border: 1px solid var(--border-color);
+    min-height: 400px; /* Match orders-section min-height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .loading-state.hidden {
@@ -365,6 +382,7 @@
     padding-top: 24px;
     border-top: 1px solid var(--border-color);
     flex-wrap: wrap; /* Added for mobile */
+    min-height: 52px; /* Reserve space to prevent layout shift */
 }
 
 .pagination-info {

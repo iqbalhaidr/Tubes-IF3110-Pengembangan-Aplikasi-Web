@@ -201,8 +201,9 @@ td:nth-child(3) {
 
 td:nth-child(4) {
     font-weight: 700;
-    color: #03ac0e;
+    color: var(--primary-green);
     font-size: 15px;
+    font-weight: 700;
 }
 
 
@@ -247,16 +248,17 @@ td:last-child {
 }
 
 .btn-danger {
-    background-color: #fef2f2;
-    color: #ef4444;
-    border: 1px solid #fee2e2;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    font-weight: 600;
 }
 
 .btn-danger:hover {
-    background-color: #ef4444;
+    background-color: #dc2626;
     color: white;
-    border-color: #ef4444;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+    border-color: #dc2626;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
 }
 
 
@@ -406,17 +408,18 @@ td:last-child {
 }
 
 .modal-footer .btn-danger {
-    background-color: #ef4444;
+    background-color: #dc2626;
     color: white;
     border: none;
     padding: 10px 20px;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+    font-weight: 600;
 }
 
 .modal-footer .btn-danger:hover {
-    background-color: #dc2626;
+    background-color: #b91c1c;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
 }
 
 .modal-footer .btn-secondary {

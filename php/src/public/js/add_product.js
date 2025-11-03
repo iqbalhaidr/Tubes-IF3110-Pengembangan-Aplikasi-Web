@@ -10,6 +10,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Add accessible names to Quill toolbar buttons
+    setTimeout(() => {
+        const toolbarButtons = document.querySelectorAll('.ql-toolbar button');
+        toolbarButtons.forEach(button => {
+            const classList = button.className;
+            // Map class patterns to aria-labels
+            if (classList.includes('ql-bold')) {
+                button.setAttribute('aria-label', 'Tebal');
+            } else if (classList.includes('ql-italic')) {
+                button.setAttribute('aria-label', 'Miring');
+            } else if (classList.includes('ql-underline')) {
+                button.setAttribute('aria-label', 'Garis bawah');
+            } else if (classList.includes('ql-list')) {
+                // Check for ordered or bullet list
+                if (button.value === 'ordered' || classList.includes('ql-ordered')) {
+                    button.setAttribute('aria-label', 'Daftar bernomor');
+                } else if (button.value === 'bullet' || classList.includes('ql-bullet')) {
+                    button.setAttribute('aria-label', 'Daftar poin');
+                } else {
+                    // Fallback for list buttons without specific type
+                    button.setAttribute('aria-label', 'Daftar');
+                }
+            }
+        });
+    }, 100);
+
     const form = document.getElementById('addProductForm');
     const saveBtn = document.getElementById('saveBtn');
     const photoInput = document.getElementById('photo');

@@ -15,11 +15,11 @@
 
 		<div class="register-card">
 			<div class="register-tabs" role="tablist">
-				<button type="button" class="register-tab is-active" data-register-option="buyer" aria-selected="true" aria-controls="registerBuyerForm">
+				<button type="button" class="register-tab is-active" role="tab" data-register-option="buyer" aria-selected="true" aria-controls="registerBuyerForm" tabindex="0">
 					<span class="tab-title">Buyer</span>
 					<span class="tab-subtitle">Belanja produk Nimons</span>
 				</button>
-				<button type="button" class="register-tab" data-register-option="seller" aria-selected="false" aria-controls="registerSellerForm">
+				<button type="button" class="register-tab" role="tab" data-register-option="seller" aria-selected="false" aria-controls="registerSellerForm" tabindex="-1">
 					<span class="tab-title">Seller</span>
 					<span class="tab-subtitle">Kelola katalog & toko</span>
 				</button>
@@ -201,6 +201,7 @@
 					if (tab.classList.contains('register-tab')) {
 						tab.classList.toggle('is-active', isActive);
 						tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+						tab.setAttribute('tabindex', isActive ? '0' : '-1');
 					}
 				});
 

@@ -21,14 +21,17 @@
 
         <div class="filters-bar">
             <div class="search-wrapper">
+                <label for="searchInput" class="sr-only">Cari nama produk</label>
                 <input type="text" id="searchInput" class="search-input" placeholder="Cari nama produk...">
             </div>
+            <label for="categoryFilter" class="sr-only">Filter berdasarkan kategori</label>
             <select id="categoryFilter" class="filter-select">
                 <option value="">Semua Kategori</option>
                 <?php foreach ($categories as $category): ?>
                     <option value="<?= $category['category_id'] ?>"><?= htmlspecialchars($category['category_name']) ?></option>
                 <?php endforeach; ?>
             </select>
+            <label for="sortFilter" class="sr-only">Urutkan produk</label>
             <select id="sortFilter" class="filter-select">
                 <option value="name:ASC">Nama (A-Z)</option>
                 <option value="name:DESC">Nama (Z-A)</option>

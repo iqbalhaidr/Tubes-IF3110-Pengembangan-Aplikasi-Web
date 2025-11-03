@@ -486,8 +486,9 @@
 
 .store-header-member-since {
     font-size: 12px;
-    color: var(--text-light);
+    color: var(--text-medium);
     margin: 0;
+    font-weight: 500;
 }
 
 .store-header-right {
@@ -543,10 +544,11 @@
 
 .summary-title {
     font-size: 12px;
-    color: var(--text-light);
+    color: var(--text-medium);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    font-weight: 600;
+    font-weight: 700;
+    opacity: 1;
 }
 
 .summary-value {
@@ -655,7 +657,7 @@
     line-height: 1;
 }
 
-.action-card h3 {
+.action-card h2 {
     font-size: 16px;
     font-weight: 700;
     color: var(--text-dark);
@@ -909,7 +911,7 @@
         font-size: 28px;
     }
 
-    .action-card h3 {
+    .action-card h2 {
         font-size: 14px;
     }
 

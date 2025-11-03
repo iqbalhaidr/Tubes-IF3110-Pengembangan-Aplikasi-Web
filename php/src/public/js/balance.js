@@ -37,8 +37,11 @@
         backdrop.className = 'topup-backdrop';
         backdrop.setAttribute('data-topup-backdrop', '');
         backdrop.setAttribute('aria-hidden', 'true');
+        backdrop.setAttribute('aria-modal', 'true');
+        backdrop.setAttribute('role', 'dialog');
+        backdrop.setAttribute('inert', '');
         backdrop.innerHTML = `
-            <div class="topup-modal" role="dialog" aria-modal="true" aria-labelledby="topup-modal-title">
+            <div class="topup-modal" role="presentation">
                 <header>
                     <h2 id="topup-modal-title">Tambah Saldo</h2>
                     <button type="button" class="topup-close-btn" data-close-topup aria-label="Tutup pop up">×</button>
@@ -131,6 +134,7 @@
 
         backdropElement.classList.add('is-visible');
         backdropElement.setAttribute('aria-hidden', 'false');
+        backdropElement.removeAttribute('inert');
         clearFeedback();
         if (amountInput) {
             amountInput.focus();
@@ -145,6 +149,7 @@
 
         backdropElement.classList.remove('is-visible');
         backdropElement.setAttribute('aria-hidden', 'true');
+        backdropElement.setAttribute('inert', '');
         if (formElement) {
             formElement.reset();
         }
