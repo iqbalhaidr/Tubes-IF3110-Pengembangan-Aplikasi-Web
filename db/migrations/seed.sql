@@ -142,3 +142,59 @@ INSERT INTO order_item (order_id, product_id, quantity, price_at_purchase, subto
 (7, 11, 2, 45000, 90000);
 
 UPDATE product SET main_image_path = '/public/images/products/' || product_id || '.jpg';
+
+UPDATE product p
+SET search_text = 
+    LOWER(
+        regexp_replace(
+            p.product_name || ' ' || 
+            COALESCE(p.description, '') || ' ' || 
+            s.store_name || ' ' || 
+            COALESCE((SELECT STRING_AGG(c.category_name, ' ')
+                      FROM category_item ci
+                      JOIN category c ON ci.category_id = c.category_id
+                      WHERE ci.product_id = p.product_id), ''), 
+            '<[^>]+>', ' ', 'g'
+        )
+    ) || ' ' ||
+    (CASE 
+        WHEN p.product_name ILIKE '%Laptop Gaming%' THEN 'notebook komputer jinjing pc portabel asus lenovo acer hp dell msi'
+        WHEN p.product_name ILIKE '%TV LED%' THEN 'televisi smart tv android tv flat screen'
+        WHEN p.product_name ILIKE '%Kipas Angin%' THEN 'fan ac pendingin ruangan'
+        WHEN p.product_name ILIKE '%Blender%' THEN 'juicer gilingan bumbu penghalus'
+        WHEN p.product_name ILIKE '%Smartphone%' THEN 'handphone hp telpon genggam android ios iphone samsung xiaomi oppo vivo'
+        WHEN p.product_name ILIKE '%Powerbank%' THEN 'cas portabel charger portable pengisi daya baterai cadangan'
+        WHEN p.product_name ILIKE '%Earbuds%' THEN 'tws headset earphone audio nirkabel bluetooth'
+        WHEN p.product_name ILIKE '%Smartwatch%' THEN 'jam tangan pintar jam digital arloji pintar'
+        WHEN p.product_name ILIKE '%Rice Cooker%' THEN 'penanak nasi magic com magic jar'
+        WHEN p.product_name ILIKE '%Oven Listrik%' THEN 'pemanggang microwave'
+        WHEN p.product_name ILIKE '%Lampu Belajar%' THEN 'lampu meja desk lamp'
+        WHEN p.product_name ILIKE '%Kemeja Batik%' THEN 'baju atasan hem pakaian formal kondangan gaun'
+        WHEN p.product_name ILIKE '%Gaun Pesta%' THEN 'dress baju pesta long dress'
+        WHEN p.product_name ILIKE '%Celana Kulot Jeans%' THEN 'denim celana panjang wanita'
+        WHEN p.product_name ILIKE '%Jaket Kulit%' THEN 'jacket motor touring'
+        WHEN p.product_name ILIKE '%Kaos Polos%' THEN 't-shirt baju santai'
+        WHEN p.product_name ILIKE '%Celana Chino%' THEN 'celana panjang katun celana kasual'
+        WHEN p.product_name ILIKE '%Hoodie Zipper%' THEN 'jaket jumper sweater'
+        WHEN p.product_name ILIKE '%Kemeja Flanel%' THEN 'baju kotak-kotak atasan flanel'
+        WHEN p.product_name ILIKE '%Panci Set%' THEN 'wajan teflon masak'
+        WHEN p.product_name ILIKE '%Pisau Dapur%' THEN 'alat potong'
+        WHEN p.product_name ILIKE '%Meja Lipat Laptop%' THEN 'meja belajar portable'
+        WHEN p.product_name ILIKE '%Rak Sepatu%' THEN 'lemari sepatu tempat penyimpanan'
+        WHEN p.product_name ILIKE '%Cermin Dinding%' THEN 'kaca rias'
+        WHEN p.product_name ILIKE '%Sepatu Lari%' THEN 'sneakers running shoes'
+        WHEN p.product_name ILIKE '%Raket Badminton%' THEN 'bulutangkis'
+        WHEN p.product_name ILIKE '%Bola Basket%' THEN 'basket ball'
+        WHEN p.product_name ILIKE '%Matras Yoga%' THEN 'alas olahraga senam'
+        WHEN p.product_name ILIKE '%Dumbbell Set%' THEN 'barbel angkat beban alat gym fitness'
+        WHEN p.product_name ILIKE '%Tali Skipping%' THEN 'jump rope lompat tali'
+        WHEN p.product_name ILIKE '%Sepeda Statis%' THEN 'alat fitness cardio x-bike'
+        WHEN p.product_name ILIKE '%Novel%' OR p.product_name ILIKE '%Komik%' THEN 'buku bacaan fiksi'
+        WHEN p.product_name ILIKE '%Buku Resep%' THEN 'buku masak'
+        WHEN p.product_name ILIKE '%Sejarah%' OR p.product_name ILIKE '%Kamus%' THEN 'buku non-fiksi buku pelajaran'
+        ELSE '' 
+    END)
+FROM 
+    store s
+WHERE 
+    p.store_id = s.store_id;

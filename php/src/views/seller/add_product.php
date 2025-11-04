@@ -45,7 +45,7 @@
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <small>💡 Tip: Gunakan Ctrl+Click (Cmd+Click pada Mac) untuk memilih lebih dari satu kategori. Atau klik dan tahan kategori yang berbeda.</small>
+                <small>Gunakan Ctrl+Click (Cmd+Click pada Mac) untuk memilih lebih dari satu kategori. Atau klik dan tahan kategori yang berbeda.</small>
             </div>
 
             <div class="form-group">

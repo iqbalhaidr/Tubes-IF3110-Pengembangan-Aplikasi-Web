@@ -1,11 +1,10 @@
 .page-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-bottom: 32px;
     flex-wrap: wrap;
     gap: 16px;
-    padding-bottom: 24px;
+    padding-top: 16px;
     border-bottom: 1px solid #e5e7e9;
 }
 
@@ -18,7 +17,9 @@
 }
 
 .page-header .btn-primary {
-    margin-top: 0;
+    flex: none;
+    margin-left: auto;
+    margin-top: 4px;
     padding: 12px 24px;
     font-size: 14px;
     font-weight: 600;

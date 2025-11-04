@@ -263,6 +263,7 @@ class ProductController {
     
             $this->productModel->updateProductImage($productId, $publicPath);
             $this->productModel->connectCategoriesToProduct($productId, $category_ids);
+            $this->productModel->updateSearchText($productId);
     
             echo json_encode([
                 'success' => true, 
@@ -363,6 +364,7 @@ class ProductController {
             ];
             $this->productModel->updateProduct($id, $store_id, $data);
             $this->productModel->connectCategoriesToProduct($id, $category_ids);
+            $this->productModel->updateSearchText($id);
 
             echo json_encode(['success' => true, 'message' => 'Produk berhasil diupdate']);
 

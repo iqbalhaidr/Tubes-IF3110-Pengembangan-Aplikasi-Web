@@ -11,14 +11,14 @@ class Product {
         
         $baseSql = 'FROM product p 
                     JOIN store s ON p.store_id = s.store_id 
-                    JOIN category_item ci ON p.product_id = ci.product_id 
-                    JOIN category c ON ci.category_id = c.category_id';
+                    LEFT JOIN category_item ci ON p.product_id = ci.product_id 
+                    LEFT JOIN category c ON ci.category_id = c.category_id';
         $whereConditions = ['p.deleted_at IS NULL'];
         $joinConditions = '';
         $params = [];
 
         if (!empty($filters['search'])) {
-            $whereConditions[] = '(p.product_name ILIKE :search OR s.store_name ILIKE :search)';
+            $whereConditions[] = 'p.search_text ILIKE :search';
             $params[':search'] = '%' . $filters['search'] . '%';
         }
 
@@ -248,6 +248,76 @@ class Product {
         }
         
         return $stmt->rowCount();
+    }
+    
+    public function updateSearchText($product_id) {
+        $synonymDictionary = [
+            'laptop' => 'notebook komputer jinjing pc portabel macbook asus lenovo acer hp dell msi',
+            'tv' => 'televisi flat screen',
+            'smartphone' => 'handphone hp telpon genggam android ios iphone samsung xiaomi oppo vivo',
+            'powerbank' => 'cas portabel charger portable pengisi daya baterai cadangan',
+            'earbuds' => 'tws headset earphone audio nirkabel bluetooth',
+            'smartwatch' => 'jam tangan pintar jam digital arloji pintar',
+            'kemeja' => 'baju atasan hem pakaian',
+            'gaun' => 'dress baju pesta',
+            'celana' => 'bawahan jeans denim chino kulot',
+            'jaket' => 'hoodie jumper sweater outerwear',
+            'kaos' => 't-shirt baju santai',
+            'sepatu' => 'sneakers running shoes',
+            'raket' => 'bulutangkis badminton',
+            'bola' => 'basket voli sepak',
+            'meja' => 'mebel furniture',
+            'kursi' => 'mebel furniture',
+            'rak' => 'lemari penyimpanan furniture',
+            'lampu' => 'penerangan desk lamp',
+            'buku' => 'novel komik bacaan fiksi non-fiksi',
+            'panci' => 'wajan teflon masak',
+            'pisau' => 'alat potong',
+            'oven' => 'pemanggang microwave',
+            'blender' => 'juicer gilingan bumbu penghalus',
+            'kipas' => 'fan pendingin',
+        ];
+
+        $stmt_data = $this->db->prepare("
+            SELECT 
+                p.product_name, 
+                p.description, 
+                s.store_name, 
+                STRING_AGG(c.category_name, ' ') as categories
+            FROM product p
+            JOIN store s ON p.store_id = s.store_id
+            LEFT JOIN category_item ci ON p.product_id = ci.product_id
+            LEFT JOIN category c ON ci.category_id = c.category_id
+            WHERE p.product_id = :product_id
+            GROUP BY p.product_id, s.store_name
+        ");
+        $stmt_data->execute([':product_id' => $product_id]);
+        $data = $stmt_data->fetch(PDO::FETCH_ASSOC);
+
+        if (!$data) return;
+
+        $base_text = $data['product_name'] . ' ' . 
+                     strip_tags($data['description'] ?? '') . ' ' . 
+                     $data['store_name'] . ' ' . 
+                     ($data['categories'] ?? '');
+
+        $extra_keywords = '';
+        $normalized_base_text = ' ' . strtolower($base_text) . ' ';
+
+        foreach ($synonymDictionary as $key => $synonyms) {
+            if (strpos($normalized_base_text, ' ' . $key . ' ') !== false) {
+                $extra_keywords .= $synonyms . ' ';
+            }
+        }
+
+        $final_search_text = strtolower($base_text . ' ' . $extra_keywords);
+        
+        $sql_update = "UPDATE product SET search_text = :search_text WHERE product_id = :product_id";
+        $stmt_update = $this->db->prepare($sql_update);
+        $stmt_update->execute([
+            ':search_text' => $final_search_text,
+            ':product_id' => $product_id
+        ]);
     }
 
     public function deleteProduct($product_id) {

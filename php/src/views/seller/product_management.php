@@ -1,4 +1,5 @@
 <?php $mainCssVersion = filemtime(__DIR__ . '/../../public/css/main.css'); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
