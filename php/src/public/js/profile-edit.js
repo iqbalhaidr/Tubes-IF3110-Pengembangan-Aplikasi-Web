@@ -100,6 +100,56 @@ function showPasswordConfirmationModal() {
     });
 }
 
+function showEditProfileConfirmationModal() {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('editProfileConfirmModal');
+        const confirmBtn = document.getElementById('editProfileConfirmSubmit');
+        const cancelBtn = document.getElementById('editProfileConfirmCancel');
+        const closeBtn = document.getElementById('editProfileConfirmClose');
+
+        if (!modal || !confirmBtn || !cancelBtn) {
+            console.warn('Edit profile confirmation modal elements not found');
+            resolve(false);
+            return;
+        }
+
+        // Show modal
+        openModal('editProfileConfirmModal');
+
+        const handleConfirm = () => {
+            closeModal('editProfileConfirmModal');
+            cleanup();
+            resolve(true);
+        };
+
+        const handleCancel = () => {
+            closeModal('editProfileConfirmModal');
+            cleanup();
+            resolve(false);
+        };
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCancel();
+            }
+        };
+
+        const cleanup = () => {
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            closeBtn.removeEventListener('click', handleCancel);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+
+        // Add event listeners
+        confirmBtn.addEventListener('click', handleConfirm);
+        cancelBtn.addEventListener('click', handleCancel);
+        closeBtn.addEventListener('click', handleCancel);
+        document.addEventListener('keydown', handleKeyDown);
+    });
+}
+
 function clearFieldError(fieldName, prefix = '') {
     const fullName = prefix ? prefix + '_' + fieldName : fieldName;
     const input = document.getElementById(fullName);
@@ -176,6 +226,7 @@ function initializeBuyerProfileEdit() {
             const value = dd.textContent.trim();
             if (label === 'Full Name') currentUserData.name = value;
             if (label === 'Address') currentUserData.address = value;
+            if (label === 'Email') currentUserData.email = value;
         }
     });
 
@@ -184,10 +235,12 @@ function initializeBuyerProfileEdit() {
         editProfileBtn.addEventListener('click', () => {
             const nameInput = document.getElementById('edit_name');
             const addressInput = document.getElementById('edit_address');
+            const emailInput = document.getElementById('edit_email');
             
-            if (nameInput && addressInput) {
+            if (nameInput && addressInput && emailInput) {
                 nameInput.value = currentUserData.name;
                 addressInput.value = currentUserData.address;
+                emailInput.value = currentUserData.email || '';
                 openModal('editProfileModal');
             }
         });
@@ -203,6 +256,25 @@ function initializeBuyerProfileEdit() {
             element.addEventListener('click', () => closeModal('editProfileModal'));
         }
     });
+
+    // Change Password link from Edit Profile Form
+    const changePasswordFromProfileBtn = document.getElementById('changePasswordFromProfileBtn');
+    if (changePasswordFromProfileBtn) {
+        changePasswordFromProfileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeModal('editProfileModal');
+            // Reset change password form
+            changePasswordForm.reset();
+            document.querySelectorAll('#changePasswordForm input').forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+            document.querySelectorAll('#changePasswordForm .error-message').forEach(el => {
+                el.classList.remove('show');
+                el.textContent = '';
+            });
+            openModal('changePasswordModal');
+        });
+    }
 
     // Edit Profile Form - Field Clear
     if (editProfileForm) {
@@ -225,6 +297,15 @@ function initializeBuyerProfileEdit() {
 
             const name = document.getElementById('edit_name').value.trim();
             const address = document.getElementById('edit_address').value.trim();
+
+            // Show edit profile confirmation modal
+            const confirmResult = await showEditProfileConfirmationModal();
+            
+            if (!confirmResult) {
+                // User cancelled
+                return;
+            }
+
             const submitBtn = document.getElementById('editProfileSubmit');
             const originalText = submitBtn.textContent;
 

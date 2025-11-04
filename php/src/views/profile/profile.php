@@ -86,6 +86,10 @@ $activeLink = 'profile';
                 </div>
                 <form id="editProfileForm" class="modal-form">
                     <div class="form-group">
+                        <label for="edit_email">Email (Read-only)</label>
+                        <input type="email" id="edit_email" name="email" readonly placeholder="Your email address">
+                    </div>
+                    <div class="form-group">
                         <label for="edit_name">Full Name</label>
                         <input type="text" id="edit_name" name="name" required placeholder="Your full name">
                         <div class="error-message" id="edit_nameError"></div>
@@ -95,11 +99,32 @@ $activeLink = 'profile';
                         <textarea id="edit_address" name="address" required placeholder="Your complete address"></textarea>
                         <div class="error-message" id="edit_addressError"></div>
                     </div>
+                    <div class="form-group">
+                        <button type="button" class="btn btn-link" id="changePasswordFromProfileBtn">Change Password</button>
+                    </div>
                     <div class="modal-actions">
                         <button type="button" class="btn btn-secondary" id="editProfileCancel">Cancel</button>
                         <button type="submit" class="btn btn-primary" id="editProfileSubmit">Save Changes</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Edit Profile Confirmation Modal -->
+        <div id="editProfileConfirmModal" class="modal hidden">
+            <div class="modal-overlay" id="editProfileConfirmOverlay"></div>
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h2>Confirm Profile Changes</h2>
+                    <button type="button" class="modal-close" id="editProfileConfirmClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="confirm-text">Are you sure you want to update your profile information?</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="editProfileConfirmCancel">No, Cancel</button>
+                    <button type="button" class="btn btn-primary" id="editProfileConfirmSubmit">Yes, Save Changes</button>
+                </div>
             </div>
         </div>
 

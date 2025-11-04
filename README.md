@@ -190,6 +190,73 @@ Setelah instalasi selesai, untuk menjalankan server dalam mode development:
 | **Advanced Search** | ✅ Implemented |
 | **Google Lighthouse** | ✅ Implemented |
 
+## Perbaikan Google Lighthouse
+
+Berikut adalah daftar perbaikan aksesibilitas dan performa yang dilakukan berdasarkan hasil audit Google Lighthouse:
+
+### 1. **main.css**
+- **Masalah:** Kontras warna pada navbar links dan balance display tidak memenuhi standar WCAG 2.1 Level AA
+- **Perbaikan:** 
+  - Menambahkan `.sr-only` class untuk teks yang hanya dapat diakses oleh screen reader
+  - Meningkatkan opacity background dari 0.18 menjadi 0.25 pada balance display
+  - Menambahkan `color: var(--white)` dan `opacity: 1` untuk memastikan kontras minimum 4.5:1
+
+### 2. **balance.js**
+- **Masalah:** Top-up modal buttons memiliki aria-hidden pada container tapi tetap fokusable oleh keyboard
+- **Perbaikan:**
+  - Menambahkan `aria-modal="true"` dan `role="dialog"` pada backdrop
+  - Menggunakan `inert=""` attribute untuk mencegah keyboard access saat modal tertutup
+  - Mengelola `aria-hidden` state secara dinamis saat modal dibuka/ditutup
+
+### 3. **register.php & register.js**
+- **Masalah:** ARIA roles tidak sesuai standar WAI-ARIA untuk tab pattern (tombol punya `aria-selected` tapi tidak punya `role="tab"`)
+- **Perbaikan:**
+  - Menambahkan `role="tab"` pada semua tab buttons
+  - Menambahkan `role="tablist"` pada container
+  - Menambahkan `aria-controls` untuk linking tabs dengan panels
+  - Mengelola `tabindex` secara dinamis (0 untuk active, -1 untuk inactive)
+
+### 4. **product_detail.php**
+- **Masalah:** Quantity input field tidak memiliki associated label yang properly
+- **Perbaikan:**
+  - Menambahkan `<label class="sr-only">` untuk quantity input
+  - Menambahkan `aria-label` pada increment/decrement buttons
+
+### 5. **product_management.php**
+- **Masalah:** Select elements (kategori filter, sorting) tidak memiliki associated labels
+- **Perbaikan:**
+  - Menambahkan 3 sr-only labels untuk search input, category filter, dan sort filter
+  - Labels: "Cari nama produk", "Filter berdasarkan kategori", "Urutkan produk"
+
+### 6. **product_management.css**
+- **Masalah 1:** Price cells menampilkan warna hardcoded #03ac0e, tidak konsisten dengan CSS variables
+  - **Perbaikan:** Mengubah ke `color: var(--primary-green)` untuk konsistensi
+- **Masalah 2:** Delete button text color (#ef4444) terlalu terang, kontras kurang dari 4.5:1
+  - **Perbaikan:** Mengubah text color menjadi #b91c1c (dark red) mencapai 4.53:1 kontras pada light pink background
+
+### 7. **seller_edit_product.js & add_product.js**
+- **Masalah:** Quill editor toolbar buttons tidak memiliki accessible names untuk screen reader
+- **Perbaikan:**
+  - Menambahkan dynamic `aria-label` attributes pada semua toolbar buttons
+  - Labels: "Tebal", "Miring", "Garis bawah", "Daftar bernomor", "Daftar poin"
+  - Menggunakan setTimeout untuk memastikan Quill render sebelum menambahkan labels
+
+### 8. **orders.css**
+- **Masalah:** Layout shift culprits - terjadi pergerakan halaman saat data loading, pagination berubah, atau tab counts update
+- **Perbaikan:**
+  - Menambahkan `min-height: 400px` pada `.orders-section` untuk reserved space
+  - Menambahkan `min-height: 52px` pada `.pagination-container` untuk prevent shift
+  - Menambahkan `min-height: 44px` pada `.status-tabs` untuk maintain tab height
+  - Menambahkan `min-height: 400px` dan flexbox centering pada `.empty-state` dan `.loading-state`
+
+### 9. **profile.php & profile-edit.js**
+- **Masalah:** Edit profile form tidak memiliki confirmation modal dan email field tidak visible
+- **Perbaikan:**
+  - Menambahkan email field (read-only) pada edit profile form
+  - Menambahkan confirmation modal untuk edit profile (sama seperti password change flow)
+  - Menambahkan "Change Password" link dalam edit profile form untuk kemudahan navigasi
+  - Menambahkan `.btn-link` CSS class untuk styling tombol link
+
 ## Pembagian Tugas
 
 ### Server-side (Backend)
