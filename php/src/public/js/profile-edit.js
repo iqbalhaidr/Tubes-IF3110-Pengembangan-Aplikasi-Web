@@ -1,12 +1,4 @@
-/**
- * Profile Edit Modal Management
- */
-
-/**
- * Show toast notification
- */
 function showToast(message, type = 'info', duration = 5000) {
-    // Create toast container if it doesn't exist
     let toastContainer = document.getElementById('toast-container');
     if (!toastContainer) {
         toastContainer = document.createElement('div');
@@ -58,10 +50,6 @@ function togglePassword(inputId, button) {
     button.textContent = isHidden ? '🙈' : '👁️';
 }
 
-/**
- * Show password confirmation modal (yes/no confirmation)
- * Returns true if user confirms, false if cancelled
- */
 function showPasswordConfirmationModal() {
     return new Promise((resolve) => {
         const modal = document.getElementById('passwordConfirmModal');
@@ -156,9 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeBuyerProfileEdit();
 });
 
-/**
- * Buyer Profile Edit
- */
+
 function initializeBuyerProfileEdit() {
     const editProfileBtn = document.getElementById('editProfileBtn');
     const changePasswordBtn = document.getElementById('changePasswordBtn');
@@ -413,8 +399,3 @@ function initializeBuyerProfileEdit() {
         });
     }
 }
-
-/**
- * Only Buyer Profile Edit is supported
- * Sellers now use the dashboard for store management
- */

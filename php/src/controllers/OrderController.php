@@ -8,12 +8,10 @@ class OrderController {
         $this->db = Database::getInstance();
         $this->orderModel = new Order($this->db);
     }
-
     /**
-     * Display order management page (HTML)
+     * Display order management page for sellers
      */
     public function index() {
-        // Require seller role
         AuthMiddleware::requireRole('SELLER', '/auth/login');
         $currentUser = AuthMiddleware::getCurrentUser();
 
@@ -31,11 +29,9 @@ class OrderController {
             exit;
         }
 
-        // Get order counts by status - THIS REQUIRES Order model to work properly
         try {
             $orderCounts = $this->orderModel->getOrderCountByStatus($store['store_id']);
         } catch (Exception $e) {
-            // If there's an error getting counts, still show the page
             $orderCounts = [
                 'WAITING_APPROVAL' => 0,
                 'APPROVED' => 0,
@@ -54,11 +50,7 @@ class OrderController {
         include __DIR__ . '/../views/seller/orders.php';
     }
 
-    /**
-     * API: Get orders with filters, search, and pagination
-     */
     public function getOrders() {
-        // Require seller role
         $currentUser = AuthMiddleware::getCurrentUser();
         
         if (!$currentUser || $currentUser['role'] !== 'SELLER') {
@@ -110,9 +102,6 @@ class OrderController {
         }
     }
 
-    /**
-     * API: Get order details
-     */
     public function getOrderDetail() {
         // Require seller role
         $currentUser = AuthMiddleware::getCurrentUser();
@@ -164,9 +153,6 @@ class OrderController {
         }
     }
 
-    /**
-     * API: Approve order
-     */
     public function approve() {
         // Require seller role
         $currentUser = AuthMiddleware::getCurrentUser();
@@ -239,9 +225,6 @@ class OrderController {
         }
     }
 
-    /**
-     * API: Reject order and refund buyer
-     */
     public function reject() {
         // Require seller role
         $currentUser = AuthMiddleware::getCurrentUser();
@@ -326,9 +309,6 @@ class OrderController {
         }
     }
 
-    /**
-     * API: Set delivery time
-     */
     public function setDeliveryTime() {
         // Require seller role
         $currentUser = AuthMiddleware::getCurrentUser();

@@ -1,4 +1,4 @@
-/* Font loading */
+
 @font-face {
     font-family: 'Open Sauce One';
     src: url('/public/fonts/OpenSauceOne-Regular.woff') format('woff');
@@ -23,7 +23,7 @@
     font-display: swap;
 }
 
-/* Global Variables */
+
 :root {
     --primary-green: #03ac0e;
     --primary-green-hover: #028a0c;
@@ -54,7 +54,7 @@ body {
     line-height: 1.6;
 }
 
-/* Screen reader only - visually hidden but accessible */
+
 .sr-only {
     position: absolute;
     width: 1px;
@@ -108,7 +108,7 @@ body {
     color: var(--white);
     text-decoration: none;
     white-space: nowrap;
-    display: block; /* Show on desktop */
+    display: block; 
 }
 
 .navbar-brand:hover {
@@ -130,7 +130,7 @@ body {
     border-bottom: 3px solid transparent;
     transition: border-color 0.2s, color 0.2s;
     white-space: nowrap;
-    opacity: 1; /* Ensure full opacity for contrast */
+    opacity: 1; 
 }
 
 .navbar-link:hover {
@@ -241,7 +241,6 @@ body {
     gap: 15px;
 }
 
-/* Cart Icon */
 .cart-icon {
     position: relative;
     color: var(--white);
@@ -282,7 +281,7 @@ body {
     padding: 2px;
 }
 
-/* User Dropdown */
+
 .user-dropdown {
     position: relative;
 }
@@ -355,7 +354,6 @@ body {
     background: var(--background-gray);
 }
 
-/* Store Balance Display (read-only for seller) */
 .store-balance-display {
     display: flex;
     align-items: center;

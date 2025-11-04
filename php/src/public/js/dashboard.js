@@ -1,10 +1,4 @@
-/**
- * Dashboard JavaScript
- * Handles dashboard interactions and event listeners
- */
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Edit Store Button - Open Modal and Load Data
     const editStoreBtn = document.getElementById('editStoreBtn');
     const editStoreModal = document.getElementById('editStoreModal');
     
@@ -57,20 +51,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Optional: Add animation to summary cards on page load
     const summaryCards = document.querySelectorAll('.summary-card');
     summaryCards.forEach((card, index) => {
         card.style.animation = `fadeInUp 0.5s ease ${index * 0.1}s backwards`;
     });
 
-    // Optional: Add animation to action cards
     const actionCards = document.querySelectorAll('.action-card');
     actionCards.forEach((card, index) => {
         card.style.animation = `fadeInUp 0.5s ease ${(summaryCards.length + index) * 0.1}s backwards`;
     });
 });
 
-// Add fadeInUp animation
 if (!document.querySelector('style[data-dashboard]')) {
     const style = document.createElement('style');
     style.setAttribute('data-dashboard', 'true');

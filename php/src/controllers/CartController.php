@@ -7,9 +7,6 @@ class CartController {
         $this->cart_model = new Cart();
     }
 
-    /**
-     * Endpoint for index displaying Cart page ()
-     */
     public function index() {
         AuthMiddleware::requireRole('BUYER', '/auth/login');
         $current_user = AuthMiddleware::getCurrentUser();
@@ -24,9 +21,6 @@ class CartController {
         require_once __DIR__ . '/../views/cart/cart.php';
     }
 
-    /**
-     * Endpoint for add item
-     */
     public function addItem() {
         if (!AuthMiddleware::isLoggedIn()) {
             Response::error('User not logged in', null, 401);
@@ -64,9 +58,6 @@ class CartController {
         }
     }
 
-    /**
-     * Endpoint for delete item
-     */
     public function deleteItem($cart_item_id) {
         if (!AuthMiddleware::isLoggedIn()) {
             Response::error('User not logged in', null, 401);
@@ -82,9 +73,6 @@ class CartController {
         Response::success('Delete item from cart successful, ' . $result['affected_rows'] . ' rows affected', null, 200);
     }
 
-    /**
-     * Endpoint for update item quantity
-     */
     public function updateItem($cart_item_id) {
         if (!AuthMiddleware::isLoggedIn()) {
             Response::error('User not logged in', null, 401);
@@ -106,9 +94,6 @@ class CartController {
         Response::success('Update item in cart successful, ' . $result['affected_rows'] . ' rows affected', null, 200);
     }
 
-    /**
-     * Endpoint for fetch all items in cart_items by buyer_id
-     */
     public function fetchItems() {
         if (!AuthMiddleware::isLoggedIn()) {
             Response::error('User not logged in', null, 401);
@@ -125,9 +110,6 @@ class CartController {
         Response::success('Get items in cart successful', $structuredCartData, 200);
     }
 
-    /**
-     * Endpoint for cart badge counter unique item count
-     */
     public function getUniqueItemCount() {
         if (!AuthMiddleware::isLoggedIn()) {
             Response::error('User not logged in', null, 401);

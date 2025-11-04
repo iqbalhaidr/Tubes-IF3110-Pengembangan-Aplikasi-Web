@@ -1,4 +1,4 @@
-/* Modal Styles */
+
 .modal {
     position: fixed;
     top: 0;
@@ -310,7 +310,6 @@
     font-size: 12px;
 }
 
-/* Store Logo Display - Fixed Square Dimensions */
 .store-logo-display {
     width: 200px;
     height: 200px;
@@ -320,7 +319,6 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive */
 @media (max-width: 600px) {
     .modal-content {
         max-width: 90vw;
@@ -355,7 +353,6 @@
         margin-bottom: 8px;
     }
 
-    /* Responsive store logo display */
     .store-logo-display {
         width: 150px;
         height: 150px;
@@ -363,14 +360,12 @@
 }
 
 @media (max-width: 480px) {
-    /* Extra small screens - smaller logo display */
     .store-logo-display {
         width: 120px;
         height: 120px;
     }
 }
 
-/* Quill CSS Fixes */
 .ql-toolbar {
     border: none;
     border-bottom: 1px solid var(--border-color);
@@ -442,7 +437,6 @@
     color: var(--primary-green);
 }
 
-/* Toast Notification Styles */
 .toast {
     position: fixed;
     bottom: 30px;

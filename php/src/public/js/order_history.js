@@ -1,5 +1,3 @@
-// Order History Page JavaScript
-
 let currentStatus = 'all';
 let currentPage = 1;
 let totalPages = 1;

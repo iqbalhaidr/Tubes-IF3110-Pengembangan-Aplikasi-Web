@@ -1,11 +1,11 @@
 :root {
-    --color-primary: #03ac0e; /* Example: Blue */
+    --color-primary: #03ac0e;
     --color-primary-dark: #00a000;
-    --color-danger: #dc3545; /* Red for delete */
+    --color-danger: #dc3545;
     --color-danger-dark: #b02a37;
-    --color-secondary: #6c757d; /* Gray */
-    --color-text-primary: #212529; /* Dark text */
-    --color-text-secondary: #6c757d; /* Lighter text */
+    --color-secondary: #6c757d;
+    --color-text-primary: #212529;
+    --color-text-secondary: #6c757d;
     --color-border: #dee2e6;
     --color-background-light: #f8f9fa;
     --color-white: #ffffff;

@@ -397,7 +397,7 @@ button:focus-visible {
 
 .toast {
     position: fixed;
-    bottom: -100px; /* Start off-screen */
+    bottom: -100px;
     left: 50%;
     transform: translateX(-50%);
     background-color: var(--text-dark);
@@ -412,12 +412,8 @@ button:focus-visible {
 }
 
 .toast.show {
-    bottom: 30px; /* Slide into view */
+    bottom: 30px; 
 }
-
-/* ================================================================
-   EDIT PRODUCT CONFIRMATION MODAL
-   ================================================================ */
 
 .modal-overlay {
     position: fixed;

@@ -380,10 +380,6 @@ button:focus-visible {
     }
 }
 
-/* ================================================================
-   ADD PRODUCT CONFIRMATION MODAL
-   ================================================================ */
-
 .modal-overlay {
     position: fixed;
     top: 0;

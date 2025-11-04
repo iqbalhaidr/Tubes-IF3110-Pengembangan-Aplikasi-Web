@@ -77,8 +77,6 @@ class HomeController {
         $store = $storeModel->findBySeller($currentUser['user_id']);
 
         if (!$store) {
-            // Store doesn't exist - this is a new seller who hasn't created a store yet
-            // For now, redirect them to login (they should create store during registration)
             header('Location: /auth/login');
             exit;
         }
@@ -89,12 +87,8 @@ class HomeController {
         require_once __DIR__ . '/../views/seller/dashboard.php';
     }
 
-    /**
-     * Calculate dashboard statistics for seller
-     */
     private function calculateDashboardStats($store_id) {
         try {
-            // 1. Total unique products (not quantity)
             $productQuery = 'SELECT COUNT(DISTINCT p.product_id) as total_products 
                             FROM product p 
                             WHERE p.store_id = :store_id AND p.deleted_at IS NULL';
@@ -103,7 +97,6 @@ class HomeController {
             $productResult = $productStmt->fetch(PDO::FETCH_ASSOC);
             $total_products = (int)($productResult['total_products'] ?? 0);
 
-            // 2. Pending orders (WAITING_APPROVAL)
             $pendingQuery = 'SELECT COUNT(*) as pending_count 
                             FROM "order" 
                             WHERE store_id = :store_id AND status = :status';
@@ -112,7 +105,6 @@ class HomeController {
             $pendingResult = $pendingStmt->fetch(PDO::FETCH_ASSOC);
             $pending_orders = (int)($pendingResult['pending_count'] ?? 0);
 
-            // 3. Products with low stock (< 10)
             $lowStockQuery = 'SELECT COUNT(DISTINCT p.product_id) as low_stock_count 
                              FROM product p 
                              WHERE p.store_id = :store_id AND p.stock < 10 AND p.deleted_at IS NULL';
@@ -121,7 +113,6 @@ class HomeController {
             $lowStockResult = $lowStockStmt->fetch(PDO::FETCH_ASSOC);
             $low_stock = (int)($lowStockResult['low_stock_count'] ?? 0);
 
-            // 4. Total revenue (sum of all RECEIVED orders)
             $revenueQuery = 'SELECT COALESCE(SUM(o.total_price), 0) as total_revenue 
                             FROM "order" o 
                             WHERE o.store_id = :store_id AND o.status = :status';
@@ -138,7 +129,6 @@ class HomeController {
             ];
 
         } catch (Exception $e) {
-            // Return default stats if there's an error
             return [
                 'total_products' => 0,
                 'pending_orders' => 0,
@@ -407,9 +397,6 @@ class HomeController {
         ], 200);
     }
 
-    /**
-     * Display buyer order history page
-     */
     public function buyerOrderHistory() {
         AuthMiddleware::requireRole('BUYER', '/auth/login');
         $currentUser = AuthMiddleware::getCurrentUser();
@@ -420,9 +407,6 @@ class HomeController {
         require_once __DIR__ . '/../views/buyer/order_history.php';
     }
 
-    /**
-     * API: Get buyer orders with filtering, searching, and pagination
-     */
     public function getBuyerOrders() {
         AuthMiddleware::requireRole('BUYER');
         $currentUser = AuthMiddleware::getCurrentUser();
@@ -466,9 +450,6 @@ class HomeController {
         }
     }
 
-    /**
-     * API: Get buyer order detail
-     */
     public function getBuyerOrderDetail() {
         AuthMiddleware::requireRole('BUYER');
         $currentUser = AuthMiddleware::getCurrentUser();
@@ -519,9 +500,6 @@ class HomeController {
         }
     }
 
-    /**
-     * API: Confirm order received (ON_DELIVERY → RECEIVED)
-     */
     public function confirmOrderReceived() {
         AuthMiddleware::requireRole('BUYER');
         $currentUser = AuthMiddleware::getCurrentUser();
@@ -586,9 +564,6 @@ class HomeController {
         }
     }
 
-    /**
-     * API: Handle Seller Performance Report Export
-     */
     public function exportPerformanceReport() {
         AuthMiddleware::requireRole('SELLER', '/auth/login');
 
@@ -632,9 +607,6 @@ class HomeController {
         }
     }
 
-    /**
-     * Get detailed performance report data for a store
-     */
     private function getSellerPerformanceReport($store_id, $storeInfo) {
         $report = [];
 

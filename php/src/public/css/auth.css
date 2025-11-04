@@ -1,4 +1,4 @@
-/* Font loading */
+
 @font-face {
     font-family: 'Open Sauce One';
     src: url('/public/fonts/OpenSauceOne-Regular.woff') format('woff');
@@ -23,7 +23,7 @@
     font-display: swap;
 }
 
-/* Reset */
+
 * {
     margin: 0;
     padding: 0;
