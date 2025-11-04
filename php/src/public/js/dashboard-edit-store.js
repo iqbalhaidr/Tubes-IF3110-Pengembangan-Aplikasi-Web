@@ -74,19 +74,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (store.store_description && store.store_description.trim() !== '') {
                         console.log('Setting description:', store.store_description); // Debug
                         
-                        // Try multiple methods to set content
                         try {
-                            // Method 1: Direct innerHTML (fastest)
                             quillStoreEditor.root.innerHTML = store.store_description;
                         } catch (e) {
                             console.error('innerHTML method failed:', e);
                             try {
-                                // Method 2: Use clipboard to convert HTML to Delta
                                 const delta = quillStoreEditor.clipboard.convert(store.store_description);
                                 quillStoreEditor.setContents(delta, 'silent');
                             } catch (e2) {
                                 console.error('Delta method failed:', e2);
-                                // Method 3: Fallback to plain text
                                 quillStoreEditor.setText(store.store_description);
                             }
                         }

@@ -1,8 +1,3 @@
-/**
- * Order Management JavaScript
- * Handles seller order management functionality
- */
-
 let currentPage = 1;
 let currentLimit = 10;
 let currentStatus = 'all';
@@ -15,14 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeEventListeners();
     loadOrderCounts();
     loadOrders();
-    
-    // Refresh order counts every 5 seconds
     countRefreshInterval = setInterval(loadOrderCounts, 5000);
 });
-
-// ================================================================
-// INITIALIZATION
-// ================================================================
 
 function initializeEventListeners() {
     // Status tabs
@@ -149,13 +138,8 @@ function setupModalHandlers() {
     document.getElementById('deliveryConfirm').addEventListener('click', confirmDelivery);
 }
 
-// ================================================================
-// DATA LOADING
-// ================================================================
-
 async function loadOrderCounts() {
     try {
-        // Fetch all statuses in parallel for better performance
         const statuses = ['all', 'WAITING_APPROVAL', 'APPROVED', 'ON_DELIVERY', 'RECEIVED', 'REJECTED'];
         
         const promises = statuses.map(status => {
@@ -226,10 +210,6 @@ async function loadOrders() {
         hideLoadingState();
     }
 }
-
-// ================================================================
-// RENDERING
-// ================================================================
 
 function renderOrdersTable(orders) {
     const tbody = document.getElementById('ordersTableBody');
@@ -305,9 +285,6 @@ function updatePagination(data) {
     document.getElementById('pageSizeSelector').value = data.limit;
 }
 
-// ================================================================
-// MODAL OPERATIONS
-// ================================================================
 
 async function viewOrderDetail(orderId) {
     try {
@@ -423,10 +400,6 @@ function openDeliveryModal(orderId) {
     document.getElementById('deliveryModal').classList.remove('hidden');
 }
 
-// ================================================================
-// MODAL CONFIRMATIONS
-// ================================================================
-
 async function confirmApprove() {
     const orderId = document.getElementById('approveModal').dataset.orderId;
     const confirmBtn = document.getElementById('approveConfirm');
@@ -535,10 +508,6 @@ async function confirmDelivery() {
         confirmBtn.textContent = originalText;
     }
 }
-
-// ================================================================
-// UTILITY FUNCTIONS
-// ================================================================
 
 function showFieldError(fieldName, message) {
     const errorElement = document.getElementById(`${fieldName}Error`);

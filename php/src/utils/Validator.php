@@ -16,9 +16,9 @@ class Validator {
      */
     public static function isValidPassword($password) {
         return strlen($password) >= 8 && 
-               preg_match('/[A-Z]/', $password) &&      // Uppercase letter
-               preg_match('/[a-z]/', $password) &&      // Lowercase letter
-               preg_match('/[0-9]/', $password) &&      // Number
+               preg_match('/[A-Z]/', $password) && // Uppercase letter
+               preg_match('/[a-z]/', $password) && // Lowercase letter
+               preg_match('/[0-9]/', $password) && // Number
                preg_match('/[^A-Za-z0-9]/', $password); // Symbol (any non-alphanumeric)
     }
 
@@ -209,7 +209,6 @@ class Validator {
         $height = $imageInfo[1];
 
         // Check minimum dimensions (at least 100x100)
-        // Note: Image will be auto-cropped to square, so check the smaller dimension
         $minDimension = 100;
         $smallerDimension = min($width, $height);
         if ($smallerDimension < $minDimension) {

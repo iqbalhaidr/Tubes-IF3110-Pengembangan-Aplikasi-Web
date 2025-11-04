@@ -16,10 +16,7 @@ class Order {
      */
     public function create($buyer_id, $store_id, $total_price, $shipping_address) {
         try {
-            // Start transaction
             $this->db->beginTransaction();
-
-            // Create order
             $query = '
                 INSERT INTO "order" (buyer_id, store_id, total_price, shipping_address, status, created_at)
                 VALUES (:buyer_id, :store_id, :total_price, :shipping_address, :status, CURRENT_TIMESTAMP)
@@ -50,7 +47,6 @@ class Order {
      */
     public function addOrderItem($order_id, $product_id, $quantity, $price_at_purchase) {
         try {
-            // Validate inputs
             if (!$order_id || !$product_id || !$quantity || !isset($price_at_purchase)) {
                 throw new Exception('Invalid order item data');
             }
@@ -63,7 +59,6 @@ class Order {
                 throw new Exception('Price cannot be negative');
             }
 
-            // Calculate subtotal
             $subtotal = $quantity * $price_at_purchase;
 
             $query = '
@@ -83,9 +78,6 @@ class Order {
         }
     }
 
-    /**
-     * Get a single order with all details and items
-     */
     public function getOrderById($order_id) {
         $query = '
             SELECT 
@@ -114,7 +106,6 @@ class Order {
         $order = $statement->fetch(PDO::FETCH_ASSOC);
 
         if ($order) {
-            // Get order items
             $itemsQuery = '
                 SELECT 
                     oi.order_item_id,
@@ -136,9 +127,6 @@ class Order {
         return $order;
     }
 
-    /**
-     * Get orders by store with filtering, searching, and pagination
-     */
     public function getOrdersByStore($store_id, $status = null, $search = null, $page = 1, $limit = 10) {
         $offset = ($page - 1) * $limit;
         
@@ -220,9 +208,6 @@ class Order {
         ];
     }
 
-    /**
-     * Generic status update
-     */
     public function updateStatus($order_id, $status, $confirmed_at = null) {
         $query = '
             UPDATE "order" 
@@ -239,14 +224,11 @@ class Order {
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Approve an order (WAITING_APPROVAL → APPROVED)
-     */
+    // Approve an order (WAITING_APPROVAL → APPROVED)
     public function approve($order_id) {
         try {
             $this->db->beginTransaction();
 
-            // Update order status
             $query = '
                 UPDATE "order" 
                 SET status = :status, confirmed_at = CURRENT_TIMESTAMP
@@ -268,20 +250,16 @@ class Order {
         }
     }
 
-    /**
-     * Reject an order and refund buyer (WAITING_APPROVAL → REJECTED)
-     */
+    // Reject an order and refund buyer (WAITING_APPROVAL → REJECTED)
     public function reject($order_id, $reject_reason) {
         try {
             $this->db->beginTransaction();
 
-            // Get order details
             $order = $this->getOrderById($order_id);
             if (!$order) {
                 throw new Exception('Order not found');
             }
 
-            // Update order status with reject reason
             $query = '
                 UPDATE "order" 
                 SET status = :status, reject_reason = :reject_reason
@@ -294,7 +272,6 @@ class Order {
                 ':reject_reason' => $reject_reason
             ]);
 
-            // Refund buyer balance
             $queryRefund = '
                 UPDATE "user" 
                 SET balance = balance + :amount
@@ -327,9 +304,7 @@ class Order {
         }
     }
 
-    /**
-     * Set delivery time for order (APPROVED → ON_DELIVERY)
-     */
+    // Set delivery time for order (APPROVED → ON_DELIVERY)
     public function setDeliveryTime($order_id, $delivery_time) {
         try {
             $this->db->beginTransaction();
@@ -361,7 +336,6 @@ class Order {
      */
     public function markReceived($order_id, $store_id, $total_price) {
         try {
-            // 1. Ambil detail pesanan yang tepercaya dari DB
             $queryGet = '
                 SELECT store_id, total_price, status, delivery_time, buyer_id
                 FROM "order"
@@ -375,7 +349,6 @@ class Order {
                 throw new Exception('Order not found.');
             }
 
-            // 3. Validasi Status
             if ($order['status'] !== 'ON_DELIVERY') {
                 throw new Exception('Order cannot be marked as received. It is not currently on delivery.');
             }
@@ -388,13 +361,11 @@ class Order {
                     throw new Exception('Cannot confirm receipt. The estimated delivery time has not passed yet.');
                 }
             } else {
-                // Jika karena suatu alasan delivery_time-nya NULL, gagalkan.
                 throw new Exception('Order does not have a valid delivery time.');
             }
             
             $this->db->beginTransaction();
 
-            // Update order status
             $query = '
                 UPDATE "order" 
                 SET status = :status, received_at = CURRENT_TIMESTAMP
@@ -538,7 +509,6 @@ class Order {
             'total_pages' => ceil($total / $limit)
         ];
     }
-
     /**
      * Get order count grouped by status for a buyer
      */
@@ -588,8 +558,6 @@ class Order {
         try {
             $this->db->beginTransaction();
 
-            // LOCK THE DATA
-
             $product_sql = "SELECT product_id, stock, price, deleted_at, product_name 
                             FROM product 
                             WHERE product_id IN ($placeholders) 
@@ -608,9 +576,6 @@ class Order {
             $user_stmt->execute([':user_id' => $buyer_id]);
             $user = $user_stmt->fetch(PDO::FETCH_ASSOC);
 
-            // VALIDATE THE DATA
-
-            // Validate and calculate the items in cart
             $grand_total = 0;
             $store_orders = [];
             $validation_errors = [];
@@ -667,9 +632,6 @@ class Order {
                 $this->db->rollBack();
                 return ['success' => false, 'message' => implode(' ', $validation_errors)];
             }
-
-
-            // UPDATE THE DATA
 
             // Decrement user balance
             $update_user_sql = "UPDATE \"user\" SET balance = balance - :grand_total, updated_at = CURRENT_TIMESTAMP WHERE user_id = :user_id";

@@ -1,9 +1,3 @@
-/* Order Management Page Styles */
-
-/* ================================================================
-   LAYOUT & STRUCTURE
-   ================================================================ */
-
 .orders-content {
     padding: 32px 0;
     background: var(--background-gray);
@@ -55,10 +49,6 @@
     font-size: 14px;
 }
 
-/* ================================================================
-   STATUS TABS
-   ================================================================ */
-
 .status-tabs {
     display: flex;
     gap: 12px;
@@ -68,7 +58,7 @@
     overflow-y: hidden;
     padding-bottom: 12px;
     scrollbar-width: none;
-    min-height: 44px; /* Reserve space to prevent layout shift */
+    min-height: 44px; 
 }
 
 .status-tabs::-webkit-scrollbar {
@@ -114,10 +104,6 @@
     background: var(--primary-color);
     color: white;
 }
-
-/* ================================================================
-   ORDERS TABLE
-   ================================================================ */
 
 .orders-table-wrapper {
     background: white;
@@ -166,7 +152,6 @@
     border-bottom: none;
 }
 
-/* Orders Section - Reserve space for content to prevent layout shifts */
 .orders-section {
     min-height: 400px;
     margin-bottom: 24px;
@@ -178,18 +163,15 @@
     color: var(--primary-color);
 }
 
-/* Date */
 .order-date {
     color: var(--text-medium);
     font-size: 13px;
 }
 
-/* Buyer Name */
 .order-buyer {
     font-weight: 500;
 }
 
-/* Products List */
 .products-list {
     color: var(--text-medium);
     font-size: 13px;
@@ -289,17 +271,13 @@
     border-color: #dc3545;
 }
 
-/* ================================================================
-   EMPTY STATE
-   ================================================================ */
-
 .empty-state {
     padding: 64px 32px;
     text-align: center;
     background: white;
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    min-height: 400px; /* Match orders-section min-height */
+    min-height: 400px; 
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -327,17 +305,13 @@
     margin: 0;
 }
 
-/* ================================================================
-   LOADING STATE
-   ================================================================ */
-
 .loading-state {
     padding: 64px 32px;
     text-align: center;
     background: white;
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    min-height: 400px; /* Match orders-section min-height */
+    min-height: 400px; 
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -369,20 +343,16 @@
     margin: 0;
 }
 
-/* ================================================================
-   PAGINATION
-   ================================================================ */
-
 .pagination-container {
     display: flex;
-    justify-content: space-between; /* Changed from 'center' */
+    justify-content: space-between; 
     align-items: center;
     gap: 16px;
     margin-top: 24px;
     padding-top: 24px;
     border-top: 1px solid var(--border-color);
-    flex-wrap: wrap; /* Added for mobile */
-    min-height: 52px; /* Reserve space to prevent layout shift */
+    flex-wrap: wrap; 
+    min-height: 52px; 
 }
 
 .pagination-info {
@@ -448,7 +418,6 @@
     gap: 8px;
 }
 
-/* Use a simple class for the select, pulling from main.css */
 .page-size-selector .filter-select {
     padding: 6px 10px;
     border: 1px solid var(--border-color);
@@ -459,30 +428,25 @@
     background: var(--white);
 }
 
-/* Responsive adjustment for the new layout */
 @media (max-width: 768px) {
     .pagination-container {
-        justify-content: center; /* Stack in center on mobile */
+        justify-content: center; 
     }
 
     .pagination-nav {
-        order: 1; /* Put buttons in the middle */
+        order: 1; 
         width: 100%;
         justify-content: center;
     }
 
     .pagination-info {
-        order: 2; /* Put "Showing..." text at the bottom */
+        order: 2; 
     }
 
     .page-size-selector {
-        order: 0; /* Put "Per Halaman" at the top */
+        order: 0;
     }
 }
-
-/* ================================================================
-   MODALS
-   ================================================================ */
 
 .modal {
     position: fixed;
@@ -670,10 +634,6 @@
     min-width: 120px;
 }
 
-/* ================================================================
-   ORDER DETAIL MODAL CONTENT
-   ================================================================ */
-
 .order-detail-content {
     display: flex;
     flex-direction: column;
@@ -781,10 +741,6 @@
     color: var(--text-dark);
 }
 
-/* ================================================================
-   TOAST NOTIFICATION
-   ================================================================ */
-
 .toast {
     position: fixed;
     bottom: 24px;
@@ -831,10 +787,6 @@
         opacity: 1;
     }
 }
-
-/* ================================================================
-   RESPONSIVE DESIGN
-   ================================================================ */
 
 @media (max-width: 992px) {
     .orders-header-top {

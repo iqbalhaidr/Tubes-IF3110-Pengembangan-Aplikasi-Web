@@ -8,17 +8,11 @@ class AuthController {
         $this->userModel = new User();
     }
 
-    /**
-     * Show login page
-     */
     public function showLogin() {
         AuthMiddleware::requireGuest('/');
         require_once __DIR__ . '/../views/auth/login.php';
     }
 
-    /**
-     * Show register page
-     */
     public function showRegister() {
         AuthMiddleware::requireGuest('/');
         require_once __DIR__ . '/../views/auth/register.php';
@@ -34,9 +28,6 @@ class AuthController {
         Response::redirect('/auth/register?role=seller');
     }
 
-    /**
-     * Handle login form submission
-     */
     public function login() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Response::error('Method not allowed', null, 405);
@@ -45,30 +36,23 @@ class AuthController {
         $email = isset($_POST['email']) ? trim($_POST['email']) : '';
         $password = isset($_POST['password']) ? $_POST['password'] : '';
 
-        // Validate input
         $validator = Validator::validateLogin($email, $password);
         if ($validator->hasErrors()) {
             Response::error('Validation failed', $validator->getErrors(), 400);
         }
 
-        // Attempt login
         $result = $this->userModel->login($email, $password);
 
         if (!$result['success']) {
             Response::error($result['message'], null, 401);
         }
 
-        // Create session
         AuthMiddleware::login($result['user']);
 
-        // Redirect based on role
         $redirect_url = $result['user']['role'] === 'SELLER' ? '/seller/dashboard' : '/home';
         Response::success('Login successful', ['redirect' => $redirect_url], 200);
     }
 
-    /**
-     * Handle buyer registration
-     */
     public function registerBuyer() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Response::error('Method not allowed', null, 405);
@@ -80,7 +64,6 @@ class AuthController {
         $name = isset($_POST['name']) ? trim($_POST['name']) : '';
         $address = isset($_POST['address']) ? trim($_POST['address']) : '';
 
-        // Validate input
         $validator = Validator::validateRegisterBuyer(
             $email,
             $password,
@@ -92,27 +75,24 @@ class AuthController {
             Response::error('Validation failed', $validator->getErrors(), 400);
         }
 
-        // Check if email already exists
+
         if ($this->userModel->emailExists($email)) {
             Response::error('Email already registered', ['email' => 'This email is already in use'], 409);
         }
 
-        // Attempt registration
+
         $result = $this->userModel->registerBuyer($email, $password, $name, $address);
 
         if (!$result['success']) {
             Response::error($result['message'], null, 500);
         }
 
-        // Create session
+
         AuthMiddleware::login($result['user']);
 
         Response::success('Registration successful', ['redirect' => '/home'], 201);
     }
 
-    /**
-     * Handle seller registration
-     */
     public function registerSeller() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Response::error('Method not allowed', null, 405);
@@ -151,7 +131,7 @@ class AuthController {
             Response::error('Validation failed', ['store_logo' => $logoUpload['message']], 400);
         }
 
-    $result = $this->userModel->registerSeller($email, $password, $name, $address, $store_name, $store_description, $logoUpload['relative_path']);
+        $result = $this->userModel->registerSeller($email, $password, $name, $address, $store_name, $store_description, $logoUpload['relative_path']);
 
         if (!$result['success']) {
             if ($logoUpload['absolute_path']) {
@@ -165,7 +145,6 @@ class AuthController {
             Response::error($result['message'], null, 500);
         }
 
-        // Create session
         AuthMiddleware::login($result['user']);
 
         Response::success('Registration successful', ['redirect' => '/seller/dashboard'], 201);
@@ -255,11 +234,9 @@ class AuthController {
             return $response;
         }
 
-        // Generate filename and target path
         $filename = uniqid('store_logo_', true) . '.' . $extension;
         $targetPath = $targetDir . DIRECTORY_SEPARATOR . $filename;
 
-        // Move uploaded file directly without cropping
         if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
             $response['message'] = 'Failed to save store logo';
             return $response;
@@ -278,19 +255,12 @@ class AuthController {
         }
     }
 
-    /**
-     * Handle logout
-     */
     public function logout() {
         AuthMiddleware::logout();
         Response::redirect('/');
     }
 
-    /**
-     * Get current user info (API endpoint)
-     */
     public function getCurrentUser() {
-        // For API endpoints, return JSON error instead of redirect
         if (!AuthMiddleware::isLoggedIn()) {
             Response::error('Not authenticated', null, 401);
         }
@@ -301,9 +271,6 @@ class AuthController {
         Response::success('User retrieved', $user, 200);
     }
 
-    /**
-     * Update user profile (API endpoint)
-     */
     public function updateProfile() {
         AuthMiddleware::requireLogin();
 
@@ -315,7 +282,6 @@ class AuthController {
         $name = isset($_POST['name']) ? trim($_POST['name']) : '';
         $address = isset($_POST['address']) ? trim($_POST['address']) : '';
 
-        // Validate input
         if (!Validator::isValidName($name)) {
             Response::error('Validation failed', ['name' => 'Please enter a valid name'], 400);
         }
@@ -324,23 +290,18 @@ class AuthController {
             Response::error('Validation failed', ['address' => 'Please enter a valid address (min. 5 characters)'], 400);
         }
 
-        // Update profile
         $result = $this->userModel->updateProfile($current_user['user_id'], $name, $address);
 
         if (!$result['success']) {
             Response::error($result['message'], null, 500);
         }
 
-        // Update session
         AuthMiddleware::startSession();
         $_SESSION['name'] = $name;
 
         Response::success('Profile updated', $result['user'], 200);
     }
 
-    /**
-     * Change password (API endpoint)
-     */
     public function changePassword() {
         AuthMiddleware::requireLogin();
 
@@ -353,7 +314,6 @@ class AuthController {
         $new_password = isset($_POST['new_password']) ? $_POST['new_password'] : '';
         $new_password_confirm = isset($_POST['new_password_confirm']) ? $_POST['new_password_confirm'] : '';
 
-        // Validate input
         if (empty($old_password)) {
             Response::error('Validation failed', ['old_password' => 'Current password is required'], 400);
         }
@@ -366,7 +326,6 @@ class AuthController {
             Response::error('Validation failed', ['new_password_confirm' => 'Passwords do not match'], 400);
         }
 
-        // Change password
         $result = $this->userModel->changePassword($current_user['user_id'], $old_password, $new_password);
 
         if (!$result['success']) {

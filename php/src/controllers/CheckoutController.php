@@ -11,9 +11,6 @@ class CheckoutController {
         $this->user_model = new User();
     }
 
-    /**
-     * Endpoint for index displaying Checkout page
-     */
     public function index() {
         AuthMiddleware::requireRole('BUYER', '/auth/login');
         $current_user = AuthMiddleware::getCurrentUser();

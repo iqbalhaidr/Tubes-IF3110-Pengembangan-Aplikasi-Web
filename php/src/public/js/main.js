@@ -1,6 +1,3 @@
-// Main JavaScript for Nimonspedia
-
-// DOM Elements
 const mobileMenuToggle = document.getElementById('mobileMenuToggle');
 const navbarMenu = document.getElementById('navbarMenu');
 const searchInput = document.getElementById('searchInput');
@@ -55,7 +52,6 @@ if (userProfileBtn && userDropdown) {
 // Logout Functionality
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-        // Use normal navigation for logout to avoid JSON parsing issues
         window.location.href = '/auth/logout';
     });
 }
@@ -99,7 +95,6 @@ function showUserMenu(userData) {
             userAvatar.textContent = userData.name.charAt(0).toUpperCase();
         }
         
-        // Update balance amount if element exists (buyer pages only)
         if (balanceAmount && userData.role === 'BUYER' && userData.balance !== undefined) {
             balanceAmount.textContent = formatCurrency(userData.balance);
         }
