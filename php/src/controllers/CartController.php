@@ -1,0 +1,130 @@
+<?php
+
+class CartController {
+    private $cart_model;
+
+    public function __construct() {
+        $this->cart_model = new Cart();
+    }
+
+    public function index() {
+        AuthMiddleware::requireRole('BUYER', '/auth/login');
+        $current_user = AuthMiddleware::getCurrentUser();
+        $buyer_id = $current_user['user_id'];
+
+        $data = $this->cart_model->fetchItems($buyer_id);
+        if (!$data['success']) {
+            Response::error($data['message'], null, 500);
+        }
+        $cartData = Helper::structure_cart_data($data['items']);
+        
+        require_once __DIR__ . '/../views/cart/cart.php';
+    }
+
+    public function addItem() {
+        if (!AuthMiddleware::isLoggedIn()) {
+            Response::error('User not logged in', null, 401);
+        }
+        $current_user = AuthMiddleware::getCurrentUser();
+        $buyer_id = $current_user['user_id'];
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (json_last_error() !== JSON_ERROR_NONE || !isset($data['product_id'])) {
+            Response::error('Invalid input. "product_id" is required in JSON body or form data.', null, 400);
+        }
+        $product_id = trim($data['product_id']);
+        $quantity = trim($data['quantity']);
+
+        $temp = $this->cart_model->find_cart_item_id($buyer_id, $product_id);
+        if (!$temp['success']) {
+            Response::error($temp['message'], null, 500);
+        }
+
+        $cart_item_id = $temp['cart_item_id'];
+        if ($cart_item_id !== null) {
+            $result = $this->cart_model->incItem($buyer_id, $cart_item_id, $quantity);
+        } else {
+            $result = $this->cart_model->addItem($buyer_id, $product_id, $quantity);
+        }
+
+        if (!$result['success']) {
+            Response::error($result['message'], null, 500);
+        }
+
+       if ($cart_item_id !== null) {
+             Response::success('Product quantity incremented', ['affected_rows' => $result['affected_rows']], 200);
+        } else {
+             Response::success('Add to cart successful', $result['row'], 201);
+        }
+    }
+
+    public function deleteItem($cart_item_id) {
+        if (!AuthMiddleware::isLoggedIn()) {
+            Response::error('User not logged in', null, 401);
+        }
+        $current_user = AuthMiddleware::getCurrentUser();
+        $buyer_id = $current_user['user_id'];
+
+        $result = $this->cart_model->deleteItem($buyer_id, $cart_item_id);
+        if (!$result['success']) {
+            Response::error($result['message'], null, 500);
+        }
+
+        Response::success('Delete item from cart successful, ' . $result['affected_rows'] . ' rows affected', null, 200);
+    }
+
+    public function updateItem($cart_item_id) {
+        if (!AuthMiddleware::isLoggedIn()) {
+            Response::error('User not logged in', null, 401);
+        }
+        $current_user = AuthMiddleware::getCurrentUser();
+        $buyer_id = $current_user['user_id'];
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (json_last_error() !== JSON_ERROR_NONE || !isset($data['quantity'])) {
+            Response::error('Invalid input. "quantity" is required in JSON body.', null, 400);
+        }
+        
+        $quantity = (int)$data['quantity'];
+        $result = $this->cart_model->updateItem($buyer_id, $cart_item_id, $quantity);
+        if (!$result['success']) {
+            Response::error($result['message'], null, 500);
+        }
+
+        Response::success('Update item in cart successful, ' . $result['affected_rows'] . ' rows affected', null, 200);
+    }
+
+    public function fetchItems() {
+        if (!AuthMiddleware::isLoggedIn()) {
+            Response::error('User not logged in', null, 401);
+        }
+        $current_user = AuthMiddleware::getCurrentUser();
+        $buyer_id = $current_user['user_id'];
+
+        $data = $this->cart_model->fetchItems($buyer_id);
+        if (!$data['success']) {
+            Response::error($data['message'], null, 500);
+        }
+        $structuredCartData = Helper::structure_cart_data($data['items']);
+
+        Response::success('Get items in cart successful', $structuredCartData, 200);
+    }
+
+    public function getUniqueItemCount() {
+        if (!AuthMiddleware::isLoggedIn()) {
+            Response::error('User not logged in', null, 401);
+        }
+        $current_user = AuthMiddleware::getCurrentUser();
+        $buyer_id = $current_user['user_id'];
+
+        $data = $this->cart_model->get_unique_item_count($buyer_id);
+        if (!$data['success']) {
+            Response::error($data['message'], null, 500);
+        }
+
+        Response::success('Get items in cart successful', $data, 200);
+    }
+
+}
+
+?>

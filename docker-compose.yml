@@ -3,6 +3,55 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # TODO
+    ports:
+      - "8080:80"
+    volumes:
+      - ./php/src:/var/www/html/
+      - ./.env:/var/www/html/.env
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - APP_ENV=${APP_ENV}
+      - APP_URL=${APP_URL}
+      - SESSION_LIFETIME=${SESSION_LIFETIME}
+      - SESSION_NAME=${SESSION_NAME}
+      - SESSION_COOKIE_HTTPONLY=${SESSION_COOKIE_HTTPONLY}
+      - SESSION_COOKIE_SAMESITE=${SESSION_COOKIE_SAMESITE}
   db:
-# TODO
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/migrations/seed.sql:/docker-entrypoint-initdb.d/seed.sql
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "8081:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+# cara run: docker compose up -d --build
+# cara masuk db: docker exec -it milestone-1-tugas-besar-if-3110-web-based-development-k01-15-db-1 psql -U {POSTGRES_USER} -d {POSTGRES_DB}
