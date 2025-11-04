@@ -98,7 +98,7 @@ Pastikan Docker sudah terinstall di sistem Anda:
    SESSION_COOKIE_SAMESITE=Lax
    ```
    
-   **Catatan:** Ganti `your_strong_password_here` dengan password anda yang kuat untuk database.
+   **Catatan:** Ganti `nimonspedia_user` dan `your_strong_password_here` dengan username dan password anda untuk database.
 
 3. **Build dan Start Container**
    ```bash
@@ -307,8 +307,8 @@ Berikut adalah daftar perbaikan aksesibilitas dan performa yang dilakukan berdas
 
 ## Lisensi
 
-Project ini dibuat untuk memenuhi Tugas Besar Milestone 1 IF3110 Pengembangan Aplikasi Berbasis Web 2025/2026.
+Project ini dibuat untuk memenuhi Tugas Besar Milestone 1 IF3110 Pengembangan Aplikasi Berbasis Web TA 2025/2026.
 
 ---
 
-**Copyright © 2025 Kelompok [Nama Kelompok] - Institut Teknologi Bandung**
+**Copyright © 2025 Kelompok 15 - Institut Teknologi Bandung**
