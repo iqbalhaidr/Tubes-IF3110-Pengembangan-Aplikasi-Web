@@ -77,9 +77,18 @@ class CheckoutController {
         $result = $this->order_model->checkout($buyer_id, $shipping_address, $cartItems);
 
         if ($result['success']) {
+            // Update session balance
+            $user = $this->user_model->getUserById($buyer_id);
+            if ($user) {
+                $_SESSION['balance'] = $user['balance'];
+            }
+
             Response::success(
-                $result['message'], 
-                ['redirect' => '/buyer/order-history'],
+                $result['message'],
+                [
+                    'redirect' => '/buyer/order-history',
+                    'balance' => $user['balance'] ?? null
+                ],
                 200
             );
         } else {

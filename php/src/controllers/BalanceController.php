@@ -58,6 +58,20 @@ class BalanceController {
         ], 200);
     }
 
+    public function getBalance() {
+        AuthMiddleware::requireRole('BUYER');
+        $currentUser = AuthMiddleware::getCurrentUser();
+        $user = $this->userModel->getUserById($currentUser['user_id']);
+
+        if (!$user) {
+            Response::error('User not found', null, 404);
+        }
+
+        $_SESSION['balance'] = $user['balance'];
+
+        Response::success('Balance fetched successfully', ['balance' => $user['balance']]);
+    }
+
     private function parseRequestBody() {
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (stripos($contentType, 'application/json') !== false) {

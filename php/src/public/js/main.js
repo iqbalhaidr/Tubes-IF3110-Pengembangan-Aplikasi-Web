@@ -118,7 +118,7 @@ function showAuthLinks() {
 
 // Format currency
 function formatCurrency(amount) {
-    return new Intl.NumberFormat('id-ID').format(amount);
+    return 'Rp ' + new Intl.NumberFormat('id-ID').format(amount);
 }
 
 // Toast Notification
@@ -184,13 +184,30 @@ async function checkCartBadgeCounter() {
 window.addEventListener('balance:updated', (event) => {
     const balanceAmount = document.getElementById('balanceAmount');
     if (balanceAmount && event.detail && event.detail.balance !== undefined) {
-        const formatter = new Intl.NumberFormat('id-ID');
-        balanceAmount.textContent = 'Balance: Rp ' + formatter.format(event.detail.balance);
+        balanceAmount.textContent = 'Balance: ' + formatCurrency(event.detail.balance);
     }
 });
+
+// Refresh balance for buyers on page load
+async function refreshBalanceOnLoad() {
+    try {
+        const authData = await window.api.get('/auth/me');
+        if (authData && authData.success && authData.data && authData.data.role === 'BUYER') {
+            const balanceData = await window.api.get('/balance/get');
+            if (balanceData && balanceData.success && balanceData.data && balanceData.data.balance !== undefined) {
+                window.dispatchEvent(new CustomEvent('balance:updated', {
+                    detail: { balance: balanceData.data.balance }
+                }));
+            }
+        }
+    } catch (error) {
+        // The user is likely not a buyer or not logged in, so we can ignore this error.
+    }
+}
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthStatus();
     checkCartBadgeCounter();
+    refreshBalanceOnLoad();
 });

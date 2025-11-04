@@ -299,6 +299,8 @@ if ($route_parts[0] === 'auth') {
 
     if (($route_parts[1] ?? '') === 'top-up' && $method === 'POST') {
         $balanceController->topUp();
+    } elseif (($route_parts[1] ?? '') === 'get' && $method === 'GET') {
+        $balanceController->getBalance();
     } else {
         Response::error('Not found', null, 404);
     }
