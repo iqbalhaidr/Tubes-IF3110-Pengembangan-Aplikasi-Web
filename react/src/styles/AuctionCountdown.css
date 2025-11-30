@@ -1,0 +1,107 @@
+/* Auction Countdown Component Styles - Tokopedia Theme */
+
+.auction-countdown {
+  background: linear-gradient(135deg, #fef3e0, #fff8e1);
+  border-left: 4px solid #ff9800;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.auction-countdown.normal {
+  background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+  border-left-color: var(--primary-green);
+}
+
+.auction-countdown.warning {
+  background: linear-gradient(135deg, #fef3e0, #fff8e1);
+  border-left-color: #ff9800;
+}
+
+.auction-countdown.critical {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+  border-left-color: #dc3545;
+  animation: pulse 0.5s infinite;
+}
+
+.auction-countdown.expired {
+  background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+  border-left-color: var(--text-light);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.countdown-label {
+  font-size: 0.85rem;
+  color: var(--text-medium);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.countdown-display {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+  color: #ff9800;
+  line-height: 1.2;
+}
+
+.auction-countdown.normal .countdown-display {
+  color: var(--primary-green);
+}
+
+.auction-countdown.warning .countdown-display {
+  color: #ff9800;
+}
+
+.auction-countdown.critical .countdown-display {
+  color: #dc3545;
+}
+
+.auction-countdown.expired .countdown-display {
+  color: var(--text-light);
+}
+
+.countdown-warning {
+  font-size: 0.85rem;
+  color: #dc3545;
+  margin-top: 0.75rem;
+  font-weight: 500;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .auction-countdown {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .countdown-label {
+    font-size: 0.75rem;
+  }
+
+  .countdown-display {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .countdown-display {
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+  }
+}
+
