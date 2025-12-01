@@ -117,9 +117,7 @@ export function useBid(auctionId) {
           `/api/node/auctions/${auctionId}/bid`,
           { bid_amount: parseFloat(amount) },
           {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
+            withCredentials: true, // Send session cookies
           }
         );
 

@@ -5,55 +5,100 @@ import AuctionDetail from './pages/AuctionDetail';
 import './App.css';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(null); // null = loading
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
+    // Check if user is logged in via PHP session
+    const checkAuth = async () => {
+      try {
+        // Make a request to /auth/me which checks session and returns user data
+        const response = await fetch('/auth/me', {
+          method: 'GET',
+          credentials: 'include', // Include cookies (PHP session)
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          // PHP Response::success returns { success: true, message: "...", data: {...} }
+          if (data.success && data.data) {
+            setUser(data.data);
+            localStorage.setItem('user', JSON.stringify(data.data));
+            setIsAuthenticated(true);
+          } else {
+            // Not authenticated - allow guest access to browse auctions
+            setIsAuthenticated(false);
+            localStorage.removeItem('user');
+          }
+        } else {
+          // Server returned error - allow guest access
+          setIsAuthenticated(false);
+          localStorage.removeItem('user');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        // Allow guest access even if auth check fails
+        setIsAuthenticated(false);
+        localStorage.removeItem('user');
+      }
+    };
+
+    checkAuth();
   }, []);
 
-  const handleLogin = (userData) => {
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', userData.token);
-    setUser(userData);
-    setIsAuthenticated(true);
+  const handleLogout = async () => {
+    try {
+      await fetch('/logout', {
+        credentials: 'include'
+      });
+      setUser(null);
+      setIsAuthenticated(false);
+      // Redirect to PHP login after logout
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Logout failed:', error);
+      window.location.href = '/login';
+    }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    setUser(null);
-    setIsAuthenticated(false);
-  };
+  // Show loading state while checking authentication
+  if (isAuthenticated === null) {
+    return <div className="app-loading">Loading...</div>;
+  }
 
+  // Allow both authenticated and guest users to access the app
   return (
     <Router>
       <div className="app">
         <header className="app-header">
           <div className="header-container">
             <div className="logo-section">
-              <h1>🏠 Nimonspedia</h1>
+              <h1>🔨 Nimonspedia Auctions</h1>
               <p className="tagline">Real-time Auction Platform</p>
             </div>
             <nav className="app-nav">
-              {isAuthenticated ? (
-                <div className="auth-section">
-                  <span className="user-name">{user?.username || 'User'}</span>
-                  <button
-                    onClick={handleLogout}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    Logout
-                  </button>
+              {isAuthenticated && user ? (
+                <div className="nav-links">
+                  <a href="/home" className="nav-link">
+                    🏪 Back to Store
+                  </a>
+                  <div className="auth-section">
+                    <span className="user-name">{user?.name || user?.email || 'User'}</span>
+                    <button
+                      onClick={handleLogout}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Logout
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="auth-section">
-                  <p>Please log in to continue</p>
+                  <a href="/login" className="btn btn-primary btn-sm">Login to Bid</a>
+                  <a href="/home" className="nav-link">🏪 Back to Store</a>
                 </div>
               )}
             </nav>
@@ -62,9 +107,12 @@ export default function App() {
 
         <main className="app-main">
           <Routes>
-            <Route path="/" element={<AuctionList />} />
             <Route path="/auctions" element={<AuctionList />} />
             <Route path="/auction/:id" element={<AuctionDetail />} />
+            {/* Future routes for Milestone 2 */}
+            {/* <Route path="/chat" element={<Chat />} /> */}
+            {/* <Route path="/admin" element={<AdminDashboard />} /> */}
+            {/* Redirect any unmatched routes back to PHP home */}
             <Route path="*" element={<Navigate to="/auctions" replace />} />
           </Routes>
         </main>

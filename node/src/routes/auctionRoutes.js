@@ -11,7 +11,7 @@ const router = express.Router();
  * List all active auctions with pagination
  * Query params: page (default 1), limit (default 10)
  */
-router.get('/auctions', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -31,13 +31,13 @@ router.get('/auctions', async (req, res) => {
         a.id,
         a.product_id,
         a.seller_id,
-        u_seller.username as seller_username,
-        p.name as product_name,
+        u_seller.name as seller_username,
+        p.product_name as product_name,
         p.description as product_description,
         a.initial_bid,
         a.current_bid,
         a.highest_bidder_id,
-        u_bidder.username as highest_bidder_username,
+        u_bidder.name as highest_bidder_username,
         a.min_bid_increment,
         a.countdown_end_time,
         a.started_at,
@@ -73,7 +73,7 @@ router.get('/auctions', async (req, res) => {
  * GET /api/node/auctions/:id
  * Get detailed information about a specific auction
  */
-router.get('/auctions/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -83,28 +83,27 @@ router.get('/auctions/:id', async (req, res) => {
         a.id,
         a.product_id,
         a.seller_id,
-        u_seller.username as seller_username,
-        u_seller.phone as seller_phone,
-        p.name as product_name,
+        u_seller.name as seller_username,
+        u_seller.address as seller_address,
+        p.product_name as product_name,
         p.description as product_description,
-        p.image as product_image,
+        p.main_image_path as product_image,
         p.price as product_price,
         a.initial_bid,
         a.current_bid,
         a.highest_bidder_id,
-        u_bidder.username as highest_bidder_username,
+        u_bidder.name as highest_bidder_username,
         a.min_bid_increment,
         a.status,
         a.countdown_end_time,
         a.started_at,
         a.ended_at,
-        a.winner_id,
-        u_winner.username as winner_username,
+        a.highest_bidder_id as winner_id,
+        u_bidder.name as winner_username,
         EXTRACT(EPOCH FROM (a.countdown_end_time - CURRENT_TIMESTAMP))::INTEGER as seconds_remaining
       FROM auctions a
       LEFT JOIN "user" u_seller ON a.seller_id = u_seller.user_id
       LEFT JOIN "user" u_bidder ON a.highest_bidder_id = u_bidder.user_id
-      LEFT JOIN "user" u_winner ON a.winner_id = u_winner.user_id
       LEFT JOIN product p ON a.product_id = p.product_id
       WHERE a.id = $1`,
       [id]
@@ -125,7 +124,7 @@ router.get('/auctions/:id', async (req, res) => {
  * GET /api/node/auctions/:id/bids
  * Get bid history for an auction
  */
-router.get('/auctions/:id/bids', async (req, res) => {
+router.get('/:id/bids', async (req, res) => {
   try {
     const { id } = req.params;
     const limit = parseInt(req.query.limit) || 50;
@@ -142,7 +141,7 @@ router.get('/auctions/:id/bids', async (req, res) => {
         ab.id,
         ab.auction_id,
         ab.bidder_id,
-        u.username as bidder_username,
+        u.name as bidder_username,
         ab.bid_amount,
         ab.placed_at
       FROM auction_bids ab
@@ -207,7 +206,7 @@ router.get('/user/:userId/created', async (req, res) => {
  * Required: product_id, seller_id, initial_bid, min_bid_increment
  * Auth: Required
  */
-router.post('/auctions', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     const { product_id, initial_bid, min_bid_increment } = req.body;
@@ -268,7 +267,7 @@ router.post('/auctions', authenticateToken, async (req, res) => {
  * Required: bid_amount
  * Auth: Required
  */
-router.post('/auctions/:id/bid', authenticateToken, async (req, res) => {
+router.post('/:id/bid', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
@@ -360,7 +359,7 @@ router.post('/auctions/:id/bid', authenticateToken, async (req, res) => {
  * Required: message
  * Auth: Required
  */
-router.post('/auctions/:id/chat', authenticateToken, async (req, res) => {
+router.post('/:id/chat', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { message } = req.body;
@@ -400,7 +399,7 @@ router.post('/auctions/:id/chat', authenticateToken, async (req, res) => {
  * Seller accepts a bid and ends auction immediately
  * Auth: Required (must be auction seller)
  */
-router.post('/auctions/:id/accept', authenticateToken, async (req, res) => {
+router.post('/:id/accept', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
@@ -471,7 +470,7 @@ router.post('/auctions/:id/accept', authenticateToken, async (req, res) => {
  * Cancel an active auction (seller only)
  * Auth: Required (must be auction seller)
  */
-router.put('/auctions/:id/cancel', authenticateToken, async (req, res) => {
+router.put('/:id/cancel', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;

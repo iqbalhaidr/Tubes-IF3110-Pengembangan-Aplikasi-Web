@@ -40,33 +40,115 @@ export function registerAuctionEvents(io) {
       }
     });
 
-    socket.on('place_bid', (data) => {
+    socket.on('place_bid', async (data) => {
       try {
         const { auctionId, userId, bidAmount } = data;
         const room = `auction_${auctionId}`;
 
-        console.log(
-          `[Auction] Bid placed: $${bidAmount} by user ${userId} in auction ${auctionId}`
-        );
-
-        if (auctionTimers.has(auctionId)) {
-          auctionTimers.get(auctionId).lastBidTime = Date.now();
+        // Validate bid data
+        if (!auctionId || !userId || !bidAmount) {
+          socket.emit('auction_error', {
+            code: 'INVALID_BID',
+            message: 'Missing required bid data',
+          });
+          return;
         }
 
-        // Broadcast bid to all users in auction room
-        io.to(room).emit('bid_placed', {
-          userId,
-          bidAmount,
-          auctionId,
-          timestamp: new Date(),
-          countdownReset: true,
-        });
+        // BUG-012 FIX: Persist bid to database with transaction
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
 
-        // Notify only this socket of successful bid
-        socket.emit('bid_success', {
-          bidAmount,
-          message: 'Your bid has been placed successfully',
-        });
+          // Get current auction state with lock
+          const auctionResult = await client.query(
+            `SELECT id, current_bid, min_bid_increment, status, countdown_end_time 
+             FROM auctions WHERE id = $1 FOR UPDATE`,
+            [auctionId]
+          );
+
+          if (auctionResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            socket.emit('auction_error', {
+              code: 'AUCTION_NOT_FOUND',
+              message: 'Auction not found',
+            });
+            return;
+          }
+
+          const auction = auctionResult.rows[0];
+
+          // Validate auction is active
+          if (auction.status !== 'ACTIVE') {
+            await client.query('ROLLBACK');
+            socket.emit('auction_error', {
+              code: 'AUCTION_NOT_ACTIVE',
+              message: 'Auction is no longer active',
+            });
+            return;
+          }
+
+          // Validate bid amount
+          const minBid = auction.current_bid + auction.min_bid_increment;
+          if (bidAmount < minBid) {
+            await client.query('ROLLBACK');
+            socket.emit('auction_error', {
+              code: 'BID_TOO_LOW',
+              message: `Bid must be at least ${minBid}`,
+            });
+            return;
+          }
+
+          // Insert bid record
+          await client.query(
+            `INSERT INTO auction_bids (auction_id, bidder_id, bid_amount) 
+             VALUES ($1, $2, $3)`,
+            [auctionId, userId, bidAmount]
+          );
+
+          // Update auction with new highest bid and reset countdown
+          const newEndTime = new Date(Date.now() + 15000); // 15 seconds from now
+          await client.query(
+            `UPDATE auctions 
+             SET current_bid = $1, highest_bidder_id = $2, countdown_end_time = $3, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $4`,
+            [bidAmount, userId, newEndTime, auctionId]
+          );
+
+          await client.query('COMMIT');
+
+          console.log(
+            `[Auction] Bid placed and saved: $${bidAmount} by user ${userId} in auction ${auctionId}`
+          );
+
+          if (auctionTimers.has(auctionId)) {
+            auctionTimers.get(auctionId).lastBidTime = Date.now();
+          }
+
+          // Broadcast bid to all users in auction room
+          io.to(room).emit('bid_placed', {
+            userId,
+            bidAmount,
+            auctionId,
+            timestamp: new Date(),
+            countdownReset: true,
+            newEndTime: newEndTime.toISOString(),
+          });
+
+          // Notify only this socket of successful bid
+          socket.emit('bid_success', {
+            bidAmount,
+            message: 'Your bid has been placed successfully',
+          });
+        } catch (dbError) {
+          await client.query('ROLLBACK');
+          console.error('[Auction] Database error in place_bid:', dbError);
+          socket.emit('auction_error', {
+            code: 'DB_ERROR',
+            message: 'Failed to save bid',
+          });
+        } finally {
+          client.release();
+        }
       } catch (error) {
         console.error('[Auction] Error in place_bid:', error);
         socket.emit('auction_error', {

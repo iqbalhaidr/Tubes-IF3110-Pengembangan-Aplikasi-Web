@@ -51,3 +51,6 @@ export const jwtMiddleware = (req, res, next) => {
   req.user = decoded;
   next();
 };
+
+// Alias for backward compatibility
+export const authenticateToken = jwtMiddleware;

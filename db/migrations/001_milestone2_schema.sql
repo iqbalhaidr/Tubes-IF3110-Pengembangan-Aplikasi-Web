@@ -178,10 +178,10 @@ SELECT
     a.id,
     a.product_id,
     a.seller_id,
-    u_seller.username as seller_username,
+    u_seller.name as seller_username,
     a.current_bid,
     a.highest_bidder_id,
-    u_bidder.username as highest_bidder_username,
+    u_bidder.name as highest_bidder_username,
     a.countdown_end_time,
     a.started_at,
     EXTRACT(EPOCH FROM (a.countdown_end_time - CURRENT_TIMESTAMP))::INTEGER as seconds_remaining

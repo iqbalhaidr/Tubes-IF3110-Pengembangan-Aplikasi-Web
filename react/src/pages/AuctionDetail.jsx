@@ -10,9 +10,17 @@ import '../styles/AuctionDetail.css';
 export default function AuctionDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [userId] = useState(() => {
-    return JSON.parse(localStorage.getItem('user'))?.user_id || 1;
+  
+  // Get user from localStorage (set by App.jsx auth check)
+  const [user] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user'));
+    } catch {
+      return null;
+    }
   });
+  const userId = user?.user_id || null;
+  const isAuthenticated = !!userId;
 
   const { auction, bidHistory, loading, error, refetch } = useAuction(id);
   const { bidAmount, setBidAmount, isSubmitting, bidError, bidSuccess, placeBid, validateBid } = useBid(id);
@@ -77,7 +85,8 @@ export default function AuctionDetail() {
   }
 
   const isAuctionActive = auction.status === 'ACTIVE';
-  const isUserSeller = userId === auction.seller_id;
+  const isUserSeller = userId && userId === auction.seller_id;
+  const canBid = isAuthenticated && !isUserSeller && isAuctionActive;
 
   return (
     <div className="auction-detail">
@@ -104,9 +113,11 @@ export default function AuctionDetail() {
                 <span className="seller">
                   <strong>Seller:</strong> {auction.seller_username}
                 </span>
-                <span className="phone">
-                  <strong>Phone:</strong> {auction.seller_phone}
-                </span>
+                {auction.seller_address && (
+                  <span className="address">
+                    <strong>Location:</strong> {auction.seller_address}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -142,29 +153,56 @@ export default function AuctionDetail() {
 
         {/* Right Column: Bid Form & Chat */}
         <div className="auction-sidebar">
-          {/* Bid Form */}
-          <BidForm
-            auction={auction}
-            onBidSubmit={handleBidSubmit}
-            isLoading={isSubmitting}
-            error={bidError}
-          />
+          {/* Bid Form - only show for authenticated users who are not the seller */}
+          {canBid ? (
+            <>
+              <BidForm
+                auction={auction}
+                onBidSubmit={handleBidSubmit}
+                isLoading={isSubmitting}
+                error={bidError}
+              />
 
-          {bidSuccess && (
-            <div className="success-message">
-              ✓ Your bid has been placed successfully!
+              {bidSuccess && (
+                <div className="success-message">
+                  ✓ Your bid has been placed successfully!
+                </div>
+              )}
+            </>
+          ) : !isAuthenticated ? (
+            <div className="login-prompt">
+              <h3>Want to place a bid?</h3>
+              <p>Please log in to participate in this auction.</p>
+              <a href="/login" className="btn btn-primary">Login to Bid</a>
+            </div>
+          ) : isUserSeller ? (
+            <div className="seller-notice">
+              <h3>Your Auction</h3>
+              <p>You cannot bid on your own auction.</p>
+            </div>
+          ) : !isAuctionActive ? (
+            <div className="auction-ended-notice">
+              <h3>Auction Ended</h3>
+              <p>This auction is no longer accepting bids.</p>
+            </div>
+          ) : null}
+
+          {/* Chat Section - only for authenticated users */}
+          {isAuthenticated ? (
+            <AuctionChat
+              auctionId={id}
+              userId={userId}
+              messages={messages}
+              onSendMessage={sendMessage}
+              onTyping={setTyping}
+              isConnected={isConnected}
+            />
+          ) : (
+            <div className="chat-login-prompt">
+              <h3>Auction Chat</h3>
+              <p><a href="/login">Login</a> to join the conversation.</p>
             </div>
           )}
-
-          {/* Chat Section */}
-          <AuctionChat
-            auctionId={id}
-            userId={userId}
-            messages={messages}
-            onSendMessage={sendMessage}
-            onTyping={setTyping}
-            isConnected={isConnected}
-          />
         </div>
       </div>
     </div>

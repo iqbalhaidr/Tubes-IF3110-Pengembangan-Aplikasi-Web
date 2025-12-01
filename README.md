@@ -87,7 +87,7 @@ Pastikan Docker sudah terinstall di sistem Anda:
    
    # Application Configuration
    APP_ENV=development
-   APP_URL=http://localhost:8080
+   APP_URL=http://localhost:80
    
    # Session Configuration
    SESSION_LIFETIME=86400
@@ -109,7 +109,7 @@ Pastikan Docker sudah terinstall di sistem Anda:
    
    Buka browser dan akses:
    ```
-   http://localhost:8080
+   http://localhost:80
    ```
 
 ## Cara Menjalankan Server
@@ -131,7 +131,7 @@ Setelah instalasi selesai, untuk menjalankan server dalam mode development:
 2. **Akses Aplikasi**
    
    Aplikasi akan berjalan di:
-   - **URL:** http://localhost:8080
+   - **URL:** http://localhost:80
    - **Database:** localhost:5432
 
 3. **Stop Server**
