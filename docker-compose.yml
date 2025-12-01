@@ -1,15 +1,57 @@
+version: '3.8'
+
 services:
+  # ============ DATABASE ============
+  db:
+    image: postgres:15
+    container_name: nimonspedia-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/migrations/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./db/migrations/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nimonspedia-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============ REDIS (Optional, for session sharing) ============
+  redis:
+    image: redis:7-alpine
+    container_name: nimonspedia-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nimonspedia-network
+    command: redis-server --appendonly yes
+
+  # ============ PHP BACKEND (Milestone 1 features) ============
   php:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: nimonspedia-php
+    restart: always
     ports:
-      - "8080:80"
+      - "80"
     volumes:
       - ./php/src:/var/www/html/
       - ./.env:/var/www/html/.env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
@@ -22,22 +64,80 @@ services:
       - SESSION_NAME=${SESSION_NAME}
       - SESSION_COOKIE_HTTPONLY=${SESSION_COOKIE_HTTPONLY}
       - SESSION_COOKIE_SAMESITE=${SESSION_COOKIE_SAMESITE}
-  db:
-    image: postgres:13
-    restart: always
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./db/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./db/migrations/seed.sql:/docker-entrypoint-initdb.d/seed.sql
-      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nimonspedia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health.php"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # ============ NODE.JS BACKEND (Milestone 2 features) ============
+  node:
+    build:
+      context: ./node
+      dockerfile: Dockerfile
+    container_name: nimonspedia-node
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./node/src:/app/src
+      - ./node/.env:/app/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - NODE_ENV=${APP_ENV:-development}
+      - NODE_PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key_here}
+      - JWT_EXPIRE=3600
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - SESSION_NAME=${SESSION_NAME}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173,http://localhost}
+    networks:
+      - nimonspedia-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/node/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============ NGINX (Reverse Proxy) ============
+  nginx:
+    image: nginx:alpine
+    container_name: nimonspedia-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./react/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - php
+      - node
+    networks:
+      - nimonspedia-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============ PGADMIN (Database Management UI) ============
   pgadmin:
-    image: dpage/pgadmin4:8
+    image: dpage/pgadmin4:latest
+    container_name: nimonspedia-pgadmin
     restart: always
     depends_on:
       - db
@@ -45,13 +145,30 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
-      - "8081:80"
+      - "5050:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - nimonspedia-network
+
+networks:
+  nimonspedia-network:
+    driver: bridge
 
 volumes:
   postgres_data:
+  redis_data:
   pgadmin_data:
 
-# cara run: docker compose up -d --build
-# cara masuk db: docker exec -it milestone-1-tugas-besar-if-3110-web-based-development-k01-15-db-1 psql -U {POSTGRES_USER} -d {POSTGRES_DB}
+# ============ USAGE ============
+# Start all services: docker-compose up -d --build
+# View logs: docker-compose logs -f
+# Stop all services: docker-compose down
+# View Node logs: docker-compose logs -f node
+# View PHP logs: docker-compose logs -f php
+# Access services:
+#   - Main app: http://localhost
+#   - PHP backend: http://localhost:80
+#   - Node.js API: http://localhost:3000
+#   - PgAdmin: http://localhost:5050
+#   - Database: docker-compose exec db psql -U ${DB_USER} -d ${DB_NAME}

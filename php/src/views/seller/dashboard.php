@@ -85,6 +85,12 @@ $activeLink = 'dashboard';
                         <p>Create a new product listing and reach more buyers faster.</p>
                         <span class="action-link">Add Now →</span>
                     </a>
+                    <a class="action-card" href="/auctions">
+                        <div class="action-icon">🔨</div>
+                        <h2>Live Auctions</h2>
+                        <p>Create and manage product auctions. Bid in real-time with other users.</p>
+                        <span class="action-link">View Auctions →</span>
+                    </a>
                 </div>
             </section>
         </div>

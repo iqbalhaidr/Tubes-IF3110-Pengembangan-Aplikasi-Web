@@ -1,0 +1,822 @@
+/**
+ * Navbar Styles - Exact match to PHP main.css
+ * Copied from php/src/public/css/main.css navbar section
+ */
+
+/* ================================================================
+   BASE NAVBAR
+   ================================================================ */
+
+.navbar {
+  background: var(--primary-green);
+  color: var(--white);
+  padding: 15px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ================================================================
+   BRAND LOGO
+   ================================================================ */
+
+.navbar-brand {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  text-decoration: none;
+  white-space: nowrap;
+  display: block;
+}
+
+.navbar-brand:hover {
+  opacity: 0.9;
+  color: var(--white);
+}
+
+/* ================================================================
+   NAVIGATION LINKS
+   ================================================================ */
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.navbar-link {
+  color: var(--white);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 8px 0;
+  border-bottom: 3px solid transparent;
+  transition: border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+  opacity: 1;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.navbar-link:hover {
+  border-bottom-color: var(--white);
+  color: var(--white);
+  opacity: 1;
+}
+
+.navbar-link.active {
+  border-bottom-color: var(--white);
+  color: var(--white);
+  opacity: 1;
+}
+
+/* Logout link for seller */
+.logout-link {
+  padding: 8px 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+  transition: border-bottom 0.2s ease;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+}
+
+.logout-link:hover {
+  border-bottom: 2px solid var(--white);
+}
+
+/* Auth Links (Guest) */
+.auth-links {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* ================================================================
+   BALANCE DISPLAY
+   ================================================================ */
+
+.balance-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 8px 16px 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: var(--white);
+}
+
+.balance-display .balance-label,
+.balance-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--white);
+  opacity: 1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.balance-display .balance-topup-btn,
+.balance-topup-btn {
+  border: none;
+  background: var(--white);
+  color: var(--primary-green);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  opacity: 1;
+  font-family: inherit;
+  text-decoration: none;
+}
+
+.balance-display .balance-topup-btn:hover,
+.balance-topup-btn:hover {
+  background: #f0f0f0;
+  color: var(--primary-green);
+}
+
+.balance-display .balance-topup-btn:focus-visible,
+.balance-topup-btn:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 2px;
+}
+
+/* Seller balance display */
+.seller-balance-display {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* ================================================================
+   CART ICON
+   ================================================================ */
+
+.cart-icon {
+  position: relative;
+  color: var(--white);
+  text-decoration: none;
+  cursor: pointer;
+  padding: 8px;
+  transition: transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-icon:hover {
+  transform: scale(1.1);
+  color: var(--white);
+}
+
+.cart-icon-svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2;
+  color: var(--white);
+}
+
+.cart-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--accent-red, var(--error-red));
+  color: var(--white);
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px;
+}
+
+/* ================================================================
+   USER DROPDOWN
+   ================================================================ */
+
+.user-dropdown {
+  position: relative;
+}
+
+.user-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--white);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+  font-family: inherit;
+}
+
+.user-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--primary-green);
+}
+
+.user-dropdown .user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--white);
+  opacity: 1;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  color: var(--white);
+}
+
+.user-dropdown.active .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  z-index: 1001;
+  padding: 0;
+}
+
+.user-dropdown.active .user-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  color: var(--text-dark);
+  text-decoration: none;
+  transition: background 0.2s ease;
+  font-size: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.dropdown-item:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.dropdown-item:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.dropdown-item:hover {
+  background: var(--background-gray);
+}
+
+.dropdown-item.active {
+  color: var(--primary-green);
+  font-weight: 600;
+}
+
+/* ================================================================
+   BURGER MENU (MOBILE)
+   ================================================================ */
+
+.burger-menu {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 8px;
+  z-index: 1001;
+}
+
+.burger-menu span {
+  width: 22px;
+  height: 2px;
+  background: var(--white);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.burger-menu.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.burger-menu.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.burger-menu.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(3.5px, -3.5px);
+}
+
+/* ================================================================
+   SELLER NAVBAR
+   ================================================================ */
+
+/* Seller navbar uses same base styles as regular navbar */
+
+/* ================================================================
+   RESPONSIVE DESIGN
+   ================================================================ */
+
+@media (max-width: 768px) {
+  .navbar-brand {
+    font-size: 18px;
+  }
+
+  .burger-menu {
+    display: flex;
+  }
+
+  .navbar-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background: var(--primary-green);
+    padding: 15px 20px;
+    gap: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .navbar-links.active {
+    display: flex;
+  }
+
+  .navbar-link {
+    padding: 12px 0;
+    border-bottom: none;
+  }
+
+  .navbar-left,
+  .navbar-right {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .balance-display {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .balance-display .balance-label,
+  .balance-label {
+    font-size: 11px;
+  }
+
+  .balance-display .balance-topup-btn,
+  .balance-topup-btn {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  /* Cart Icon - Smaller on mobile */
+  .cart-icon {
+    padding: 6px;
+  }
+
+  .cart-badge {
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+
+  /* User Dropdown - Compact on mobile */
+  .user-profile-btn {
+    padding: 4px 8px;
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .dropdown-arrow {
+    font-size: 8px;
+  }
+
+  .user-dropdown-menu {
+    min-width: 160px;
+  }
+
+  .dropdown-item {
+    padding: 10px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 15px;
+  }
+
+  .navbar-brand {
+    font-size: 16px;
+  }
+
+  /* Extra small screens - even more compact navbar elements */
+  .balance-display {
+    padding: 4px 10px;
+    gap: 8px;
+  }
+
+  .balance-display .balance-label,
+  .balance-label {
+    font-size: 10px;
+  }
+
+  .balance-display .balance-topup-btn,
+  .balance-topup-btn {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .cart-icon {
+    padding: 4px;
+  }
+
+  .cart-icon-svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .cart-badge {
+    min-width: 14px;
+    height: 14px;
+    font-size: 9px;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .user-profile-btn {
+    padding: 2px 6px;
+  }
+
+  .navbar {
+    padding: 12px 0;
+  }
+}
+
+/* ================================================================
+   LOGOUT CONFIRMATION MODAL
+   ================================================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.modal-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.logout-modal-overlay {
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  transform: translateY(-20px);
+  transition: transform 0.2s ease;
+}
+
+.modal-overlay.is-visible .modal-content {
+  transform: translateY(0);
+}
+
+.logout-modal-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0 0 12px 0;
+}
+
+.logout-modal-content p {
+  font-size: 0.95rem;
+  color: var(--text-medium);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-family: inherit;
+}
+
+.modal-btn-secondary {
+  background-color: var(--background-gray);
+  color: var(--text-dark);
+  border: 1px solid var(--border-color);
+}
+
+.modal-btn-secondary:hover {
+  background-color: var(--border-color);
+}
+
+.modal-btn-danger {
+  background-color: var(--error-red);
+  color: var(--white);
+}
+
+.modal-btn-danger:hover {
+  background-color: #c82333;
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    padding: 20px;
+    margin: 16px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ================================================================
+   TOP-UP MODAL
+   ================================================================ */
+
+.topup-modal-overlay {
+  backdrop-filter: blur(2px);
+}
+
+.topup-modal-content {
+  max-width: 450px;
+  position: relative;
+}
+
+.topup-modal-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0 0 4px 0;
+}
+
+.topup-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-medium);
+  margin: 0 0 20px 0;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-medium);
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: var(--background-gray);
+  color: var(--text-dark);
+}
+
+.topup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.topup-quick-amounts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.quick-amount-btn {
+  padding: 12px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.quick-amount-btn:hover {
+  border-color: var(--primary-green);
+  background: rgba(46, 125, 50, 0.05);
+}
+
+.quick-amount-btn.selected {
+  border-color: var(--primary-green);
+  background: var(--primary-green);
+  color: var(--white);
+}
+
+.topup-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.topup-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+.topup-input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.topup-input-wrapper:focus-within {
+  border-color: var(--primary-green);
+}
+
+.topup-currency {
+  padding: 12px 14px;
+  background: var(--background-gray);
+  color: var(--text-medium);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.topup-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: none;
+  font-size: 1rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.topup-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Remove spinner buttons on number input */
+.topup-input::-webkit-outer-spin-button,
+.topup-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.topup-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.topup-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.topup-error {
+  padding: 10px 14px;
+  background: #fdf2f2;
+  border: 1px solid var(--error-red);
+  border-radius: 6px;
+  color: var(--error-red);
+  font-size: 0.9rem;
+}
+
+.modal-btn-primary {
+  background-color: var(--primary-green);
+  color: var(--white);
+}
+
+.modal-btn-primary:hover:not(:disabled) {
+  background-color: #1b5e20;
+}
+
+.modal-btn-primary:disabled {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .topup-quick-amounts {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .quick-amount-btn {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+}

@@ -1,0 +1,110 @@
+import express from 'express';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import auctionRoutes from './routes/auctionRoutes.js';
+import { registerAuctionEvents } from './events/auctionEvents.js';
+
+// Load environment variables
+dotenv.config();
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Initialize Express app
+const app = express();
+const httpServer = createServer(app);
+
+// Initialize Socket.io with CORS configuration
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: process.env.CORS_ORIGIN?.split(',') || 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST'],
+  },
+  path: process.env.WEBSOCKET_PATH || '/socket.io',
+});
+
+// Middleware
+app.use(cors({
+  origin: process.env.CORS_ORIGIN?.split(',') || 'http://localhost:5173',
+  credentials: true,
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Health check endpoint
+app.get('/api/node/health', (req, res) => {
+  res.json({ status: 'Node.js backend is running', timestamp: new Date() });
+});
+
+// ============== ROUTES ==============
+app.use('/api/node/auctions', auctionRoutes);
+// TODO (uncomment): Add other route modules here
+// import authRoutes from './routes/auth.js';
+// import adminRoutes from './routes/admin.js';
+// import chatRoutes from './routes/chat.js';
+// import pushRoutes from './routes/push.js';
+// 
+// app.use('/api/node/auth', authRoutes);
+// app.use('/api/node/admin', adminRoutes);
+// app.use('/api/node/chat', chatRoutes);
+// app.use('/api/node/push', pushRoutes);
+
+// ============== WEBSOCKET EVENTS ==============
+
+// Register auction-related WebSocket events
+const cleanupAuctionEvents = registerAuctionEvents(io);
+
+// WebSocket connection handler for general events
+io.on('connection', (socket) => {
+  console.log(`[WebSocket] User connected: ${socket.id}`);
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log(`[WebSocket] User disconnected: ${socket.id}`);
+  });
+
+  // Error handling
+  socket.on('error', (error) => {
+    console.error(`[WebSocket] Socket error for ${socket.id}:`, error);
+  });
+});
+
+// ============== ERROR HANDLING ==============
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('[Error]', err);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error',
+    timestamp: new Date(),
+  });
+});
+
+// ============== SERVER STARTUP ==============
+
+const PORT = process.env.NODE_PORT || 3000;
+
+httpServer.listen(PORT, () => {
+  console.log(`
+╔════════════════════════════════════════╗
+║   Nimonspedia Node.js Backend Ready    ║
+╠════════════════════════════════════════╣
+║ HTTP Server:  http://localhost:${PORT}     ║
+║ WebSocket:    ws://localhost:${PORT}      ║
+║ Environment:  ${process.env.NODE_ENV || 'development'}            ║
+╚════════════════════════════════════════╝
+  `);
+});
+
+export { app, io };
