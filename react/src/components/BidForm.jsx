@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import '../styles/BidForm.css';
 
 export default function BidForm({
@@ -10,11 +10,21 @@ export default function BidForm({
   const [bidAmount, setBidAmount] = useState('');
   const [validationError, setValidationError] = useState(null);
 
+  // Calculate minimum bid
+  const currentBid = parseFloat(auction?.current_bid) || 0;
+  const minIncrement = parseFloat(auction?.min_bid_increment) || 0;
+  const minimumBid = currentBid + minIncrement;
+
+  // Autofill bid amount when auction data changes (new bids come in)
+  useEffect(() => {
+    if (auction) {
+      setBidAmount(minimumBid.toString());
+    }
+  }, [currentBid, minIncrement]);
+
   if (!auction) {
     return <div className="bid-form empty">Loading auction data...</div>;
   }
-
-  const minimumBid = auction.current_bid + auction.min_bid_increment;
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -48,19 +58,19 @@ export default function BidForm({
         <div className="info-row">
           <span className="label">Current Bid:</span>
           <span className="value">
-            Rp{auction.current_bid?.toLocaleString() || '0'}
+            Rp{currentBid.toLocaleString('id-ID')}
           </span>
         </div>
         <div className="info-row">
           <span className="label">Minimum Increment:</span>
           <span className="value">
-            Rp{auction.min_bid_increment?.toLocaleString() || '0'}
+            Rp{minIncrement.toLocaleString('id-ID')}
           </span>
         </div>
         <div className="info-row highlight">
           <span className="label">Minimum Next Bid:</span>
           <span className="value">
-            Rp{minimumBid.toLocaleString()}
+            Rp{minimumBid.toLocaleString('id-ID')}
           </span>
         </div>
         {auction.highest_bidder_username && (

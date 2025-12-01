@@ -11,8 +11,12 @@ export default function AuctionChat({
 }) {
   const [messageText, setMessageText] = useState('');
   const [userName, setUserName] = useState(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    return user?.username || 'Anonymous';
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      return user?.name || user?.username || 'Anonymous';
+    } catch {
+      return 'Anonymous';
+    }
   });
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);

@@ -4,28 +4,102 @@ import { pool } from '../db.js';
 
 const router = express.Router();
 
+/**
+ * Helper function to create an order when an auction ends with a winner
+ * Creates an order with status 'APPROVED', deducts buyer balance, and adds order_item
+ * Returns { success, orderId, error } - does not throw on insufficient balance
+ */
+async function createOrderFromAuction(client, auction) {
+  // Get buyer's address, balance, and product details
+  const buyerResult = await client.query(
+    'SELECT address, balance FROM "user" WHERE user_id = $1',
+    [auction.highest_bidder_id]
+  );
+
+  const productResult = await client.query(
+    'SELECT product_id, store_id FROM product WHERE product_id = $1',
+    [auction.product_id]
+  );
+
+  if (buyerResult.rows.length === 0 || productResult.rows.length === 0) {
+    console.error(`[Auction] Buyer or product not found for auction #${auction.id}`);
+    return { success: false, orderId: null, error: 'Buyer or product not found' };
+  }
+
+  const buyerAddress = buyerResult.rows[0].address || 'Address not provided';
+  const buyerBalance = parseFloat(buyerResult.rows[0].balance) || 0;
+  const storeId = productResult.rows[0].store_id;
+  const finalPrice = Math.round(parseFloat(auction.current_bid));
+
+  // Check if buyer has enough balance - gracefully handle insufficient funds
+  if (buyerBalance < finalPrice) {
+    console.warn(`[Auction] Buyer #${auction.highest_bidder_id} has insufficient balance (${buyerBalance} < ${finalPrice}). Order will not be created.`);
+    return { 
+      success: false, 
+      orderId: null, 
+      error: 'Insufficient balance',
+      details: { buyerBalance, requiredAmount: finalPrice }
+    };
+  }
+
+  // Deduct balance from buyer
+  await client.query(
+    'UPDATE "user" SET balance = balance - $1 WHERE user_id = $2',
+    [finalPrice, auction.highest_bidder_id]
+  );
+  console.log(`[Auction] Deducted Rp ${finalPrice} from buyer #${auction.highest_bidder_id}`);
+
+  // Create the order with status 'APPROVED'
+  const orderResult = await client.query(
+    `INSERT INTO "order" (buyer_id, store_id, total_price, shipping_address, status, confirmed_at)
+     VALUES ($1, $2, $3, $4, 'APPROVED', CURRENT_TIMESTAMP)
+     RETURNING order_id`,
+    [auction.highest_bidder_id, storeId, finalPrice, buyerAddress]
+  );
+
+  const orderId = orderResult.rows[0].order_id;
+
+  // Create the order item
+  await client.query(
+    `INSERT INTO order_item (order_id, product_id, quantity, price_at_purchase, subtotal)
+     VALUES ($1, $2, 1, $3, $3)`,
+    [orderId, auction.product_id, finalPrice]
+  );
+
+  console.log(`[Auction] Order #${orderId} created for auction #${auction.id} winner (user #${auction.highest_bidder_id})`);
+
+  return { success: true, orderId, error: null };
+}
+
 // ============ GET ENDPOINTS ============
 
 /**
  * GET /api/node/auctions
- * List all active auctions with pagination
- * Query params: page (default 1), limit (default 10)
+ * List auctions with pagination
+ * Query params: page (default 1), limit (default 10), status (default 'ACTIVE')
  */
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    const status = req.query.status || 'ACTIVE';
     const offset = (page - 1) * limit;
 
-    // Get total count of active auctions
+    // Validate status
+    const validStatuses = ['ACTIVE', 'ENDED', 'CANCELLED'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, error: 'Invalid status filter' });
+    }
+
+    // Get total count of auctions with given status
     const countResult = await pool.query(
       'SELECT COUNT(*) FROM auctions WHERE status = $1',
-      ['ACTIVE']
+      [status]
     );
     const totalCount = parseInt(countResult.rows[0].count);
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Get paginated active auctions with seller info
+    // Get paginated auctions with seller info
     const result = await pool.query(
       `SELECT 
         a.id,
@@ -34,13 +108,16 @@ router.get('/', async (req, res) => {
         u_seller.name as seller_username,
         p.product_name as product_name,
         p.description as product_description,
+        p.main_image_path as product_image,
         a.initial_bid,
         a.current_bid,
         a.highest_bidder_id,
         u_bidder.name as highest_bidder_username,
         a.min_bid_increment,
+        a.status,
         a.countdown_end_time,
         a.started_at,
+        a.ended_at,
         EXTRACT(EPOCH FROM (a.countdown_end_time - CURRENT_TIMESTAMP))::INTEGER as seconds_remaining,
         (SELECT COUNT(*) FROM auction_bids WHERE auction_id = a.id) as total_bids
       FROM auctions a
@@ -48,9 +125,9 @@ router.get('/', async (req, res) => {
       LEFT JOIN "user" u_bidder ON a.highest_bidder_id = u_bidder.user_id
       LEFT JOIN product p ON a.product_id = p.product_id
       WHERE a.status = $1
-      ORDER BY a.countdown_end_time ASC
+      ORDER BY ${status === 'ACTIVE' ? 'a.countdown_end_time ASC' : 'a.ended_at DESC'}
       LIMIT $2 OFFSET $3`,
-      ['ACTIVE', limit, offset]
+      [status, limit, offset]
     );
 
     res.json({
@@ -281,11 +358,11 @@ router.post('/:id/bid', authenticateToken, async (req, res) => {
       });
     }
 
-    await client.query('BEGIN');
+    await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
 
-    // Get current auction state
+    // Get current auction state with exclusive lock (NOWAIT to fail fast on contention)
     const auctionResult = await client.query(
-      'SELECT * FROM auctions WHERE id = $1 FOR UPDATE',
+      'SELECT * FROM auctions WHERE id = $1 FOR UPDATE NOWAIT',
       [id]
     );
 
@@ -347,6 +424,16 @@ router.post('/:id/bid', authenticateToken, async (req, res) => {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error placing bid:', error);
+    
+    // Check for lock contention or serialization failure
+    if (error.code === '55P03' || error.code === '40001') {
+      // 55P03 = lock_not_available (NOWAIT), 40001 = serialization_failure
+      return res.status(409).json({ 
+        success: false, 
+        error: 'Another bid was placed at the same time. Please try again.' 
+      });
+    }
+    
     res.status(500).json({ success: false, error: error.message });
   } finally {
     client.release();
@@ -397,6 +484,7 @@ router.post('/:id/chat', authenticateToken, async (req, res) => {
 /**
  * POST /api/node/auctions/:id/accept
  * Seller accepts a bid and ends auction immediately
+ * Creates an order for the winner with status 'APPROVED'
  * Auth: Required (must be auction seller)
  */
 router.post('/:id/accept', authenticateToken, async (req, res) => {
@@ -447,13 +535,28 @@ router.post('/:id/accept', authenticateToken, async (req, res) => {
       [auction.highest_bidder_id, id]
     );
 
+    // Try to create order for the winner
+    const orderResult = await createOrderFromAuction(client, auction);
+
     await client.query('COMMIT');
 
-    res.json({
-      success: true,
-      data: result.rows[0],
-      message: 'Auction ended, bid accepted',
-    });
+    // Build response based on order creation result
+    if (orderResult.success) {
+      res.json({
+        success: true,
+        data: result.rows[0],
+        order_id: orderResult.orderId,
+        message: 'Auction ended, bid accepted, order created for winner',
+      });
+    } else {
+      res.json({
+        success: true,
+        data: result.rows[0],
+        order_id: null,
+        order_error: orderResult.error,
+        message: `Auction ended, but order could not be created: ${orderResult.error}`,
+      });
+    }
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error accepting bid:', error);
@@ -464,6 +567,101 @@ router.post('/:id/accept', authenticateToken, async (req, res) => {
 });
 
 // ============ PUT ENDPOINTS ============
+
+/**
+ * PUT /api/node/auctions/:id/end
+ * End an auction when countdown expires (can be called by anyone/system)
+ * Creates an order for the winner if there are bids
+ */
+router.put('/:id/end', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+
+    await client.query('BEGIN');
+
+    // Get auction
+    const auctionResult = await client.query(
+      'SELECT * FROM auctions WHERE id = $1 FOR UPDATE',
+      [id]
+    );
+
+    if (auctionResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, error: 'Auction not found' });
+    }
+
+    const auction = auctionResult.rows[0];
+
+    // Verify auction is still active
+    if (auction.status !== 'ACTIVE') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ success: false, error: 'Auction is not active' });
+    }
+
+    // Check if countdown has expired
+    const now = new Date();
+    const endTime = new Date(auction.countdown_end_time);
+    if (endTime > now) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Auction countdown has not expired yet',
+        seconds_remaining: Math.ceil((endTime - now) / 1000)
+      });
+    }
+
+    let orderId = null;
+    let orderError = null;
+    let winnerId = auction.highest_bidder_id;
+
+    // If there's a winner, try to create the order
+    if (winnerId) {
+      const orderResult = await createOrderFromAuction(client, auction);
+      if (orderResult.success) {
+        orderId = orderResult.orderId;
+      } else {
+        orderError = orderResult.error;
+        console.warn(`[Auction] Could not create order for auction #${id}: ${orderError}`);
+      }
+    }
+
+    // End auction regardless of order creation result
+    const result = await client.query(
+      `UPDATE auctions 
+       SET status = 'ENDED', winner_id = $1, ended_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       RETURNING *`,
+      [winnerId, id]
+    );
+
+    await client.query('COMMIT');
+
+    // Build response message
+    let message;
+    if (!winnerId) {
+      message = 'Auction ended with no bids';
+    } else if (orderId) {
+      message = 'Auction ended with winner, order created';
+    } else {
+      message = `Auction ended with winner, but order could not be created: ${orderError}`;
+    }
+
+    res.json({
+      success: true,
+      data: result.rows[0],
+      order_id: orderId,
+      order_error: orderError,
+      message,
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error ending auction:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    client.release();
+  }
+});
 
 /**
  * PUT /api/node/auctions/:id/cancel

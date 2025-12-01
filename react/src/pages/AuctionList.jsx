@@ -6,6 +6,7 @@ import '../styles/AuctionList.css';
 
 
 export default function AuctionList() {
+  const [statusFilter, setStatusFilter] = useState('ACTIVE');
   const {
     auctions,
     pagination,
@@ -14,12 +15,16 @@ export default function AuctionList() {
     goToPage,
     changeLimit,
     refetch,
-  } = useAuctionsList();
+  } = useAuctionsList(statusFilter);
 
   const [sortBy, setSortBy] = useState('countdown');
 
   const handleSort = (newSort) => {
     setSortBy(newSort);
+  };
+
+  const handleStatusChange = (newStatus) => {
+    setStatusFilter(newStatus);
   };
 
   const sortedAuctions = [...auctions].sort((a, b) => {
@@ -40,16 +45,29 @@ export default function AuctionList() {
   return (
     <div className="auction-list-page">
       <div className="page-header">
-        <h1>Active Auctions</h1>
+        <div className="title-with-filter">
+          <select
+            id="status-filter"
+            value={statusFilter}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            className="status-filter-select"
+          >
+            <option value="ACTIVE">Active Auctions</option>
+            <option value="ENDED">Ended Auctions</option>
+          </select>
+        </div>
         <p className="subtitle">
-          {pagination.totalCount} auctions available
+          {loading ? 'Loading...' : `${pagination.totalCount} auctions available`}
         </p>
       </div>
 
       {error && (
         <div className="error-alert">
-          <strong>Error:</strong> {error}
-          <button onClick={refetch} className="btn btn-sm">
+          <div>
+            <strong>Error loading auctions</strong>
+            <p>{error}</p>
+          </div>
+          <button onClick={refetch} className="btn btn-primary btn-sm">
             Retry
           </button>
         </div>
@@ -89,14 +107,22 @@ export default function AuctionList() {
       {/* Auctions Grid */}
       {loading && !auctions.length ? (
         <div className="loading-state">
+          <div className="loading-spinner"></div>
           <p>Loading auctions...</p>
         </div>
       ) : sortedAuctions.length === 0 ? (
         <div className="empty-state">
-          <p>No auctions available at the moment.</p>
-          <button onClick={refetch} className="btn btn-primary">
-            Refresh
-          </button>
+          <div className="empty-icon">🔨</div>
+          <h3>No Active Auctions</h3>
+          <p>There are no active auctions at the moment. Check back later or create one from the seller dashboard!</p>
+          <div className="empty-actions">
+            <button onClick={refetch} className="btn btn-primary">
+              Refresh
+            </button>
+            <a href="/home" className="btn btn-secondary">
+              Back to Store
+            </a>
+          </div>
         </div>
       ) : (
         <>

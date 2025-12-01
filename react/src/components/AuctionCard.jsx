@@ -21,11 +21,27 @@ export default function AuctionCard({ auction }) {
     return `${Math.floor(seconds / 3600)}h`;
   };
 
+  // Format product image path - PHP stores as /public/images/products/X.jpg
+  // These are served by PHP backend, so we need the correct URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    // If path already starts with http, return as-is
+    if (imagePath.startsWith('http')) return imagePath;
+    // If path starts with /public, it's served by PHP
+    if (imagePath.startsWith('/public')) return imagePath;
+    // If path starts with public (no leading slash), add it
+    if (imagePath.startsWith('public')) return `/${imagePath}`;
+    // Otherwise return as-is
+    return imagePath;
+  };
+
+  const imageUrl = getImageUrl(auction.product_image);
+
   return (
     <div className={`auction-card status-${getStatusColor(auction.status)}`}>
       <div className="card-image">
-        {auction.product_image ? (
-          <img src={auction.product_image} alt={auction.product_name} />
+        {imageUrl ? (
+          <img src={imageUrl} alt={auction.product_name} />
         ) : (
           <div className="placeholder">No Image</div>
         )}
@@ -41,7 +57,7 @@ export default function AuctionCard({ auction }) {
         <div className="bid-info">
           <div className="current-bid">
             <span className="label">Current Bid</span>
-            <span className="value">Rp{auction.current_bid?.toLocaleString()}</span>
+            <span className="value">Rp{parseFloat(auction.current_bid || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
           </div>
           <div className="total-bids">
             <span className="label">Bids</span>

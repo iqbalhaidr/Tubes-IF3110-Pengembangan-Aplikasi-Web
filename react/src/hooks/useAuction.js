@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-export function useAuction(auctionId) {
+export function useAuction(auctionId, options = {}) {
+  const { pollInterval = 5000, enablePolling = true } = options;
   const [auction, setAuction] = useState(null);
   const [bidHistory, setBidHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,12 +33,27 @@ export function useAuction(auctionId) {
     }
   }, [auctionId]);
 
+  // Initial fetch
   useEffect(() => {
     if (auctionId) {
       fetchAuction();
       fetchBidHistory();
     }
   }, [auctionId, fetchAuction, fetchBidHistory]);
+
+  // Periodic polling for bid history (only for active auctions)
+  useEffect(() => {
+    if (!auctionId || !enablePolling) return;
+    
+    // Only poll if auction is active
+    if (auction && auction.status !== 'ACTIVE') return;
+
+    const intervalId = setInterval(() => {
+      fetchBidHistory();
+    }, pollInterval);
+
+    return () => clearInterval(intervalId);
+  }, [auctionId, enablePolling, pollInterval, auction?.status, fetchBidHistory]);
 
   return {
     auction,
@@ -49,7 +65,7 @@ export function useAuction(auctionId) {
   };
 }
 
-export function useAuctionsList() {
+export function useAuctionsList(statusFilter = 'ACTIVE') {
   const [auctions, setAuctions] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -64,7 +80,7 @@ export function useAuctionsList() {
     try {
       setLoading(true);
       const response = await axios.get(
-        `/api/node/auctions?page=${page}&limit=${limit}`
+        `/api/node/auctions?page=${page}&limit=${limit}&status=${statusFilter}`
       );
       setAuctions(response.data.data);
       setPagination(response.data.pagination);
@@ -75,7 +91,7 @@ export function useAuctionsList() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [statusFilter]);
 
   useEffect(() => {
     fetchAuctions();

@@ -1,12 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import '../styles/AuctionCountdown.css';
 
 export default function AuctionCountdown({ countdownSeconds, onExpired }) {
   const [displaySeconds, setDisplaySeconds] = useState(countdownSeconds);
+  const hasExpiredRef = useRef(false);
 
   useEffect(() => {
     setDisplaySeconds(countdownSeconds);
+    // Reset the expired flag when countdown is reset (new bid placed)
+    if (countdownSeconds > 0) {
+      hasExpiredRef.current = false;
+    }
   }, [countdownSeconds]);
+
+  // Call onExpired when countdown reaches 0
+  useEffect(() => {
+    if (displaySeconds !== null && displaySeconds <= 0 && !hasExpiredRef.current && onExpired) {
+      hasExpiredRef.current = true;
+      onExpired();
+    }
+  }, [displaySeconds, onExpired]);
 
   const formatCountdown = (seconds) => {
     if (!seconds || seconds <= 0) return 'EXPIRED';

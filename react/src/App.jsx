@@ -2,11 +2,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react';
 import AuctionList from './pages/AuctionList';
 import AuctionDetail from './pages/AuctionDetail';
+import Navbar from './components/Navbar';
 import './App.css';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // null = loading
   const [user, setUser] = useState(null);
+  const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
     // Check if user is logged in via PHP session
@@ -40,6 +42,7 @@ export default function App() {
         }
       } catch (error) {
         console.error('Auth check failed:', error);
+        setAuthError(error.message);
         // Allow guest access even if auth check fails
         setIsAuthenticated(false);
         localStorage.removeItem('user');
@@ -51,61 +54,51 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/logout', {
+      await fetch('/auth/logout', {
         credentials: 'include'
       });
       setUser(null);
       setIsAuthenticated(false);
+      localStorage.removeItem('user');
       // Redirect to PHP login after logout
-      window.location.href = '/login';
+      window.location.href = '/auth/login';
     } catch (error) {
       console.error('Logout failed:', error);
-      window.location.href = '/login';
+      window.location.href = '/auth/login';
     }
+  };
+
+  const handleBalanceUpdate = (newBalance) => {
+    // Update user state with new balance
+    setUser(prevUser => ({
+      ...prevUser,
+      balance: newBalance
+    }));
+    // Also update localStorage
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    storedUser.balance = newBalance;
+    localStorage.setItem('user', JSON.stringify(storedUser));
   };
 
   // Show loading state while checking authentication
   if (isAuthenticated === null) {
-    return <div className="app-loading">Loading...</div>;
+    return (
+      <div className="app-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading Auction Platform...</p>
+      </div>
+    );
   }
 
   // Allow both authenticated and guest users to access the app
   return (
     <Router>
       <div className="app">
-        <header className="app-header">
-          <div className="header-container">
-            <div className="logo-section">
-              <h1>🔨 Nimonspedia Auctions</h1>
-              <p className="tagline">Real-time Auction Platform</p>
-            </div>
-            <nav className="app-nav">
-              {isAuthenticated && user ? (
-                <div className="nav-links">
-                  <a href="/home" className="nav-link">
-                    🏪 Back to Store
-                  </a>
-                  <div className="auth-section">
-                    <span className="user-name">{user?.name || user?.email || 'User'}</span>
-                    <button
-                      onClick={handleLogout}
-                      className="btn btn-secondary btn-sm"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="auth-section">
-                  <a href="/login" className="btn btn-primary btn-sm">Login to Bid</a>
-                  <a href="/home" className="nav-link">🏪 Back to Store</a>
-                </div>
-              )}
-            </nav>
-          </div>
-        </header>
+        {/* Use shared Navbar component matching PHP styling */}
+        <Navbar user={user} onLogout={handleLogout} onBalanceUpdate={handleBalanceUpdate} />
 
         <main className="app-main">
+          
           <Routes>
             <Route path="/auctions" element={<AuctionList />} />
             <Route path="/auction/:id" element={<AuctionDetail />} />
@@ -119,7 +112,7 @@ export default function App() {
 
         <footer className="app-footer">
           <div className="footer-content">
-            <p>&copy; 2024 Nimonspedia - Milestone 2 Auction System</p>
+            <p>&copy; 2025 Nimonspedia - Auction Platform</p>
             <p className="tech-stack">
               Built with React 18 | Socket.io | Node.js Express
             </p>

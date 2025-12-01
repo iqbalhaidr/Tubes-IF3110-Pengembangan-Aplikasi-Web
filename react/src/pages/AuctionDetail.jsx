@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import BidForm from '../components/BidForm';
 import AuctionCountdown from '../components/AuctionCountdown';
 import AuctionChat from '../components/AuctionChat';
@@ -22,7 +23,7 @@ export default function AuctionDetail() {
   const userId = user?.user_id || null;
   const isAuthenticated = !!userId;
 
-  const { auction, bidHistory, loading, error, refetch } = useAuction(id);
+  const { auction, bidHistory, loading, error, refetch, refetchBids } = useAuction(id);
   const { bidAmount, setBidAmount, isSubmitting, bidError, bidSuccess, placeBid, validateBid } = useBid(id);
   const {
     isConnected,
@@ -33,11 +34,28 @@ export default function AuctionDetail() {
     setTyping,
   } = useWebSocket(id, userId);
 
+  // When a bid is placed via WebSocket, immediately refresh auction and bid history
   useEffect(() => {
     if (bidPlaced) {
       refetch();
+      refetchBids();
     }
-  }, [bidPlaced, refetch]);
+  }, [bidPlaced, refetch, refetchBids]);
+
+  // Handle auction expiration - call the end auction API
+  const handleAuctionExpired = useCallback(async () => {
+    try {
+      // Call the end auction API
+      await axios.put(`/api/node/auctions/${id}/end`);
+      console.log('[Auction] Auction ended, order created if there was a winner');
+      // Refetch to get updated auction status
+      refetch();
+    } catch (err) {
+      // If auction was already ended or other error, just refetch
+      console.log('[Auction] End auction response:', err.response?.data?.error || err.message);
+      refetch();
+    }
+  }, [id, refetch]);
 
   const handleBidSubmit = async (amount) => {
     const validationMsg = validateBid(
@@ -88,6 +106,17 @@ export default function AuctionDetail() {
   const isUserSeller = userId && userId === auction.seller_id;
   const canBid = isAuthenticated && !isUserSeller && isAuctionActive;
 
+  // Format product image path - PHP stores as /public/images/products/X.jpg
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('/public')) return imagePath;
+    if (imagePath.startsWith('public')) return `/${imagePath}`;
+    return imagePath;
+  };
+
+  const productImageUrl = getImageUrl(auction.product_image);
+
   return (
     <div className="auction-detail">
       <button onClick={() => navigate('/auctions')} className="btn btn-secondary back-btn">
@@ -100,8 +129,8 @@ export default function AuctionDetail() {
           {/* Product Image/Info */}
           <div className="product-section">
             <div className="product-image">
-              {auction.product_image ? (
-                <img src={auction.product_image} alt={auction.product_name} />
+              {productImageUrl ? (
+                <img src={productImageUrl} alt={auction.product_name} />
               ) : (
                 <div className="placeholder">No Image</div>
               )}
@@ -126,7 +155,7 @@ export default function AuctionDetail() {
           {isAuctionActive && (
             <AuctionCountdown
               countdownSeconds={countdownSeconds}
-              onExpired={() => refetch()}
+              onExpired={handleAuctionExpired}
             />
           )}
 
