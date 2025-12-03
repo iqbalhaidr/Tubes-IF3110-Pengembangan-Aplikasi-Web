@@ -164,9 +164,15 @@ export default function AuctionDetail() {
             <div className={`status-badge status-${auction.status.toLowerCase()}`}>
               {auction.status === 'ENDED' && (
                 <>
-                  <strong>Auction Ended</strong>
-                  {auction.winner_id && (
-                    <p>Winner: {auction.winner_username}</p>
+                  <strong>🔨 Auction Ended</strong>
+                  {auction.winner_id ? (
+                    <div className="winner-info">
+                      <div className="winner-label">Winner</div>
+                      <div className="winner-name">{auction.winner_username}</div>
+                      <div className="final-price">Rp {parseFloat(auction.current_bid).toLocaleString('id-ID')}</div>
+                    </div>
+                  ) : (
+                    <p>No bids were placed on this auction</p>
                   )}
                 </>
               )}
@@ -208,6 +214,9 @@ export default function AuctionDetail() {
             <div className="seller-notice">
               <h3>Your Auction</h3>
               <p>You cannot bid on your own auction.</p>
+              <button onClick={() => navigate(`/manage-auctions/${id}`)} className="btn btn-primary">
+                Manage This Auction
+              </button>
             </div>
           ) : !isAuctionActive ? (
             <div className="auction-ended-notice">

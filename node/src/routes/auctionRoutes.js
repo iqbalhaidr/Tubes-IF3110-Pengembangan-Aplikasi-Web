@@ -345,9 +345,11 @@ router.post('/', authenticateToken, async (req, res) => {
  * Auth: Required
  */
 router.post('/:id/bid', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const auctionIdNum = parseInt(id);
   const client = await pool.connect();
+  
   try {
-    const { id } = req.params;
     const { bid_amount } = req.body;
     const bidder_id = req.user.id;
 
@@ -358,11 +360,11 @@ router.post('/:id/bid', authenticateToken, async (req, res) => {
       });
     }
 
-    await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
-
-    // Get current auction state with exclusive lock (NOWAIT to fail fast on contention)
+    await client.query('SELECT pg_advisory_lock($1)', [auctionIdNum]);
+    
+    await client.query('BEGIN');
     const auctionResult = await client.query(
-      'SELECT * FROM auctions WHERE id = $1 FOR UPDATE NOWAIT',
+      'SELECT * FROM auctions WHERE id = $1',
       [id]
     );
 
@@ -425,17 +427,14 @@ router.post('/:id/bid', authenticateToken, async (req, res) => {
     await client.query('ROLLBACK');
     console.error('Error placing bid:', error);
     
-    // Check for lock contention or serialization failure
-    if (error.code === '55P03' || error.code === '40001') {
-      // 55P03 = lock_not_available (NOWAIT), 40001 = serialization_failure
-      return res.status(409).json({ 
-        success: false, 
-        error: 'Another bid was placed at the same time. Please try again.' 
-      });
-    }
-    
     res.status(500).json({ success: false, error: error.message });
   } finally {
+    // Always release the advisory lock
+    try {
+      await client.query('SELECT pg_advisory_unlock($1)', [auctionIdNum]);
+    } catch (unlockErr) {
+      console.error('Error releasing advisory lock:', unlockErr);
+    }
     client.release();
   }
 });

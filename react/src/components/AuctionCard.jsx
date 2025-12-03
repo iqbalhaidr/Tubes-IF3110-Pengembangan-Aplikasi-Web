@@ -57,7 +57,7 @@ export default function AuctionCard({ auction }) {
         <div className="bid-info">
           <div className="current-bid">
             <span className="label">Current Bid</span>
-            <span className="value">Rp{parseFloat(auction.current_bid || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
+            <span className="value">Rp {parseFloat(auction.current_bid || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
           </div>
           <div className="total-bids">
             <span className="label">Bids</span>
