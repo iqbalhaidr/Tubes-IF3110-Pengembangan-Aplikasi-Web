@@ -1,0 +1,143 @@
+/**
+ * Toast Component Styles
+ * 
+ * Tokopedia-inspired toast notifications
+ */
+
+/* Toast Container - Fixed position for all toasts */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 400px;
+  pointer-events: none; /* Allow clicking through container */
+}
+
+/* Individual Toast */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: toast-slide-in 0.3s ease-out;
+  pointer-events: auto; /* Enable clicking on toast */
+  min-width: 280px;
+}
+
+/* Slide-in animation */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Toast Icon */
+.toast-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Toast Message */
+.toast-message {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-dark);
+  line-height: 1.4;
+}
+
+/* Close Button */
+.toast-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.toast-close:hover {
+  background: var(--background-gray);
+  color: var(--text-dark);
+}
+
+/* Toast Types */
+
+/* Success Toast */
+.toast-success {
+  border-left: 4px solid var(--success-green);
+}
+
+.toast-success .toast-icon {
+  background: var(--success-green);
+  color: var(--white);
+}
+
+/* Error Toast */
+.toast-error {
+  border-left: 4px solid var(--error-red);
+}
+
+.toast-error .toast-icon {
+  background: var(--error-red);
+  color: var(--white);
+}
+
+/* Warning Toast */
+.toast-warning {
+  border-left: 4px solid var(--warning-orange);
+}
+
+.toast-warning .toast-icon {
+  background: var(--warning-orange);
+  color: var(--white);
+}
+
+/* Info Toast */
+.toast-info {
+  border-left: 4px solid var(--info-blue);
+}
+
+.toast-info .toast-icon {
+  background: var(--info-blue);
+  color: var(--white);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .toast-container {
+    top: auto;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    max-width: 100%;
+  }
+  
+  .toast {
+    min-width: auto;
+  }
+}

@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import auctionRoutes from './routes/auctionRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import { registerAuctionEvents } from './events/auctionEvents.js';
 
 // Load environment variables
@@ -44,14 +45,12 @@ app.get('/api/node/health', (req, res) => {
 
 // ============== ROUTES ==============
 app.use('/api/node/auctions', auctionRoutes);
+app.use('/api/node/admin', adminRoutes);
+
 // TODO (uncomment): Add other route modules here
-// import authRoutes from './routes/auth.js';
-// import adminRoutes from './routes/admin.js';
 // import chatRoutes from './routes/chat.js';
 // import pushRoutes from './routes/push.js';
 // 
-// app.use('/api/node/auth', authRoutes);
-// app.use('/api/node/admin', adminRoutes);
 // app.use('/api/node/chat', chatRoutes);
 // app.use('/api/node/push', pushRoutes);
 

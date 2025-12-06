@@ -2,6 +2,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react';
 import AuctionList from './pages/AuctionList';
 import AuctionDetail from './pages/AuctionDetail';
+// Admin pages
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -22,7 +25,7 @@ export default function App() {
             'Accept': 'application/json'
           }
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           // PHP Response::success returns { success: true, message: "...", data: {...} }
@@ -93,32 +96,45 @@ export default function App() {
   // Allow both authenticated and guest users to access the app
   return (
     <Router>
-      <div className="app">
-        {/* Use shared Navbar component matching PHP styling */}
-        <Navbar user={user} onLogout={handleLogout} onBalanceUpdate={handleBalanceUpdate} />
+      <Routes>
+        {/* ============================================ */}
+        {/* ADMIN ROUTES - Separate from main app layout */}
+        {/* ============================================ */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
 
-        <main className="app-main">
-          
-          <Routes>
-            <Route path="/auctions" element={<AuctionList />} />
-            <Route path="/auction/:id" element={<AuctionDetail />} />
-            {/* Future routes for Milestone 2 */}
-            {/* <Route path="/chat" element={<Chat />} /> */}
-            {/* <Route path="/admin" element={<AdminDashboard />} /> */}
-            {/* Redirect any unmatched routes back to PHP home */}
-            <Route path="*" element={<Navigate to="/auctions" replace />} />
-          </Routes>
-        </main>
+        {/* ============================================ */}
+        {/* MAIN APP ROUTES - With shared navbar/footer */}
+        {/* ============================================ */}
+        <Route path="/*" element={
+          <div className="app">
+            {/* Use shared Navbar component matching PHP styling */}
+            <Navbar user={user} onLogout={handleLogout} onBalanceUpdate={handleBalanceUpdate} />
 
-        <footer className="app-footer">
-          <div className="footer-content">
-            <p>&copy; 2025 Nimonspedia - Auction Platform</p>
-            <p className="tech-stack">
-              Built with React 18 | Socket.io | Node.js Express
-            </p>
+            <main className="app-main">
+              <Routes>
+                <Route path="/auctions" element={<AuctionList />} />
+                <Route path="/auction/:id" element={<AuctionDetail />} />
+                {/* Future routes for Milestone 2 */}
+                {/* <Route path="/chat" element={<Chat />} /> */}
+                {/* Redirect any unmatched routes back to auctions */}
+                <Route path="*" element={<Navigate to="/auctions" replace />} />
+              </Routes>
+            </main>
+
+            <footer className="app-footer">
+              <div className="footer-content">
+                <p>&copy; 2025 Nimonspedia - Auction Platform</p>
+                <p className="tech-stack">
+                  Built with React 18 | Socket.io | Node.js Express
+                </p>
+              </div>
+            </footer>
           </div>
-        </footer>
-      </div>
+        } />
+      </Routes>
     </Router>
   );
 }
+
