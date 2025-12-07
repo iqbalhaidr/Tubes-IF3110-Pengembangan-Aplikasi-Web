@@ -37,6 +37,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                     <?php 
                     $sellerLinks = [
                         ['href' => '/seller/dashboard', 'label' => 'Dashboard', 'key' => 'dashboard'],
+                        ['href' => '/chat', 'label' => 'Chat', 'key' => 'chat'],
                         ['href' => '/seller/products', 'label' => 'Produk', 'key' => 'products'],
                         ['href' => '/seller/orders', 'label' => 'Orders', 'key' => 'orders'],
                     ];
@@ -75,6 +76,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                     <div class="user-dropdown-menu" id="userDropdownMenu">
                         <a href="/buyer/profile" class="dropdown-item">Profile</a>
                         <a href="/buyer/order-history" class="dropdown-item">Order History</a>
+                        <a href="/chat" class="dropdown-item">Chat</a>
                         <button type="button" class="dropdown-item" onclick="openLogoutModal();">Logout</button>
                     </div>
                 </div>
