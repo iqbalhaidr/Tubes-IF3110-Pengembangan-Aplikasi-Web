@@ -2,6 +2,9 @@ Options -Indexes
 
 RewriteEngine On
 
+# Allow health.php to be served directly (stop processing rewrite rules)
+RewriteRule ^health\.php$ - [L]
+
 # Stop processing if already in the /public directory
 RewriteRule ^public/ - [L]
 

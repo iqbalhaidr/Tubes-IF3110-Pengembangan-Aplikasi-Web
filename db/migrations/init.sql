@@ -229,6 +229,10 @@ CREATE TABLE IF NOT EXISTS user_feature_access (
     feature_flag VARCHAR(100) NOT NULL,
     access_enabled BOOLEAN DEFAULT true,
     granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    disable_reason TEXT,
+    disabled_at TIMESTAMP WITH TIME ZONE,
+    disabled_by INTEGER, -- Optional: Add REFERENCES admin(admin_id) if you want strict constraints
     
     -- Constraints
     CONSTRAINT fk_feature_user FOREIGN KEY (user_id) REFERENCES "user"(user_id) ON DELETE CASCADE,
@@ -280,3 +284,92 @@ LEFT JOIN auction_bids ab ON a.id = ab.auction_id
 GROUP BY a.id;
 
 INSERT INTO category (category_name) VALUES ('Electronics'), ('Fashion'), ('Books'), ('Home & Kitchen');
+
+-- ============================================
+-- ADMIN TABLE
+-- ============================================
+-- Separate table for admin users (different from buyer/seller)
+-- Admin uses JWT authentication instead of PHP sessions
+
+CREATE TABLE IF NOT EXISTS admin (
+    admin_id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster email lookups during login
+CREATE INDEX IF NOT EXISTS idx_admin_email ON admin(email);
+
+-- ============================================
+-- GLOBAL FEATURE FLAGS TABLE
+-- ============================================
+-- System-wide feature toggles that affect all users
+-- When disabled, features are in "maintenance mode"
+
+CREATE TABLE IF NOT EXISTS global_feature_flags (
+    id SERIAL PRIMARY KEY,
+    feature_flag VARCHAR(100) UNIQUE NOT NULL,
+    is_enabled BOOLEAN DEFAULT true NOT NULL,
+    disable_reason TEXT,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_by INTEGER REFERENCES admin(admin_id) ON DELETE SET NULL
+);
+
+-- Index for faster flag lookups
+CREATE INDEX IF NOT EXISTS idx_global_flags_feature ON global_feature_flags(feature_flag);
+
+-- ============================================
+-- INSERT DEFAULT DATA
+-- ============================================
+
+-- Insert default global flags (only if they don't exist)
+INSERT INTO global_feature_flags (feature_flag, is_enabled) 
+VALUES 
+    ('auction_enabled', true),
+    ('chat_enabled', true),
+    ('checkout_enabled', true)
+ON CONFLICT (feature_flag) DO NOTHING;
+
+-- Insert hardcoded admin account
+-- Password: Admin@1234 (bcrypt hashed with cost 10)
+-- You can generate new hash with: require('bcryptjs').hashSync('Admin@1234', 10)
+INSERT INTO admin (email, password_hash, name)
+VALUES (
+    'admin@nimonspedia.com',
+    '$2a$10$RW.1sjFaZAznCKphltBEg.rQeaUmd1INbbOZ2UnIar2hhLxhhJZxa',
+    'Super Admin'
+)
+ON CONFLICT (email) DO NOTHING;
+
+-- ============================================
+-- VIEW FOR ADMIN DASHBOARD
+-- ============================================
+-- Combined view for users with their feature flags
+
+CREATE OR REPLACE VIEW admin_user_list_view AS
+SELECT 
+    u.user_id,
+    u.name,
+    u.email,
+    u.role,
+    u.balance,
+    u.created_at as registration_date,
+    -- Aggregate feature flags as JSON
+    COALESCE(
+        json_agg(
+            json_build_object(
+                'feature_flag', ufa.feature_flag,
+                'access_enabled', ufa.access_enabled,
+                'disable_reason', ufa.disable_reason,
+                'disabled_at', ufa.disabled_at
+            )
+        ) FILTER (WHERE ufa.feature_flag IS NOT NULL),
+        '[]'::json
+    ) as feature_flags
+FROM "user" u
+LEFT JOIN user_feature_access ufa ON u.user_id = ufa.user_id
+GROUP BY u.user_id, u.name, u.email, u.role, u.balance, u.created_at
+ORDER BY u.user_id;
