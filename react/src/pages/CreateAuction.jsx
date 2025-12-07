@@ -36,8 +36,8 @@ export default function CreateAuction() {
         });
         const data = await response.json();
         if (data.success && data.data) {
-          // Ensure data.data is an array
-          const productsArray = Array.isArray(data.data) ? data.data : [];
+          // API returns { success: true, data: { products: [...], pagination: {...} } }
+          const productsArray = Array.isArray(data.data.products) ? data.data.products : [];
           setProducts(productsArray);
         } else {
           setProducts([]);
