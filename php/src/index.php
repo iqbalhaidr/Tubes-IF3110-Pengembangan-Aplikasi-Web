@@ -168,6 +168,9 @@ if ($route_parts[0] === 'auth') {
     } elseif ($route_parts[1] === 'cartcounter' && $method === 'GET') {
         $controller = new CartController();
         $controller->getUniqueItemCount();
+    } elseif ($route_parts[1] === 'stores' && $method === 'GET') {
+        $controller = new StoreController();
+        $controller->getAllStores();
     } elseif ($route_parts[1] === 'store') {
         $controller = new HomeController();
         if (isset($route_parts[2]) && $route_parts[2] === 'get-store-info' && $method === 'GET') {
@@ -209,6 +212,56 @@ if ($route_parts[0] === 'auth') {
             echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
             exit;
         }
+    } elseif ($route_parts[1] === 'php' && isset($route_parts[2])) {
+        // API endpoints for React App
+        $sub_route = $route_parts[2];
+
+        if ($sub_route === 'stores' && $method === 'GET') {
+            $controller = new StoreController();
+            $controller->getAllStores();
+
+        } elseif ($sub_route === 'products' && $method === 'GET') {
+            $controller = new ProductController();
+            $controller->getProducts();
+
+        } elseif ($sub_route === 'chat' && isset($route_parts[3])) {
+            $chatController = new ChatController();
+            $chat_action = $route_parts[3];
+
+            if ($chat_action === 'rooms' && !isset($route_parts[4])) {
+                if ($method === 'GET') $chatController->getChatRooms();
+                elseif ($method === 'POST') $chatController->createChatRoom();
+                else Response::error('Method not allowed', null, 405);
+            } elseif (
+                $chat_action === 'rooms' &&
+                isset($route_parts[4]) && is_numeric($route_parts[4]) &&
+                isset($route_parts[5]) && is_numeric($route_parts[5]) &&
+                isset($route_parts[6]) && $route_parts[6] === 'messages' &&
+                $method === 'GET'
+            ) {
+                $storeId = (int)$route_parts[4];
+                $buyerId = (int)$route_parts[5];
+                $chatController->getMessages($storeId, $buyerId);
+            } elseif ($chat_action === 'upload-image' && $method === 'POST') {
+                $chatController->uploadImage();
+            } else {
+                Response::error('Chat API endpoint not found', null, 404);
+            }
+        
+        } elseif ($sub_route === 'push' && isset($route_parts[3])) {
+            $pushController = new PushController();
+            if ($route_parts[3] === 'subscribe' && $method === 'POST') {
+                $pushController->subscribe();
+            } else {
+                Response::error('Push API endpoint not found', null, 404);
+            }
+        } elseif ($sub_route === 'auth' && isset($route_parts[3]) && $route_parts[3] === 'me' && $method === 'GET') {
+            $authController = new AuthController();
+            $authController->getCurrentUser();
+        } else {
+            Response::error('API endpoint not found under /api/php/', null, 404);
+        }
+        exit;
     } else {
         header("HTTP/1.0 404 Not Found");
         echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
@@ -293,6 +346,13 @@ if ($route_parts[0] === 'auth') {
     } else {
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';
+    }
+} elseif ($route_parts[0] === 'push') {
+    $pushController = new PushController();
+    if (isset($route_parts[1]) && $route_parts[1] === 'subscribe' && $method === 'POST') {
+        $pushController->subscribe();
+    } else {
+        Response::error('Push API endpoint not found', null, 404);
     }
 } elseif ($route_parts[0] === 'balance') {
     $balanceController = new BalanceController();
