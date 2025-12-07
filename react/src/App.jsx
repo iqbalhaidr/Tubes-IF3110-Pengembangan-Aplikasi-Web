@@ -1,10 +1,24 @@
-import React from 'react'
+import React, { useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import ChatPage from './pages/ChatPage';
 
 export default function App() {
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/chat/sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered with scope:', registration.scope);
+        }).catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+  }, []);
+
   return (
-    <div className="app">
-      <h1>Nimonspedia - React SPA</h1>
-      <p>Milestone 2: WebSocket, Real-time Chat, Auction System</p>
-    </div>
-  )
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/chat" element={<ChatPage />} />
+    </Routes>
+  );
 }
