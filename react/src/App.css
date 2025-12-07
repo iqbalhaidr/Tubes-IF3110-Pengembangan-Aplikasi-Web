@@ -1,0 +1,272 @@
+/* Main App Layout - Tokopedia Inspired Theme */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--background-gray);
+}
+
+/* App Loading State */
+.app-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--background-gray);
+  gap: 20px;
+}
+
+.app-loading p {
+  color: var(--text-medium);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-green);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Auction Page Header */
+.auction-page-header {
+  text-align: center;
+  padding: 30px 20px;
+  background: var(--white);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.auction-page-header h1 {
+  font-size: 2rem;
+  color: var(--text-dark);
+  margin: 0 0 8px 0;
+}
+
+.auction-page-header .auction-tagline {
+  font-size: 1rem;
+  color: var(--text-medium);
+  margin: 0;
+}
+
+/* Main Content */
+.app-main {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Footer */
+.app-footer {
+  background: var(--white);
+  border-top: 1px solid var(--border-color);
+  padding: 30px 20px;
+  margin-top: auto;
+  color: var(--text-medium);
+}
+
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-content p {
+  margin: 6px 0;
+  font-size: 0.9rem;
+  color: var(--text-medium);
+}
+
+.tech-stack {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-top: 10px;
+}
+
+/* Button Styles */
+.btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-family: 'Open Sans', sans-serif;
+  outline: none;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background-color: var(--primary-green);
+  color: var(--white);
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-green-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:disabled {
+  background-color: var(--text-light);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--white);
+  border: 1.5px solid var(--white);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--white);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-sm {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loading State */
+.loading-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-medium);
+  font-size: 1.1rem;
+}
+
+.loading-state p {
+  margin: 0;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-medium);
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+/* Error State */
+.error-alert {
+  background: #fee;
+  border: 1px solid #f99;
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  color: var(--error-red);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.error-alert strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 15px;
+  }
+
+  .logo-section {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .logo-section h1 {
+    font-size: 1.4rem;
+  }
+
+  .app-nav {
+    width: 100%;
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .auth-section {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .app-main {
+    padding: 15px;
+  }
+
+  .footer-content p {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-section h1 {
+    font-size: 1.2rem;
+  }
+
+  .logo-section .tagline {
+    display: none;
+  }
+
+  .app-main {
+    padding: 10px;
+  }
+
+  .btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .user-name {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+}

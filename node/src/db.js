@@ -22,4 +22,6 @@ pool.on('connect', () => {
   console.log('[Database] Connected successfully');
 });
 
+// Named export for compatibility
+export { pool };
 export default pool;

@@ -1,0 +1,106 @@
+/* Auction Countdown Component Styles - Tokopedia Theme */
+
+.auction-countdown {
+  background: #fafbfc;
+  border-left: 4px solid #ff9800;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.auction-countdown.normal {
+  background: #fafbfc;
+  border-left-color: var(--primary-green);
+}
+
+.auction-countdown.warning {
+  background: #fafbfc;
+  border-left-color: #ff9800;
+}
+
+.auction-countdown.critical {
+  background: #fff5f5;
+  border-left-color: #dc3545;
+  animation: pulse 0.5s infinite;
+}
+
+.auction-countdown.expired {
+  background: #fafbfc;
+  border-left-color: #6b7280;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.countdown-label {
+  font-size: 13px;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.countdown-display {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 1px;
+  color: #ff9800;
+  line-height: 1.2;
+}
+
+.auction-countdown.normal .countdown-display {
+  color: var(--primary-green);
+}
+
+.auction-countdown.warning .countdown-display {
+  color: #ff9800;
+}
+
+.auction-countdown.critical .countdown-display {
+  color: #dc3545;
+}
+
+.auction-countdown.expired .countdown-display {
+  color: var(--text-light);
+}
+
+.countdown-warning {
+  font-size: 13px;
+  color: #dc3545;
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .auction-countdown {
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .countdown-label {
+    font-size: 12px;
+  }
+
+  .countdown-display {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .countdown-display {
+    font-size: 1.5rem;
+  }
+}
+

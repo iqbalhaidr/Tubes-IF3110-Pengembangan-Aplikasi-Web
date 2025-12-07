@@ -45,7 +45,7 @@ services:
     container_name: nimonspedia-php
     restart: always
     ports:
-      - "8080:80"
+      - "80"
     volumes:
       - ./php/src:/var/www/html/
       - ./.env:/var/www/html/.env
@@ -168,7 +168,7 @@ volumes:
 # View PHP logs: docker-compose logs -f php
 # Access services:
 #   - Main app: http://localhost
-#   - PHP backend: http://localhost:8080
+#   - PHP backend: http://localhost:80
 #   - Node.js API: http://localhost:3000
 #   - PgAdmin: http://localhost:5050
 #   - Database: docker-compose exec db psql -U ${DB_USER} -d ${DB_NAME}

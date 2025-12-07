@@ -412,7 +412,7 @@ Direct access:
   http://localhost/api/php/orders
 
 Through Nginx routing:
-  GET /api/php/*  → Nginx routes to http://nimonspedia-php:8080
+  GET /api/php/*  → Nginx routes to http://nimonspedia-php:80
 
 View PHP logs:
   docker-compose logs -f nimonspedia-php
@@ -715,7 +715,7 @@ kill -9 PID
 
 # Or change port in docker-compose.yml
 # Change: ports: ["80:80"]
-# To: ports: ["8080:80"]
+# To: ports: ["80:80"]
 
 # Windows: Find process
 netstat -ano | findstr :80
@@ -830,14 +830,14 @@ docker-compose restart
 # 1. Check Nginx routing is correct
 docker-compose logs nimonspedia-nginx
 
-# 2. Verify request URL is /api/php/... not :8080
+# 2. Verify request URL is /api/php/... not :80
 # In browser DevTools → Network → check request URL
 
 # 3. Check origin in browser
 console.log(window.location.origin)  # Should be http://localhost
 
-# 4. If you see :8080 in URL, fix React API calls
-# Wrong: fetch('http://localhost:8080/api/users')
+# 4. If you see :80 in URL, fix React API calls
+# Wrong: fetch('http://localhost:80/api/users')
 # Right: fetch('/api/php/users')
 
 # 5. Restart Nginx
@@ -1005,7 +1005,7 @@ docker-compose -f docker-compose.prod.yml up -d
 │         Reverse Proxy & Static File Server              │
 │                                                         │
 │  GET /                 → React SPA (dist/index.html)   │
-│  GET /api/php/*        → PHP Container (8080)          │
+│  GET /api/php/*        → PHP Container (80)          │
 │  GET /api/node/*       → Node.js Container (3000)      │
 │  GET /socket.io        → Node.js WebSocket             │
 └────┬──────────────┬──────────────┬─────────────────────┘
@@ -1014,7 +1014,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ┌─────────────┐ ┌──────────────┐ ┌──────────────────┐
 │   PHP       │ │  Node.js     │ │  React (Nginx)   │
 │ Container   │ │ Container    │ │  Container       │
-│ Port 8080   │ │ Port 3000    │ │  Port 80         │
+│ Port 80   │ │ Port 3000    │ │  Port 80         │
 │             │ │              │ │                  │
 │ - M1 code   │ │ - Auctions   │ │ - SPA files      │
 │ - Auth      │ │ - Chat       │ │ - Static assets  │
@@ -1080,7 +1080,7 @@ Exposed Ports (Host Machine):
   :5050 → PgAdmin (admin UI)
   :5432 → PostgreSQL (if configured)
   :3000 → Node.js (if configured)
-  :8080 → PHP (if configured)
+  :80 → PHP (if configured)
 ```
 
 ### Data Flow Example: User Placing a Bid

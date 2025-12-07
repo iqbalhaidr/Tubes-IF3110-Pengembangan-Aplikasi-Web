@@ -5,6 +5,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import auctionRoutes from './routes/auctionRoutes.js';
+import { registerAuctionEvents } from './events/auctionEvents.js';
 
 // Load environment variables
 dotenv.config();
@@ -40,78 +42,27 @@ app.get('/api/node/health', (req, res) => {
   res.json({ status: 'Node.js backend is running', timestamp: new Date() });
 });
 
-// ============== ROUTES PLACEHOLDER ==============
-// Import and use route modules here
+// ============== ROUTES ==============
+app.use('/api/node/auctions', auctionRoutes);
+// TODO (uncomment): Add other route modules here
 // import authRoutes from './routes/auth.js';
 // import adminRoutes from './routes/admin.js';
-// import auctionRoutes from './routes/auction.js';
 // import chatRoutes from './routes/chat.js';
 // import pushRoutes from './routes/push.js';
 // 
 // app.use('/api/node/auth', authRoutes);
 // app.use('/api/node/admin', adminRoutes);
-// app.use('/api/node/auction', auctionRoutes);
 // app.use('/api/node/chat', chatRoutes);
 // app.use('/api/node/push', pushRoutes);
 
 // ============== WEBSOCKET EVENTS ==============
 
-// WebSocket connection handler
+// Register auction-related WebSocket events
+const cleanupAuctionEvents = registerAuctionEvents(io);
+
+// WebSocket connection handler for general events
 io.on('connection', (socket) => {
   console.log(`[WebSocket] User connected: ${socket.id}`);
-
-  // Example: Join auction room
-  socket.on('join_auction', (data) => {
-    const { auctionId, userId } = data;
-    const room = `auction_${auctionId}`;
-    socket.join(room);
-    console.log(`[WebSocket] User ${userId} joined auction ${auctionId}`);
-    
-    // Notify other users
-    io.to(room).emit('user_joined', { userId, auctionId });
-  });
-
-  // Example: Join chat room
-  socket.on('join_chat', (data) => {
-    const { storeId, buyerId, userId } = data;
-    const room = `chat_${storeId}_${buyerId}`;
-    socket.join(room);
-    console.log(`[WebSocket] User ${userId} joined chat room ${room}`);
-  });
-
-  // Example: Place bid
-  socket.on('place_bid', (data) => {
-    const { auctionId, bidAmount, userId } = data;
-    const room = `auction_${auctionId}`;
-    console.log(`[WebSocket] Bid placed: ${bidAmount} by user ${userId} in auction ${auctionId}`);
-    
-    // Broadcast to all clients in auction room
-    io.to(room).emit('bid_placed', { userId, bidAmount, timestamp: new Date() });
-  });
-
-  // Example: Send chat message
-  socket.on('send_message', (data) => {
-    const { storeId, buyerId, message, userId } = data;
-    const room = `chat_${storeId}_${buyerId}`;
-    console.log(`[WebSocket] Message from ${userId}: ${message}`);
-    
-    // Broadcast to all clients in chat room
-    io.to(room).emit('message_received', { userId, message, timestamp: new Date() });
-  });
-
-  // Typing indicator
-  socket.on('typing', (data) => {
-    const { storeId, buyerId, userId } = data;
-    const room = `chat_${storeId}_${buyerId}`;
-    socket.to(room).emit('user_typing', { userId });
-  });
-
-  // Stop typing
-  socket.on('stop_typing', (data) => {
-    const { storeId, buyerId, userId } = data;
-    const room = `chat_${storeId}_${buyerId}`;
-    socket.to(room).emit('user_stop_typing', { userId });
-  });
 
   // Handle disconnection
   socket.on('disconnect', () => {
