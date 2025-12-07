@@ -5,7 +5,9 @@ import AuctionDetail from './pages/AuctionDetail';
 // Admin pages
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
+// Common components
 import Navbar from './components/Navbar';
+import FeatureGate, { FEATURES } from './components/common/FeatureGate';
 import './App.css';
 
 export default function App() {
@@ -114,8 +116,17 @@ export default function App() {
 
             <main className="app-main">
               <Routes>
-                <Route path="/auctions" element={<AuctionList />} />
-                <Route path="/auction/:id" element={<AuctionDetail />} />
+                {/* Auction routes wrapped with FeatureGate */}
+                <Route path="/auctions" element={
+                  <FeatureGate feature={FEATURES.AUCTION_ENABLED}>
+                    <AuctionList />
+                  </FeatureGate>
+                } />
+                <Route path="/auction/:id" element={
+                  <FeatureGate feature={FEATURES.AUCTION_ENABLED}>
+                    <AuctionDetail />
+                  </FeatureGate>
+                } />
                 {/* Future routes for Milestone 2 */}
                 {/* <Route path="/chat" element={<Chat />} /> */}
                 {/* Redirect any unmatched routes back to auctions */}

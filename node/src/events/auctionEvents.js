@@ -1,4 +1,5 @@
 import { pool } from '../db.js';
+import { checkFeatureForSocket, FEATURES } from '../middleware/featureFlagMiddleware.js';
 
 /**
  * Helper function to create an order when an auction ends with a winner
@@ -30,9 +31,9 @@ async function createOrderFromAuction(client, auction) {
   // Check if buyer has enough balance - gracefully handle insufficient funds
   if (buyerBalance < finalPrice) {
     console.warn(`[Auction] Buyer #${auction.highest_bidder_id} has insufficient balance (${buyerBalance} < ${finalPrice}). Order will not be created.`);
-    return { 
-      success: false, 
-      orderId: null, 
+    return {
+      success: false,
+      orderId: null,
       error: 'Insufficient balance',
       details: { buyerBalance, requiredAmount: finalPrice }
     };
@@ -118,6 +119,15 @@ export function registerAuctionEvents(io) {
             code: 'INVALID_BID',
             message: 'Missing required bid data',
           });
+          return;
+        }
+
+        // ============================================
+        // FEATURE FLAG CHECK - Auction must be enabled
+        // ============================================
+        const featureError = await checkFeatureForSocket(FEATURES.AUCTION_ENABLED, userId);
+        if (featureError) {
+          socket.emit('auction_error', featureError);
           return;
         }
 
@@ -210,7 +220,7 @@ export function registerAuctionEvents(io) {
         } catch (dbError) {
           await client.query('ROLLBACK');
           console.error('[Auction] Database error in place_bid:', dbError);
-          
+
           // Check for lock contention or serialization failure
           if (dbError.code === '55P03' || dbError.code === '40001') {
             // 55P03 = lock_not_available (NOWAIT), 40001 = serialization_failure
@@ -448,7 +458,7 @@ export function registerAuctionEvents(io) {
             } catch (dbError) {
               await client.query('ROLLBACK');
               console.error(`[Auction] Database error ending auction ${auctionId}:`, dbError);
-              
+
               // Still emit auction ended even if there was an error
               io.to(room).emit('auction_ended', {
                 auctionId,

@@ -16,6 +16,18 @@ class CheckoutController {
         $current_user = AuthMiddleware::getCurrentUser();
         $buyer_id = $current_user['user_id'];
 
+        // ============================================
+        // FEATURE FLAG CHECK - Checkout must be enabled
+        // ============================================
+        $checkoutAccess = FeatureFlag::checkAccess(FeatureFlag::CHECKOUT_ENABLED, $buyer_id);
+        if (!$checkoutAccess['enabled']) {
+            // Redirect to a disabled feature page or show error
+            $featureDisabledReason = $checkoutAccess['reason'];
+            $featureDisabledIsGlobal = $checkoutAccess['is_global'];
+            require_once __DIR__ . '/../views/feature-disabled.php';
+            return;
+        }
+
         $user = $this->user_model->getUserById($buyer_id);
         if (!$user) {
             Response::error('User not found.', null, 404);
@@ -47,6 +59,12 @@ class CheckoutController {
         AuthMiddleware::requireLogin();
         $current_user = AuthMiddleware::getCurrentUser();
         $buyer_id = $current_user['user_id'];
+
+        // ============================================
+        // FEATURE FLAG CHECK - Checkout must be enabled
+        // Server-side enforcement to prevent API bypass
+        // ============================================
+        FeatureFlag::requireFeature(FeatureFlag::CHECKOUT_ENABLED, $buyer_id);
 
         $cartResult = $this->cart_model->fetchItems($buyer_id);
         if (!$cartResult['success']) {

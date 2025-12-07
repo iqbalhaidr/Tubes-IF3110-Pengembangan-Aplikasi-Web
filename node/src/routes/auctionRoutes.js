@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../auth.js';
 import { pool } from '../db.js';
+import { requireFeature, FEATURES } from '../middleware/featureFlagMiddleware.js';
 
 const router = express.Router();
 
@@ -34,9 +35,9 @@ async function createOrderFromAuction(client, auction) {
   // Check if buyer has enough balance - gracefully handle insufficient funds
   if (buyerBalance < finalPrice) {
     console.warn(`[Auction] Buyer #${auction.highest_bidder_id} has insufficient balance (${buyerBalance} < ${finalPrice}). Order will not be created.`);
-    return { 
-      success: false, 
-      orderId: null, 
+    return {
+      success: false,
+      orderId: null,
       error: 'Insufficient balance',
       details: { buyerBalance, requiredAmount: finalPrice }
     };
@@ -282,8 +283,9 @@ router.get('/user/:userId/created', async (req, res) => {
  * Create a new auction
  * Required: product_id, seller_id, initial_bid, min_bid_increment
  * Auth: Required
+ * Feature Flag: auction_enabled
  */
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), async (req, res) => {
   const client = await pool.connect();
   try {
     const { product_id, initial_bid, min_bid_increment } = req.body;
@@ -343,8 +345,9 @@ router.post('/', authenticateToken, async (req, res) => {
  * Place a bid on an auction
  * Required: bid_amount
  * Auth: Required
+ * Feature Flag: auction_enabled
  */
-router.post('/:id/bid', authenticateToken, async (req, res) => {
+router.post('/:id/bid', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
@@ -424,16 +427,16 @@ router.post('/:id/bid', authenticateToken, async (req, res) => {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error placing bid:', error);
-    
+
     // Check for lock contention or serialization failure
     if (error.code === '55P03' || error.code === '40001') {
       // 55P03 = lock_not_available (NOWAIT), 40001 = serialization_failure
-      return res.status(409).json({ 
-        success: false, 
-        error: 'Another bid was placed at the same time. Please try again.' 
+      return res.status(409).json({
+        success: false,
+        error: 'Another bid was placed at the same time. Please try again.'
       });
     }
-    
+
     res.status(500).json({ success: false, error: error.message });
   } finally {
     client.release();
@@ -486,8 +489,9 @@ router.post('/:id/chat', authenticateToken, async (req, res) => {
  * Seller accepts a bid and ends auction immediately
  * Creates an order for the winner with status 'APPROVED'
  * Auth: Required (must be auction seller)
+ * Feature Flag: auction_enabled
  */
-router.post('/:id/accept', authenticateToken, async (req, res) => {
+router.post('/:id/accept', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
@@ -604,8 +608,8 @@ router.put('/:id/end', async (req, res) => {
     const endTime = new Date(auction.countdown_end_time);
     if (endTime > now) {
       await client.query('ROLLBACK');
-      return res.status(400).json({ 
-        success: false, 
+      return res.status(400).json({
+        success: false,
         error: 'Auction countdown has not expired yet',
         seconds_remaining: Math.ceil((endTime - now) / 1000)
       });

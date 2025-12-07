@@ -28,6 +28,12 @@ class CartController {
         $current_user = AuthMiddleware::getCurrentUser();
         $buyer_id = $current_user['user_id'];
 
+        // ============================================
+        // FEATURE FLAG CHECK - Checkout must be enabled
+        // If checkout is disabled, adding to cart is also disabled
+        // ============================================
+        FeatureFlag::requireFeature(FeatureFlag::CHECKOUT_ENABLED, $buyer_id);
+
         $data = json_decode(file_get_contents('php://input'), true);
         if (json_last_error() !== JSON_ERROR_NONE || !isset($data['product_id'])) {
             Response::error('Invalid input. "product_id" is required in JSON body or form data.', null, 400);
