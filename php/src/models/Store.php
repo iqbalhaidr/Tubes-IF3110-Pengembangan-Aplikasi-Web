@@ -103,6 +103,26 @@ class Store {
             ];
         }
     }
+
+    public function findAll($searchQuery = null) {
+        $query = 'SELECT store_id, store_name, store_logo_path FROM store';
+        $params = [];
+
+        if ($searchQuery) {
+            $query .= ' WHERE store_name ILIKE :search';
+            $params[':search'] = '%' . $searchQuery . '%';
+        }
+
+        $query .= ' ORDER BY store_name ASC';
+
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute($params);
+            return $statement->fetchAll() ?: [];
+        } catch (PDOException $exception) {
+            return [];
+        }
+    }
 }
 
 ?>
