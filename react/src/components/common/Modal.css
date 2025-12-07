@@ -87,7 +87,7 @@
     margin: 0;
 }
 
-.modal-close-btn {
+.react-modal-close-btn {
     background: none;
     border: none;
     font-size: 28px;
@@ -103,7 +103,7 @@
     line-height: 1;
 }
 
-.modal-close-btn:hover {
+.react-modal-close-btn:hover {
     background: var(--background-gray);
     color: var(--text-dark);
 }

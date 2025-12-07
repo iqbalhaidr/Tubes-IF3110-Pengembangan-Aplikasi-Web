@@ -94,7 +94,7 @@ export default function Modal({
                     <h2 id="modal-title" className="modal-title">{title}</h2>
                     {showCloseButton && (
                         <button
-                            className="modal-close-btn"
+                            className="react-modal-close-btn"
                             onClick={onClose}
                             aria-label="Close modal"
                         >
