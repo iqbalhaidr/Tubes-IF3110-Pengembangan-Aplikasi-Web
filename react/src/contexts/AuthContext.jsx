@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import api from '../api';
 
 const AuthContext = createContext();
 
@@ -7,15 +6,21 @@ export const useAuth = () => {
     return useContext(AuthContext);
 };
 
-export const AuthProvider = ({ children }) => {
-    const [currentUser, setCurrentUser] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+export const AuthProvider = ({ children, user: initialUser }) => {
+    const [currentUser, setCurrentUser] = useState(initialUser || null);
+    const [isLoading, setIsLoading] = useState(!initialUser);
 
     const fetchUser = useCallback(async () => {
         try {
-            const response = await api.get('/auth/me');
-            if (response.data.success === true) {
-                setCurrentUser(response.data.data);
+            const response = await fetch('/auth/me', {
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data) {
+                    setCurrentUser(data.data);
+                }
             }
         } catch (error) {
             console.error('Not authenticated or failed to fetch user:', error);
@@ -25,9 +30,13 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
+    // Update currentUser when initialUser prop changes
     useEffect(() => {
-        fetchUser();
-    }, [fetchUser]);
+        if (initialUser) {
+            setCurrentUser(initialUser);
+            setIsLoading(false);
+        }
+    }, [initialUser]);
 
     const value = {
         currentUser,

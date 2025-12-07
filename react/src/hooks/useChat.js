@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSocket } from '../contexts/SocketContext';
-import api from '../api';
+import { nodeApi } from '../api';
 
 export const useChat = (currentUser) => {
     const { socket, isConnected } = useSocket();
@@ -15,7 +15,7 @@ export const useChat = (currentUser) => {
     const fetchRooms = useCallback(async () => {
         setLoading(prev => ({ ...prev, rooms: true }));
         try {
-            const response = await api.get('/chat/rooms');
+            const response = await nodeApi.get('/chat/rooms');
             if (response.data.status === 'success') {
                 setRooms(response.data.data);
             }
@@ -31,7 +31,7 @@ export const useChat = (currentUser) => {
         setLoading(prev => ({ ...prev, messages: true }));
         setMessages([]); // Clear previous messages
         try {
-            const response = await api.get(`/chat/rooms/${storeId}/${buyerId}/messages`);
+            const response = await nodeApi.get(`/chat/rooms/${storeId}/${buyerId}/messages`);
             if (response.data.status === 'success') {
                 setMessages(response.data.data.reverse());
             }
@@ -207,7 +207,7 @@ export const useChat = (currentUser) => {
 
     const createOrSelectRoom = useCallback(async (storeId) => {
         try {
-            const response = await api.post('/chat/rooms', { store_id: storeId });
+            const response = await nodeApi.post('/chat/rooms', { store_id: storeId });
             console.log('Create/select room response:', response);
             if (response.data.status === 'success') {
                 const newRoom = response.data.data;
@@ -233,8 +233,7 @@ export const useChat = (currentUser) => {
         formData.append('image', file);
 
         try {
-            // This needs to be a direct axios call because of FormData, not using the api helper's base URL if it's different
-            const response = await api.post('/chat/upload-image', formData, {
+            const response = await nodeApi.post('/chat/upload-image', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

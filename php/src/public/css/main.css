@@ -241,6 +241,30 @@ body {
     gap: 15px;
 }
 
+/* Auctions link in navbar */
+.auctions-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--white);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+.auctions-link:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.02);
+}
+
+.auction-icon-svg {
+    margin-right: 6px;
+}
+
 .cart-icon {
     position: relative;
     color: var(--white);

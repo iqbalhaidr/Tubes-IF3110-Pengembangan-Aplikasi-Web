@@ -198,3 +198,122 @@ FROM
     store s
 WHERE 
     p.store_id = s.store_id;
+
+-- ============================================
+-- MILESTONE 2: AUCTION SEED DATA
+-- ============================================
+-- Product-Store-Seller mapping reference:
+-- Store 1 (seller_id=1): products 1-4 (TV, Laptop, Kipas, Blender)
+-- Store 2 (seller_id=2): products 5-8 (Kemeja Batik, Gaun, Celana Kulot, Jaket)
+-- Store 3 (seller_id=3): products 9-12 (Novel Laskar, Buku Resep, Komik, Sejarah)
+-- Store 4 (seller_id=4): products 13-16 (Panci, Pisau, Rice Cooker, Oven)
+-- Store 5 (seller_id=5): products 17-20 (Sepatu Lari, Raket, Bola Basket, Matras)
+-- Store 6 (seller_id=6): products 21-24 (Smartphone, Powerbank, TWS, Smartwatch)
+-- Store 7 (seller_id=7): products 25-28 (Kaos, Celana Chino, Hoodie, Kemeja Flanel)
+-- Store 8 (seller_id=8): products 29-32 (Lampu, Meja Lipat, Rak Sepatu, Cermin)
+-- Store 9 (seller_id=9): products 33-36 (Dumbbell, Tali Skipping, Sarung Tangan, Sepeda Statis)
+-- Store 10 (seller_id=10): products 37-40 (Novel Bumi, Kamus, Buku Anak, Harry Potter)
+-- Buyers: user_id 11-15 (Lina, Mega, Nina, Oscar, Rina)
+
+-- Active auctions with various countdown times
+INSERT INTO auctions (product_id, seller_id, initial_bid, current_bid, highest_bidder_id, min_bid_increment, status, countdown_end_time, started_at) VALUES
+-- Auction 1: Laptop Gaming (product 2, store 1, seller 1) - ends in 2 hours
+(2, 1, 10000000, 12500000, 12, 500000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '2 hours', CURRENT_TIMESTAMP - INTERVAL '1 day'),
+-- Auction 2: Smartphone Flagship Pro (product 21, store 6, seller 6) - ends in 30 minutes
+(21, 6, 8000000, 10000000, 11, 250000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '30 minutes', CURRENT_TIMESTAMP - INTERVAL '2 days'),
+-- Auction 3: Sepeda Statis X-Bike (product 36, store 9, seller 9) - ends in 5 hours, no bids
+(36, 9, 900000, 900000, NULL, 50000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '5 hours', CURRENT_TIMESTAMP - INTERVAL '6 hours'),
+-- Auction 4: TV LED 50 inch Smart 4K (product 1, store 1, seller 1) - ends in 1 hour
+(1, 1, 3000000, 3500000, 13, 100000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '1 hour', CURRENT_TIMESTAMP - INTERVAL '3 days'),
+-- Auction 5: Gaun Pesta Brokat (product 6, store 2, seller 2) - ends in 4 hours
+(6, 2, 500000, 650000, 15, 50000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '4 hours', CURRENT_TIMESTAMP - INTERVAL '1 day'),
+-- Auction 6: Smartwatch Pro GPS (product 24, store 6, seller 6) - ends tomorrow
+(24, 6, 1000000, 1200000, 14, 100000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '2 days'),
+-- Auction 7: Raket Badminton Carbon (product 18, store 5, seller 5) - just started, ends in 6 hours
+(18, 5, 350000, 350000, NULL, 25000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '6 hours', CURRENT_TIMESTAMP - INTERVAL '10 minutes'),
+-- Auction 8: Dumbbell Set 10kg (product 33, store 9, seller 9) - ending soon!
+(33, 9, 250000, 375000, 11, 25000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '15 minutes', CURRENT_TIMESTAMP - INTERVAL '2 days');
+
+-- Ended auctions (for history)
+INSERT INTO auctions (product_id, seller_id, initial_bid, current_bid, highest_bidder_id, min_bid_increment, status, countdown_end_time, started_at, ended_at, winner_id) VALUES
+-- Ended auction 9: Novel Laskar Pelangi (product 9, store 3, seller 3) - completed with winner
+(9, 3, 60000, 95000, 12, 5000, 'ENDED', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP - INTERVAL '1 day', 12),
+-- Ended auction 10: Rice Cooker Digital (product 15, store 4, seller 4) - completed with winner
+(15, 4, 400000, 550000, 14, 25000, 'ENDED', CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '4 days', CURRENT_TIMESTAMP - INTERVAL '2 days', 14);
+
+-- Auction bids (for active and ended auctions)
+INSERT INTO auction_bids (auction_id, bidder_id, bid_amount, placed_at) VALUES
+-- Bids for Auction 1 (Laptop Gaming)
+(1, 11, 10500000, CURRENT_TIMESTAMP - INTERVAL '20 hours'),
+(1, 13, 11000000, CURRENT_TIMESTAMP - INTERVAL '18 hours'),
+(1, 12, 11500000, CURRENT_TIMESTAMP - INTERVAL '12 hours'),
+(1, 11, 12000000, CURRENT_TIMESTAMP - INTERVAL '6 hours'),
+(1, 12, 12500000, CURRENT_TIMESTAMP - INTERVAL '2 hours'),
+
+-- Bids for Auction 2 (Smartphone)
+(2, 12, 8500000, CURRENT_TIMESTAMP - INTERVAL '1 day 20 hours'),
+(2, 14, 9000000, CURRENT_TIMESTAMP - INTERVAL '1 day 12 hours'),
+(2, 11, 9500000, CURRENT_TIMESTAMP - INTERVAL '1 day'),
+(2, 11, 10000000, CURRENT_TIMESTAMP - INTERVAL '6 hours'),
+
+-- Bids for Auction 4 (TV LED)
+(4, 11, 3200000, CURRENT_TIMESTAMP - INTERVAL '2 days'),
+(4, 13, 3500000, CURRENT_TIMESTAMP - INTERVAL '1 day 12 hours'),
+
+-- Bids for Auction 5 (Gaun Pesta)
+(5, 12, 550000, CURRENT_TIMESTAMP - INTERVAL '18 hours'),
+(5, 15, 600000, CURRENT_TIMESTAMP - INTERVAL '12 hours'),
+(5, 15, 650000, CURRENT_TIMESTAMP - INTERVAL '4 hours'),
+
+-- Bids for Auction 6 (Smartwatch)
+(6, 13, 1100000, CURRENT_TIMESTAMP - INTERVAL '1 day 18 hours'),
+(6, 14, 1200000, CURRENT_TIMESTAMP - INTERVAL '1 day'),
+
+-- Bids for Auction 8 (Dumbbell Set - ending soon!)
+(8, 13, 275000, CURRENT_TIMESTAMP - INTERVAL '1 day 20 hours'),
+(8, 11, 300000, CURRENT_TIMESTAMP - INTERVAL '1 day 12 hours'),
+(8, 14, 325000, CURRENT_TIMESTAMP - INTERVAL '1 day'),
+(8, 13, 350000, CURRENT_TIMESTAMP - INTERVAL '12 hours'),
+(8, 11, 375000, CURRENT_TIMESTAMP - INTERVAL '6 hours'),
+
+-- Bids for Ended Auction 9 (Novel - ended)
+(9, 11, 65000, CURRENT_TIMESTAMP - INTERVAL '2 days 20 hours'),
+(9, 14, 70000, CURRENT_TIMESTAMP - INTERVAL '2 days 16 hours'),
+(9, 12, 80000, CURRENT_TIMESTAMP - INTERVAL '2 days 10 hours'),
+(9, 11, 85000, CURRENT_TIMESTAMP - INTERVAL '2 days'),
+(9, 12, 95000, CURRENT_TIMESTAMP - INTERVAL '1 day 12 hours'),
+
+-- Bids for Ended Auction 10 (Rice Cooker - ended)
+(10, 12, 425000, CURRENT_TIMESTAMP - INTERVAL '3 days 20 hours'),
+(10, 13, 475000, CURRENT_TIMESTAMP - INTERVAL '3 days 12 hours'),
+(10, 14, 500000, CURRENT_TIMESTAMP - INTERVAL '3 days'),
+(10, 12, 525000, CURRENT_TIMESTAMP - INTERVAL '2 days 12 hours'),
+(10, 14, 550000, CURRENT_TIMESTAMP - INTERVAL '2 days 6 hours');
+
+-- Chat messages for auctions
+INSERT INTO chat_messages (auction_id, user_id, message, sent_at) VALUES
+-- Chat for Auction 1 (Laptop Gaming)
+(1, 11, 'Apakah laptop ini masih garansi?', CURRENT_TIMESTAMP - INTERVAL '22 hours'),
+(1, 1, 'Iya, masih garansi resmi 1 tahun.', CURRENT_TIMESTAMP - INTERVAL '21 hours 50 minutes'),
+(1, 12, 'Spek lengkapnya gimana ya?', CURRENT_TIMESTAMP - INTERVAL '15 hours'),
+(1, 1, 'Core i7 12th Gen, RTX 4060, 16GB RAM, 512GB SSD', CURRENT_TIMESTAMP - INTERVAL '14 hours 30 minutes'),
+(1, 13, 'Bisa COD Jakarta?', CURRENT_TIMESTAMP - INTERVAL '8 hours'),
+(1, 1, 'Bisa, tapi tambah ongkir ya', CURRENT_TIMESTAMP - INTERVAL '7 hours 45 minutes'),
+
+-- Chat for Auction 2 (Smartphone)
+(2, 14, 'Kondisi HP gimana?', CURRENT_TIMESTAMP - INTERVAL '1 day 18 hours'),
+(2, 6, 'Baru, masih segel resmi.', CURRENT_TIMESTAMP - INTERVAL '1 day 17 hours'),
+(2, 11, 'Warna apa yang ready?', CURRENT_TIMESTAMP - INTERVAL '1 day'),
+(2, 6, 'Hitam dan biru tersedia.', CURRENT_TIMESTAMP - INTERVAL '23 hours'),
+
+-- Chat for Auction 5 (Gaun Pesta)
+(5, 15, 'Ukuran yang tersedia apa saja?', CURRENT_TIMESTAMP - INTERVAL '20 hours'),
+(5, 2, 'S, M, L tersedia. Mau yang mana?', CURRENT_TIMESTAMP - INTERVAL '19 hours 30 minutes'),
+(5, 12, 'Warna selain ini ada?', CURRENT_TIMESTAMP - INTERVAL '16 hours'),
+(5, 2, 'Ada merah maroon dan navy blue juga', CURRENT_TIMESTAMP - INTERVAL '15 hours 40 minutes');
+
+-- Push subscriptions for testing
+INSERT INTO push_subscriptions (user_id, subscription_data) VALUES
+(11, '{"endpoint": "https://fcm.googleapis.com/fcm/send/test1", "keys": {"p256dh": "test_key_1", "auth": "test_auth_1"}}'),
+(12, '{"endpoint": "https://fcm.googleapis.com/fcm/send/test2", "keys": {"p256dh": "test_key_2", "auth": "test_auth_2"}}'),
+(13, '{"endpoint": "https://fcm.googleapis.com/fcm/send/test3", "keys": {"p256dh": "test_key_3", "auth": "test_auth_3"}}');

@@ -40,6 +40,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                         ['href' => '/chat', 'label' => 'Chat', 'key' => 'chat'],
                         ['href' => '/seller/products', 'label' => 'Produk', 'key' => 'products'],
                         ['href' => '/seller/orders', 'label' => 'Orders', 'key' => 'orders'],
+                        ['href' => '/manage-auctions', 'label' => 'Auctions', 'key' => 'auctions'],
                     ];
                     ?>
                     <?php foreach ($sellerLinks as $link): ?>
@@ -77,6 +78,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                         <a href="/buyer/profile" class="dropdown-item">Profile</a>
                         <a href="/buyer/order-history" class="dropdown-item">Order History</a>
                         <a href="/chat" class="dropdown-item">Chat</a>
+                        <a href="/auctions" class="dropdown-item">Live Auctions</a>
                         <button type="button" class="dropdown-item" onclick="openLogoutModal();">Logout</button>
                     </div>
                 </div>

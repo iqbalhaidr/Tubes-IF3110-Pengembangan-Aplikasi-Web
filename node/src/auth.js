@@ -33,21 +33,71 @@ export const verifyToken = (token) => {
 };
 
 /**
- * JWT middleware for Express
+ * Verify PHP session by calling PHP backend
+ * @param {string} cookies - Cookie header string
+ * @returns {Promise<object|null>} User object or null if invalid
  */
-export const jwtMiddleware = (req, res, next) => {
+const verifyPHPSession = async (cookies) => {
+  try {
+    // Call PHP /auth/me endpoint to verify session
+    const response = await fetch('http://php/auth/me', {
+      method: 'GET',
+      headers: {
+        'Cookie': cookies,
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    if (data.success && data.data) {
+      return {
+        id: data.data.user_id,
+        userId: data.data.user_id,
+        email: data.data.email,
+        name: data.data.name,
+        role: data.data.role,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('[PHP Session Verification Error]', error.message);
+    return null;
+  }
+};
+
+/**
+ * JWT middleware for Express - supports both JWT tokens and PHP sessions
+ */
+export const jwtMiddleware = async (req, res, next) => {
+  // First, try JWT token authentication
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) {
-    return res.status(401).json({ error: 'Token not found' });
+  if (token) {
+    const decoded = verifyToken(token);
+    if (decoded) {
+      req.user = decoded;
+      return next();
+    }
   }
 
-  const decoded = verifyToken(token);
-  if (!decoded) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
+  // Fall back to PHP session authentication
+  const cookies = req.headers.cookie;
+  if (cookies) {
+    const user = await verifyPHPSession(cookies);
+    if (user) {
+      req.user = user;
+      return next();
+    }
   }
 
-  req.user = decoded;
-  next();
+  return res.status(401).json({ error: 'Unauthorized - No valid token or session' });
 };
+
+// Alias for backward compatibility
+export const authenticateToken = jwtMiddleware;
+export const requireAuth = jwtMiddleware;

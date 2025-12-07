@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 // import webpush from 'web-push';
+import auctionRoutes from './routes/auctionRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
+import { registerAuctionEvents } from './events/auctionEvents.js';
 
 // Load environment variables
 dotenv.config();
@@ -51,18 +54,16 @@ app.get('/api/node/health', (req, res) => {
   res.json({ status: 'Node.js backend is running', timestamp: new Date() });
 });
 
-// ============== ROUTES PLACEHOLDER ==============
-// Import and use route modules here
+// ============== ROUTES ==============
+app.use('/api/node/auctions', auctionRoutes);
+app.use('/api/node/chat', chatRoutes);
+// TODO (uncomment): Add other route modules here
 // import authRoutes from './routes/auth.js';
 // import adminRoutes from './routes/admin.js';
-// import auctionRoutes from './routes/auction.js';
-// import chatRoutes from './routes/chat.js';
 // import pushRoutes from './routes/push.js';
 // 
 // app.use('/api/node/auth', authRoutes);
 // app.use('/api/node/admin', adminRoutes);
-// app.use('/api/node/auction', auctionRoutes);
-// app.use('/api/node/chat', chatRoutes);
 // app.use('/api/node/push', pushRoutes);
 
 import { socketAuthMiddleware } from './websocket-auth.js';
@@ -70,6 +71,10 @@ import pool from './db.js';
 
 // ============== WEBSOCKET EVENTS ==============
 
+// Register auction-related WebSocket events
+const cleanupAuctionEvents = registerAuctionEvents(io);
+
+// WebSocket connection handler for general events
 io.on('connection', (socket) => {
   console.log(`[WebSocket] User connected to main namespace: ${socket.id}`);
   socket.on('disconnect', () => {
