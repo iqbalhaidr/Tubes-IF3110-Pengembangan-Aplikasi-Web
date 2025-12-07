@@ -16,12 +16,13 @@ export default function App() {
 
   useEffect(() => {
     // Register service worker for push notifications
+    // Note: Service worker registration is optional and only attempted if sw.js exists
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
         .then((registration) => {
           console.log('Service Worker registered with scope:', registration.scope);
         }).catch((error) => {
-          console.error('Service Worker registration failed:', error);
+          console.debug('Service Worker not available (this is optional):', error.message);
         });
     }
 

@@ -12,8 +12,8 @@ export const SocketProvider = ({ children }) => {
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        // Connect to the /chat namespace through the reverse proxy
-        const newSocket = io('/chat', {
+        // Connect to the root namespace through the reverse proxy at /socket.io
+        const newSocket = io('/', {
             withCredentials: true,
             transports: ['websocket'],
             autoConnect: true,
@@ -23,12 +23,12 @@ export const SocketProvider = ({ children }) => {
         setSocket(newSocket);
 
         newSocket.on('connect', () => {
-            console.log('[WebSocket] Connected to /chat namespace. Socket ID:', newSocket.id);
+            console.log('[WebSocket] Connected to root namespace. Socket ID:', newSocket.id);
             setIsConnected(true);
         });
 
         newSocket.on('disconnect', (reason) => {
-            console.log('[WebSocket] Disconnected from /chat namespace. Reason:', reason);
+            console.log('[WebSocket] Disconnected from root namespace. Reason:', reason);
             setIsConnected(false);
         });
 

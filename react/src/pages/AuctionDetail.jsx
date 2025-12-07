@@ -167,7 +167,7 @@ export default function AuctionDetail() {
             }`}>
               {auction.status === 'ENDED' && (
                 <>
-                  <strong className="block text-2xl text-text-dark mb-4">🔨 Auction Ended</strong>
+                  <strong className="block text-2xl text-text-dark mb-4">Auction Ended</strong>
                   {auction.winner_id ? (
                     <div className="space-y-2">
                       <div className="text-sm text-text-muted uppercase tracking-wide">Winner</div>
