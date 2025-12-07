@@ -79,14 +79,14 @@ export default function Modal({
 
     return (
         <div
-            className="modal-overlay"
+            className="react-modal-overlay"
             onClick={handleOverlayClick}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
         >
             <div
-                className={`modal-content modal-${size}`}
+                className={`react-modal-content modal-${size}`}
                 ref={modalRef}
             >
                 {/* Modal Header */}
