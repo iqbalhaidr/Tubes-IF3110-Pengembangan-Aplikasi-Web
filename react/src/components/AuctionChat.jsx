@@ -82,7 +82,7 @@ export default function AuctionChat({
               className={`message ${msg.userId === userId ? 'own' : 'other'}`}
             >
               <div className="message-header">
-                <span className="username">{msg.username}</span>
+                <span className="username">{msg.username || 'User'}</span>
                 <span className="timestamp">
                   {new Date(msg.timestamp).toLocaleTimeString([], {
                     hour: '2-digit',

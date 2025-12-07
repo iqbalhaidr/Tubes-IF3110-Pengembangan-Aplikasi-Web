@@ -1,34 +1,34 @@
 /* Auction Countdown Component Styles - Tokopedia Theme */
 
 .auction-countdown {
-  background: linear-gradient(135deg, #fef3e0, #fff8e1);
+  background: #fafbfc;
   border-left: 4px solid #ff9800;
-  border-radius: 8px;
-  padding: 1.5rem;
+  border-radius: 12px;
+  padding: 24px;
   text-align: center;
-  margin-bottom: 1.5rem;
-  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .auction-countdown.normal {
-  background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+  background: #fafbfc;
   border-left-color: var(--primary-green);
 }
 
 .auction-countdown.warning {
-  background: linear-gradient(135deg, #fef3e0, #fff8e1);
+  background: #fafbfc;
   border-left-color: #ff9800;
 }
 
 .auction-countdown.critical {
-  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+  background: #fff5f5;
   border-left-color: #dc3545;
   animation: pulse 0.5s infinite;
 }
 
 .auction-countdown.expired {
-  background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
-  border-left-color: var(--text-light);
+  background: #fafbfc;
+  border-left-color: #6b7280;
 }
 
 @keyframes pulse {
@@ -41,19 +41,19 @@
 }
 
 .countdown-label {
-  font-size: 0.85rem;
-  color: var(--text-medium);
+  font-size: 13px;
+  color: #6b7280;
   text-transform: uppercase;
-  font-weight: 500;
-  margin-bottom: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 12px;
   letter-spacing: 0.5px;
 }
 
 .countdown-display {
   font-size: 2.5rem;
   font-weight: 700;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 2px;
+  font-family: inherit;
+  letter-spacing: 1px;
   color: #ff9800;
   line-height: 1.2;
 }
@@ -75,22 +75,22 @@
 }
 
 .countdown-warning {
-  font-size: 0.85rem;
+  font-size: 13px;
   color: #dc3545;
-  margin-top: 0.75rem;
-  font-weight: 500;
+  margin-top: 12px;
+  font-weight: 600;
 }
 
 /* Responsive */
 
 @media (max-width: 768px) {
   .auction-countdown {
-    padding: 1rem;
-    margin-bottom: 1rem;
+    padding: 20px;
+    margin-bottom: 16px;
   }
 
   .countdown-label {
-    font-size: 0.75rem;
+    font-size: 12px;
   }
 
   .countdown-display {
@@ -101,7 +101,6 @@
 @media (max-width: 480px) {
   .countdown-display {
     font-size: 1.5rem;
-    letter-spacing: 1px;
   }
 }
 

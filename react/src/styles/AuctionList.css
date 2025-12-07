@@ -28,14 +28,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
-  font-family: 'Open Sans', sans-serif;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0 center;
-  padding-right: 20px;
+  font-family: inherit;
 }
 
 .page-header .status-filter-select:hover {
@@ -95,29 +88,36 @@
 
 .sort-controls select,
 .pagination-controls select {
-  padding: 10px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  background: var(--white);
+  padding: 12px 16px;
+  border: 1.5px solid #e5e7e9;
+  border-radius: 8px;
+  background: #fafbfc;
   color: var(--text-dark);
-  font-size: 0.9rem;
+  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: 'Open Sans', sans-serif;
+  transition: all 0.3s ease;
+  font-family: inherit;
   font-weight: 500;
+  min-width: 160px;
 }
 
 .sort-controls select:hover,
 .pagination-controls select:hover {
   border-color: var(--primary-green);
-  background-color: var(--background-light);
+  background: var(--white);
 }
 
 .sort-controls select:focus,
 .pagination-controls select:focus {
   outline: none;
   border-color: var(--primary-green);
-  box-shadow: 0 0 0 2px rgba(3, 172, 14, 0.1);
+  box-shadow: 0 0 0 3px rgba(3, 172, 14, 0.15);
+}
+
+.sort-controls select option,
+.pagination-controls select option {
+  padding: 10px;
+  font-weight: 500;
 }
 
 /* Auctions Grid */

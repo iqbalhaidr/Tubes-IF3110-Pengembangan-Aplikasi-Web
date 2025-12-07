@@ -58,19 +58,19 @@ export default function BidForm({
         <div className="info-row">
           <span className="label">Current Bid:</span>
           <span className="value">
-            Rp{currentBid.toLocaleString('id-ID')}
+            Rp {currentBid.toLocaleString('id-ID')}
           </span>
         </div>
         <div className="info-row">
           <span className="label">Minimum Increment:</span>
           <span className="value">
-            Rp{minIncrement.toLocaleString('id-ID')}
+            Rp {minIncrement.toLocaleString('id-ID')}
           </span>
         </div>
         <div className="info-row highlight">
           <span className="label">Minimum Next Bid:</span>
           <span className="value">
-            Rp{minimumBid.toLocaleString('id-ID')}
+            Rp {minimumBid.toLocaleString('id-ID')}
           </span>
         </div>
         {auction.highest_bidder_username && (

@@ -1,0 +1,156 @@
+/* Seller Auction Pages Styles */
+
+/* Page Header Actions */
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.create-auction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #03ac0e 0%, #028a0f 100%);
+  color: var(--white);
+  box-shadow: 0 2px 8px rgba(3, 172, 14, 0.25);
+  transition: all 0.3s ease;
+}
+
+.create-auction-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(3, 172, 14, 0.35);
+}
+
+/* Seller Manage Header */
+.seller-manage-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 24px;
+}
+
+.seller-manage-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.status-indicator {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-indicator.status-active {
+  background: #e8f5e9;
+  color: var(--primary-green);
+}
+
+.status-indicator.status-ended {
+  background: #ffebee;
+  color: var(--error-red);
+}
+
+.status-indicator.status-cancelled {
+  background: #f5f5f5;
+  color: var(--text-medium);
+}
+
+/* Seller Actions Card */
+.seller-actions-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.seller-actions-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.action-error {
+  background: #ffebee;
+  color: var(--error-red);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 15px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.btn-accept {
+  background: linear-gradient(135deg, #03ac0e 0%, #028a0f 100%);
+  color: var(--white);
+  box-shadow: 0 2px 8px rgba(3, 172, 14, 0.25);
+}
+
+.btn-accept:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(3, 172, 14, 0.35);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c62828 100%);
+  color: var(--white);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.25);
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.35);
+}
+
+.action-hint {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Product Meta for Seller View */
+.product-meta .current-bid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.product-meta .bid-amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-green);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-header-actions {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .seller-manage-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

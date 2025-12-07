@@ -121,16 +121,15 @@ export function registerAuctionEvents(io) {
           return;
         }
 
-        // BUG-012 FIX: Persist bid to database with transaction
-        // Use SERIALIZABLE isolation to prevent race conditions
         const client = await pool.connect();
         try {
-          await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
-
-          // Get current auction state with exclusive lock (NOWAIT to fail fast on contention)
+          // Acquire advisory lock for this specific auction (blocks until lock is available)
+          await client.query('SELECT pg_advisory_lock($1)', [auctionId]);
+          
+          await client.query('BEGIN');
           const auctionResult = await client.query(
             `SELECT id, current_bid, min_bid_increment, status, countdown_end_time 
-             FROM auctions WHERE id = $1 FOR UPDATE NOWAIT`,
+             FROM auctions WHERE id = $1`,
             [auctionId]
           );
 
@@ -211,20 +210,17 @@ export function registerAuctionEvents(io) {
           await client.query('ROLLBACK');
           console.error('[Auction] Database error in place_bid:', dbError);
           
-          // Check for lock contention or serialization failure
-          if (dbError.code === '55P03' || dbError.code === '40001') {
-            // 55P03 = lock_not_available (NOWAIT), 40001 = serialization_failure
-            socket.emit('auction_error', {
-              code: 'BID_CONFLICT',
-              message: 'Another bid was placed at the same time. Please try again.',
-            });
-          } else {
-            socket.emit('auction_error', {
-              code: 'DB_ERROR',
-              message: 'Failed to save bid',
-            });
-          }
+          socket.emit('auction_error', {
+            code: 'DB_ERROR',
+            message: 'Failed to save bid',
+          });
         } finally {
+          // Always release the advisory lock
+          try {
+            await client.query('SELECT pg_advisory_unlock($1)', [auctionId]);
+          } catch (unlockErr) {
+            console.error('[Auction] Error releasing advisory lock:', unlockErr);
+          }
           client.release();
         }
       } catch (error) {

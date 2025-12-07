@@ -29,7 +29,7 @@ export default function BidHistory({ bids = [] }) {
                 {index === 0 && <span className="highest-badge">HIGHEST</span>}
               </div>
               <div className="col-amount">
-                Rp{bid.bid_amount?.toLocaleString()}
+                Rp {parseFloat(bid.bid_amount).toLocaleString('id-ID')}
               </div>
               <div className="col-time">
                 {new Date(bid.placed_at).toLocaleString([], {

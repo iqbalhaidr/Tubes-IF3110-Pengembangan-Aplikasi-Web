@@ -2,6 +2,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react';
 import AuctionList from './pages/AuctionList';
 import AuctionDetail from './pages/AuctionDetail';
+import SellerAuctionList from './pages/SellerAuctionList';
+import CreateAuction from './pages/CreateAuction';
+import SellerAuctionManage from './pages/SellerAuctionManage';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -100,8 +103,36 @@ export default function App() {
         <main className="app-main">
           
           <Routes>
+            {/* Buyer auction views - accessible by all */}
             <Route path="/auctions" element={<AuctionList />} />
             <Route path="/auction/:id" element={<AuctionDetail />} />
+            
+            {/* Seller auction routes - protected for sellers only */}
+            <Route 
+              path="/manage-auctions" 
+              element={
+                user && user.role === 'SELLER' 
+                  ? <SellerAuctionList /> 
+                  : <Navigate to="/auctions" replace />
+              } 
+            />
+            <Route 
+              path="/manage-auctions/create" 
+              element={
+                user && user.role === 'SELLER' 
+                  ? <CreateAuction /> 
+                  : <Navigate to="/auctions" replace />
+              } 
+            />
+            <Route 
+              path="/manage-auctions/:id" 
+              element={
+                user && user.role === 'SELLER' 
+                  ? <SellerAuctionManage /> 
+                  : <Navigate to="/auctions" replace />
+              } 
+            />
+            
             {/* Future routes for Milestone 2 */}
             {/* <Route path="/chat" element={<Chat />} /> */}
             {/* <Route path="/admin" element={<AdminDashboard />} /> */}
