@@ -15,6 +15,7 @@ services:
     volumes:
       - ./db/migrations/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./db/migrations/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      - ./db/migrations/001_milestone2_schema.sql:/docker-entrypoint-initdb.d/03-milestone2_schema.sql
       - postgres_data:/var/lib/postgresql/data
     networks:
       - nimonspedia-network
@@ -49,6 +50,7 @@ services:
     volumes:
       - ./php/src:/var/www/html/
       - ./.env:/var/www/html/.env
+      - ./php/redis-session.ini:/usr/local/etc/php/conf.d/zz-redis-session.ini
     depends_on:
       db:
         condition: service_healthy

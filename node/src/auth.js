@@ -100,3 +100,4 @@ export const jwtMiddleware = async (req, res, next) => {
 
 // Alias for backward compatibility
 export const authenticateToken = jwtMiddleware;
+export const requireAuth = jwtMiddleware;

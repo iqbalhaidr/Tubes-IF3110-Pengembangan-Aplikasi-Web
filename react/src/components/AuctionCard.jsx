@@ -1,5 +1,3 @@
-import '../styles/AuctionCard.css';
-
 export default function AuctionCard({ auction }) {
   const getStatusColor = (status) => {
     switch (status) {
@@ -37,62 +35,68 @@ export default function AuctionCard({ auction }) {
 
   const imageUrl = getImageUrl(auction.product_image);
 
+  const statusColors = {
+    active: 'bg-green-500',
+    ended: 'bg-gray-500',
+    cancelled: 'bg-red-500'
+  };
+
   return (
-    <div className={`auction-card status-${getStatusColor(auction.status)}`}>
-      <div className="card-image">
+    <div className="flex flex-col bg-white border border-gray-100 rounded-lg overflow-hidden transition-all duration-200 cursor-pointer h-full shadow-sm hover:-translate-y-1 hover:shadow-lg hover:border-gray-300">
+      <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
         {imageUrl ? (
-          <img src={imageUrl} alt={auction.product_name} />
+          <img src={imageUrl} alt={auction.product_name} className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" />
         ) : (
-          <div className="placeholder">No Image</div>
+          <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">No Image</div>
         )}
-        <span className={`status-badge ${getStatusColor(auction.status)}`}>
+        <span className={`absolute top-2 right-2 ${statusColors[getStatusColor(auction.status)] || 'bg-green-500'} text-white text-xs font-bold px-2 py-1 rounded`}>
           {auction.status}
         </span>
       </div>
 
-      <div className="card-content">
-        <h3 className="product-name">{auction.product_name}</h3>
-        <p className="seller-name">by {auction.seller_username}</p>
+      <div className="p-4 flex-1 flex flex-col">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{auction.product_name}</h3>
+        <p className="text-sm text-gray-600 mb-3">by {auction.seller_username}</p>
 
-        <div className="bid-info">
-          <div className="current-bid">
-            <span className="label">Current Bid</span>
-            <span className="value">Rp {parseFloat(auction.current_bid || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
+        <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-100">
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-500 font-medium">Current Bid</span>
+            <span className="text-xl font-bold text-primary-green">Rp {parseFloat(auction.current_bid || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 })}</span>
           </div>
-          <div className="total-bids">
-            <span className="label">Bids</span>
-            <span className="value">{auction.total_bids || 0}</span>
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-gray-500 font-medium">Bids</span>
+            <span className="text-lg font-bold text-gray-700">{auction.total_bids || 0}</span>
           </div>
         </div>
 
-        <div className="countdown">
+        <div className="mb-3">
           {auction.seconds_remaining !== undefined && (
-            <>
-              <span className="label">Time Left</span>
-              <span className="value">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500 font-medium">Time Left</span>
+              <span className="text-sm font-semibold text-warning-orange">
                 {formatTime(auction.seconds_remaining)}
               </span>
-            </>
+            </div>
           )}
         </div>
 
-        <div className="highest-bidder">
+        <div className="mt-auto">
           {auction.highest_bidder_username ? (
-            <>
-              <span className="label">Highest Bid By</span>
-              <span className="value">{auction.highest_bidder_username}</span>
-            </>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500 font-medium">Highest Bid By</span>
+              <span className="text-sm font-semibold text-gray-900">{auction.highest_bidder_username}</span>
+            </div>
           ) : (
-            <>
-              <span className="label">No Bids Yet</span>
-              <span className="value">Be the first!</span>
-            </>
+            <div className="text-center">
+              <span className="text-xs text-gray-500 font-medium">No Bids Yet</span>
+              <span className="text-sm font-semibold text-primary-green block">Be the first!</span>
+            </div>
           )}
         </div>
       </div>
 
-      <div className="card-footer">
-        <button className="btn btn-primary btn-sm">View Details</button>
+      <div className="p-4 pt-0">
+        <button className="w-full bg-primary-green text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm">View Details</button>
       </div>
     </div>
   );

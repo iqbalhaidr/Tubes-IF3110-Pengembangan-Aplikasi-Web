@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import '../styles/BidForm.css';
 
 export default function BidForm({
   auction,
@@ -23,7 +22,7 @@ export default function BidForm({
   }, [currentBid, minIncrement]);
 
   if (!auction) {
-    return <div className="bid-form empty">Loading auction data...</div>;
+    return <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-200 flex items-center justify-center min-h-[200px] text-gray-500">Loading auction data...</div>;
   }
 
   const handleChange = (e) => {
@@ -53,37 +52,37 @@ export default function BidForm({
   };
 
   return (
-    <div className="bid-form">
-      <div className="bid-info">
-        <div className="info-row">
-          <span className="label">Current Bid:</span>
-          <span className="value">
+    <div className="bg-white rounded-2xl p-6 shadow-md border-t-4 border-primary-green">
+      <div className="mb-5 rounded-lg overflow-hidden">
+        <div className="flex justify-between items-center p-3 border-b border-gray-200">
+          <span className="text-xs font-semibold text-gray-600">Current Bid:</span>
+          <span className="text-sm font-bold text-gray-900">
             Rp {currentBid.toLocaleString('id-ID')}
           </span>
         </div>
-        <div className="info-row">
-          <span className="label">Minimum Increment:</span>
-          <span className="value">
+        <div className="flex justify-between items-center p-3 border-b border-gray-200">
+          <span className="text-xs font-semibold text-gray-600">Minimum Increment:</span>
+          <span className="text-sm font-bold text-gray-900">
             Rp {minIncrement.toLocaleString('id-ID')}
           </span>
         </div>
-        <div className="info-row highlight">
-          <span className="label">Minimum Next Bid:</span>
-          <span className="value">
+        <div className="flex justify-between items-center p-3.5 bg-gray-50 border-2 border-gray-200 rounded-lg -mx-3 -mb-px">
+          <span className="text-xs font-bold text-gray-900">Minimum Next Bid:</span>
+          <span className="text-base font-bold text-error-red">
             Rp {minimumBid.toLocaleString('id-ID')}
           </span>
         </div>
         {auction.highest_bidder_username && (
-          <div className="info-row">
-            <span className="label">Highest Bidder:</span>
-            <span className="value">{auction.highest_bidder_username}</span>
+          <div className="flex justify-between items-center p-3 border-t border-gray-200 mt-1">
+            <span className="text-xs font-semibold text-gray-600">Highest Bidder:</span>
+            <span className="text-sm font-bold text-gray-900">{auction.highest_bidder_username}</span>
           </div>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="bid-input-form">
-        <div className="form-group">
-          <label htmlFor="bidAmount">Your Bid Amount (Rp)</label>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="bidAmount" className="text-sm font-bold text-gray-900">Your Bid Amount (Rp)</label>
           <input
             id="bidAmount"
             type="number"
@@ -93,18 +92,18 @@ export default function BidForm({
             min={minimumBid}
             step={auction.min_bid_increment}
             disabled={isLoading}
-            className={validationError ? 'error' : ''}
+            className={`w-full px-4 py-3 border-2 ${validationError ? 'border-error-red' : 'border-gray-200'} rounded-lg text-sm text-gray-900 bg-gray-50 hover:border-primary-green hover:bg-white focus:outline-none focus:border-primary-green focus:bg-white focus:ring-4 focus:ring-primary-green focus:ring-opacity-10 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed`}
           />
           {validationError && (
-            <span className="error-message">{validationError}</span>
+            <span className="text-error-red text-xs font-medium flex items-center gap-1">{validationError}</span>
           )}
-          {error && <span className="error-message">{error}</span>}
+          {error && <span className="text-error-red text-xs font-medium flex items-center gap-1">{error}</span>}
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="btn btn-primary btn-block"
+          className="w-full bg-gradient-to-br from-primary-green to-green-700 text-white font-bold py-3 px-6 rounded-lg hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400"
         >
           {isLoading ? 'Placing Bid...' : 'Place Bid'}
         </button>

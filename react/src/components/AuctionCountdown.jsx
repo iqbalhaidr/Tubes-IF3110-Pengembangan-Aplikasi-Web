@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from 'react';
-import '../styles/AuctionCountdown.css';
 
 export default function AuctionCountdown({ countdownSeconds, onExpired }) {
   const [displaySeconds, setDisplaySeconds] = useState(countdownSeconds);
@@ -40,22 +39,22 @@ export default function AuctionCountdown({ countdownSeconds, onExpired }) {
     return `${hours}h ${mins}m`;
   };
 
-  const getCountdownClass = () => {
-    if (!displaySeconds) return 'expired';
-    if (displaySeconds < 60) return 'critical';
-    if (displaySeconds < 300) return 'warning';
-    return 'normal';
+  const getCountdownColors = () => {
+    if (!displaySeconds) return 'bg-gray-500 border-gray-400';
+    if (displaySeconds < 60) return 'bg-error-red border-red-600 animate-pulse';
+    if (displaySeconds < 300) return 'bg-warning-orange border-orange-600';
+    return 'bg-primary-green border-green-600';
   };
 
   return (
-    <div className={`auction-countdown ${getCountdownClass()}`}>
-      <div className="countdown-label">Auction Ends In</div>
-      <div className="countdown-display">
+    <div className={`${getCountdownColors()} rounded-xl p-6 shadow-lg border-2 text-white text-center mb-6`}>
+      <div className="text-sm font-semibold opacity-90 mb-2">Auction Ends In</div>
+      <div className="text-4xl font-bold tracking-tight">
         {formatCountdown(displaySeconds)}
       </div>
       {displaySeconds && displaySeconds < 60 && (
-        <div className="countdown-warning">
-          Auction ending soon!
+        <div className="mt-3 text-sm font-semibold animate-pulse">
+          ⚠️ Auction ending soon!
         </div>
       )}
     </div>

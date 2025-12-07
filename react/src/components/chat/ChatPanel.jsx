@@ -1,0 +1,123 @@
+import React, { useState, useRef, useEffect } from 'react';
+import MessageBubble from './MessageBubble';
+import TypingIndicator from './TypingIndicator';
+import SelectItemPreviewModal from './SelectItemPreviewModal';
+import { MessageListSkeleton } from './SkeletonLoader';
+
+const ChatPanel = ({ activeRoom, messages, loading, onSendMessage, onUploadImage, typingUsers, onTyping, currentUserId }) => {
+  const [inputValue, setInputValue] = useState('');
+  const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+  const typingTimeoutRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const messageEndRef = useRef(null);
+
+  useEffect(() => {
+    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  if (!activeRoom) {
+    return <div className="h-full flex items-center justify-center text-gray-500 bg-gray-50"><p>Select a chat to start messaging.</p></div>;
+  }
+
+  const handleSendMessage = () => {
+    console.log('handleSendMessage called in ChatPanel');
+    if (inputValue.trim()) {
+      onSendMessage({ content: inputValue });
+      setInputValue('');
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      onTyping(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) onUploadImage(file);
+  };
+
+  const handleAttachClick = () => fileInputRef.current.click();
+  
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+    onTyping(true);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => onTyping(false), 2000);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleProductSelected = (product) => {
+    onSendMessage({
+      messageType: 'item_preview',
+      content: JSON.stringify(product),
+      productId: product.product_id,
+    });
+    setIsItemModalOpen(false);
+  };
+
+  return (
+    <>
+      <div className="h-full flex flex-col bg-white">
+        {/* Chat Header */}
+        <div className="p-5 border-b border-gray-200 flex items-center bg-white shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-primary-green mr-4 flex-shrink-0 flex items-center justify-center text-white font-bold text-lg">
+              {activeRoom.store_name.charAt(0)}
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">{activeRoom.store_name}</h2>
+            <p className="text-sm text-gray-500">Online</p>
+          </div>
+        </div>
+
+        {/* Message List */}
+        <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
+          {loading && <MessageListSkeleton />}
+          {!loading && messages.map((msg) => <MessageBubble key={msg.message_id} message={msg} currentUserId={currentUserId} />)}
+          <div ref={messageEndRef} />
+          {!loading && messages.length === 0 && <div className="text-center text-gray-500">No messages yet. Say hi!</div>}
+        </div>
+
+        <TypingIndicator typingUsers={typingUsers} />
+
+        {/* Chat Input */}
+        <div className="p-5 border-t border-gray-200 bg-white">
+          <div className="relative flex items-center gap-2">
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+            <button onClick={handleAttachClick} className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all" title="Upload Image">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+            </button>
+            <button onClick={() => setIsItemModalOpen(true)} className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all" title="Send Item Preview">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+            </button>
+            <input
+              type="text"
+              placeholder="Type a message..."
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              value={inputValue}
+              onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
+            />
+            <button 
+              className="bg-primary-green hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
+              onClick={handleSendMessage}
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+      <SelectItemPreviewModal
+        isOpen={isItemModalOpen}
+        onClose={() => setIsItemModalOpen(false)}
+        onProductSelect={handleProductSelected}
+        storeId={activeRoom.store_id}
+      />
+    </>
+  );
+};
+
+export default ChatPanel;

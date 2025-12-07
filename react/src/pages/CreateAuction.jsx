@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../styles/CreateAuction.css';
 
 export default function CreateAuction() {
   const navigate = useNavigate();
@@ -116,41 +115,41 @@ export default function CreateAuction() {
     : null;
 
   return (
-    <div className="create-auction-page">
-      <div className="page-header">
-        <button onClick={() => navigate('/manage-auctions')} className="btn btn-secondary back-btn">
+    <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="mb-8">
+        <button onClick={() => navigate('/manage-auctions')} className="mb-4 px-4 py-2 bg-gray-200 text-text-dark rounded-lg hover:bg-gray-300 transition-colors">
           ← Back to My Auctions
         </button>
-        <h1>Create New Auction</h1>
-        <p className="subtitle">Set up a new auction for one of your products</p>
+        <h1 className="text-4xl font-bold text-text-dark mb-2">Create New Auction</h1>
+        <p className="text-text-muted text-lg">Set up a new auction for one of your products</p>
       </div>
 
       {success ? (
-        <div className="success-card">
-          <div className="success-icon">✓</div>
-          <h2>Auction Created Successfully!</h2>
-          <p>Your auction is now live. Redirecting to auction management...</p>
+        <div className="bg-white rounded-xl shadow-md p-12 text-center">
+          <div className="text-6xl text-success-green mb-4">✓</div>
+          <h2 className="text-3xl font-bold text-text-dark mb-3">Auction Created Successfully!</h2>
+          <p className="text-text-muted text-lg">Your auction is now live. Redirecting to auction management...</p>
         </div>
       ) : (
-        <div className="create-auction-container">
-          <form onSubmit={handleSubmit} className="auction-form">
+        <div className="bg-white rounded-xl shadow-md">
+          <form onSubmit={handleSubmit} className="p-8 space-y-8">
             {error && (
-              <div className="error-alert">
+              <div className="bg-error-red/10 border border-error-red text-error-red px-4 py-3 rounded-lg">
                 <strong>Error:</strong> {error}
               </div>
             )}
 
             {/* Product Selection */}
-            <div className="form-section">
-              <h3>Select Product</h3>
-              <div className="form-group">
-                <label htmlFor="product">Product to Auction</label>
+            <div className="space-y-4">
+              <h3 className="text-2xl font-bold text-text-dark border-b border-gray-200 pb-3">Select Product</h3>
+              <div className="space-y-2">
+                <label htmlFor="product" className="block text-sm font-medium text-text-dark">Product to Auction</label>
                 {productsLoading ? (
-                  <div className="loading-products">Loading your products...</div>
+                  <div className="text-text-muted py-4 text-center">Loading your products...</div>
                 ) : products.length === 0 ? (
-                  <div className="no-products">
-                    <p>You don't have any products yet.</p>
-                    <a href="/seller/products/add" className="btn btn-primary btn-sm">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                    <p className="text-text-muted mb-4">You don't have any products yet.</p>
+                    <a href="/seller/products/add" className="inline-block px-4 py-2 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm">
                       Add Product
                     </a>
                   </div>
@@ -159,7 +158,7 @@ export default function CreateAuction() {
                     id="product"
                     value={selectedProduct}
                     onChange={(e) => setSelectedProduct(e.target.value)}
-                    className="form-select"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent transition-all"
                     required
                   >
                     <option value="">-- Select a product --</option>
@@ -174,23 +173,24 @@ export default function CreateAuction() {
 
               {/* Product Preview */}
               {selectedProductDetails && (
-                <div className="product-preview">
-                  <div className="preview-image">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex gap-4 mt-4">
+                  <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                     {selectedProductDetails.main_image_path ? (
                       <img 
                         src={selectedProductDetails.main_image_path.startsWith('/') ? selectedProductDetails.main_image_path : `/public/images/products/${selectedProductDetails.main_image_path}`} 
-                        alt={selectedProductDetails.product_name} 
+                        alt={selectedProductDetails.product_name}
+                        className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="placeholder">No Image</div>
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
                     )}
                   </div>
-                  <div className="preview-info">
-                    <h4>{selectedProductDetails.product_name}</h4>
-                    <p className="preview-price">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-lg font-bold text-text-dark mb-1">{selectedProductDetails.product_name}</h4>
+                    <p className="text-sm text-primary-green font-medium mb-2">
                       Original Price: Rp {parseFloat(selectedProductDetails.price).toLocaleString('id-ID')}
                     </p>
-                    <p className="preview-description">
+                    <p className="text-sm text-text-muted line-clamp-2">
                       {selectedProductDetails.description?.substring(0, 100)}
                       {selectedProductDetails.description?.length > 100 ? '...' : ''}
                     </p>
@@ -200,13 +200,13 @@ export default function CreateAuction() {
             </div>
 
             {/* Auction Settings */}
-            <div className="form-section">
-              <h3>Auction Settings</h3>
+            <div className="space-y-4">
+              <h3 className="text-2xl font-bold text-text-dark border-b border-gray-200 pb-3">Auction Settings</h3>
               
-              <div className="form-group">
-                <label htmlFor="initialBid">Starting Bid (Rp)</label>
-                <div className="input-with-prefix">
-                  <span className="input-prefix">Rp</span>
+              <div className="space-y-2">
+                <label htmlFor="initialBid" className="block text-sm font-medium text-text-dark">Starting Bid (Rp)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-medium">Rp</span>
                   <input
                     type="number"
                     id="initialBid"
@@ -215,16 +215,16 @@ export default function CreateAuction() {
                     placeholder="e.g. 100000"
                     min="1000"
                     required
-                    className="form-input"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent transition-all"
                   />
                 </div>
-                <span className="form-hint">The minimum amount for the first bid</span>
+                <span className="block text-xs text-text-muted">The minimum amount for the first bid</span>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="minIncrement">Minimum Bid Increment (Rp)</label>
-                <div className="input-with-prefix">
-                  <span className="input-prefix">Rp</span>
+              <div className="space-y-2">
+                <label htmlFor="minIncrement" className="block text-sm font-medium text-text-dark">Minimum Bid Increment (Rp)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-medium">Rp</span>
                   <input
                     type="number"
                     id="minIncrement"
@@ -233,36 +233,51 @@ export default function CreateAuction() {
                     placeholder="e.g. 10000"
                     min="1000"
                     required
-                    className="form-input"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent transition-all"
                   />
                 </div>
-                <span className="form-hint">Each new bid must be at least this much higher</span>
+                <span className="block text-xs text-text-muted">Each new bid must be at least this much higher</span>
               </div>
             </div>
 
             {/* Auction Rules Info */}
-            <div className="form-section info-section">
-              <h3>📋 Auction Rules</h3>
-              <ul className="rules-list">
-                <li>Auction starts immediately after creation</li>
-                <li>Each bid resets the countdown to 15 seconds</li>
-                <li>Auction ends when no bids are placed for 15 seconds</li>
-                <li>Winner will be automatically charged and order created</li>
-                <li>You can cancel the auction if there are no bids yet</li>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-xl font-bold text-text-dark mb-4">📋 Auction Rules</h3>
+              <ul className="space-y-2 text-text-dark">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary-green mt-1">•</span>
+                  <span>Auction starts immediately after creation</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary-green mt-1">•</span>
+                  <span>Each bid resets the countdown to 15 seconds</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary-green mt-1">•</span>
+                  <span>Auction ends when no bids are placed for 15 seconds</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary-green mt-1">•</span>
+                  <span>Winner will be automatically charged and order created</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary-green mt-1">•</span>
+                  <span>You can cancel the auction if there are no bids yet</span>
+                </li>
               </ul>
             </div>
 
-            <div className="form-actions">
+            <div className="flex gap-4 pt-4 border-t border-gray-200">
               <button 
                 type="button" 
                 onClick={() => navigate('/manage-auctions')} 
-                className="btn btn-secondary"
+                className="flex-1 px-6 py-3 bg-gray-200 text-text-dark rounded-lg hover:bg-gray-300 transition-colors font-medium"
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                className="btn btn-primary"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading || !selectedProduct}
               >
                 {loading ? 'Creating...' : 'Start Auction'}

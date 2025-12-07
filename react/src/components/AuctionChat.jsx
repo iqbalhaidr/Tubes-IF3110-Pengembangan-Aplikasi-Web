@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import '../styles/AuctionChat.css';
 
 export default function AuctionChat({
   auctionId,
@@ -62,43 +61,45 @@ export default function AuctionChat({
   };
 
   return (
-    <div className="auction-chat">
-      <div className="chat-header">
-        <h3>Live Chat</h3>
-        <span className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-[500px]">
+      <div className="bg-gradient-to-r from-primary-green to-green-600 text-white p-4 flex justify-between items-center">
+        <h3 className="font-bold text-lg">Live Chat</h3>
+        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${isConnected ? 'bg-green-900 bg-opacity-30' : 'bg-red-900 bg-opacity-30'}`}>
           {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
         </span>
       </div>
 
-      <div className="chat-messages">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
         {messages.length === 0 ? (
-          <div className="no-messages">
-            <p>No messages yet. Be the first to chat!</p>
+          <div className="flex items-center justify-center h-full text-center">
+            <p className="text-gray-500 text-sm">No messages yet. Be the first to chat!</p>
           </div>
         ) : (
           messages.map((msg, index) => (
             <div
               key={index}
-              className={`message ${msg.userId === userId ? 'own' : 'other'}`}
+              className={`flex ${msg.userId === userId ? 'justify-end' : 'justify-start'}`}
             >
-              <div className="message-header">
-                <span className="username">{msg.username || 'User'}</span>
-                <span className="timestamp">
-                  {new Date(msg.timestamp).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
+              <div className={`max-w-[75%] rounded-lg p-3 ${msg.userId === userId ? 'bg-primary-green text-white bubble-sent' : 'bg-white text-gray-900 border border-gray-200 bubble-received'}`}>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className={`text-xs font-semibold ${msg.userId === userId ? 'text-green-100' : 'text-gray-700'}`}>{msg.username || 'User'}</span>
+                  <span className={`text-[10px] ${msg.userId === userId ? 'text-green-200' : 'text-gray-400'}`}>
+                    {new Date(msg.timestamp).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+                <div className="text-sm leading-relaxed break-words">{msg.message}</div>
               </div>
-              <div className="message-text">{msg.message}</div>
             </div>
           ))
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSendMessage} className="chat-input-form">
-        <div className="form-group">
+      <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-200">
+        <div className="flex gap-2">
           <input
             type="text"
             value={messageText}
@@ -106,18 +107,18 @@ export default function AuctionChat({
             placeholder="Type a message..."
             disabled={!isConnected}
             maxLength={1000}
-            className="message-input"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-green focus:ring-2 focus:ring-primary-green focus:ring-opacity-20 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
           />
           <button
             type="submit"
             disabled={!messageText.trim() || !isConnected}
-            className="btn btn-sm btn-primary"
+            className="bg-primary-green text-white font-semibold px-6 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             Send
           </button>
         </div>
         {!isConnected && (
-          <p className="connection-warning">
+          <p className="text-error-red text-xs mt-2 flex items-center gap-1">
             ⚠️ Connection lost. Messages cannot be sent.
           </p>
         )}
