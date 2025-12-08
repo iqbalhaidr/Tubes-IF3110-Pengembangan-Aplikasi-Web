@@ -6,6 +6,9 @@ import SellerAuctionList from './pages/SellerAuctionList';
 import CreateAuction from './pages/CreateAuction';
 import SellerAuctionManage from './pages/SellerAuctionManage';
 import ChatPage from './pages/ChatPage';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard'
+import FeatureGate, { FEATURES } from './components/admin/FeatureGate';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -107,69 +110,102 @@ export default function App() {
 
   // Allow both authenticated and guest users to access the app
   return (
-    <div className="app">
-      {/* Use shared Navbar component matching PHP styling */}
-      <Navbar user={user} onLogout={handleLogout} onBalanceUpdate={handleBalanceUpdate} />
+    <Routes>
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
 
-      <main className="app-main">
-              
-              <Routes>
-                {/* Buyer auction views - accessible by all */}
-                <Route path="/auctions" element={<AuctionList />} />
-                <Route path="/auction/:id" element={<AuctionDetail />} />
-                
-                {/* Seller auction routes - protected for sellers only */}
-                <Route 
-                  path="/manage-auctions" 
-                  element={
-                    user && user.role === 'SELLER' 
-                      ? <SellerAuctionList /> 
-                      : <Navigate to="/auctions" replace />
-                  } 
-                />
-                <Route 
-                  path="/manage-auctions/create" 
-                  element={
-                    user && user.role === 'SELLER' 
-                      ? <CreateAuction /> 
-                      : <Navigate to="/auctions" replace />
-                  } 
-                />
-                <Route 
-                  path="/manage-auctions/:id" 
-                  element={
-                    user && user.role === 'SELLER' 
-                      ? <SellerAuctionManage /> 
-                      : <Navigate to="/auctions" replace />
-                  } 
-                />
-                
-                {/* Chat route - requires authentication */}
-                <Route 
-                  path="/chat" 
-                  element={
-                    isAuthenticated 
-                      ? <ChatPage /> 
-                      : <Navigate to="/auth/login" replace />
-                  } 
-                />
-                
-                {/* Future routes for Milestone 2 */}
-                {/* <Route path="/admin" element={<AdminDashboard />} /> */}
-                
-                {/* Redirect any unmatched routes back to auctions */}
-                <Route path="*" element={<Navigate to="/auctions" replace />} />
-              </Routes>
-            </main>
+      <Route path="/*" element={
+        <div className="app">
+          {/* Use shared Navbar component matching PHP styling */}
+          <Navbar user={user} onLogout={handleLogout} onBalanceUpdate={handleBalanceUpdate} />
 
-      <footer className="app-footer">
-        <div className="footer-content">
-          <p>&copy; 2025 Nimonspedia - Auction Platform</p>
-          <p className="tech-stack">
-            Built with React 18 | Socket.io | Node.js Express
-          </p>
+          <main className="app-main">
+                  
+                  <Routes>
+                    {/* Buyer auction views - accessible by all */}
+                    <Route path="/auctions" element={
+                      <FeatureGate feature={FEATURES.AUCTION_ENABLED}>
+                        <AuctionList />
+                      </FeatureGate>
+                    } />
+
+                    <Route path="/auction/:id" element={
+                      <FeatureGate feature={FEATURES.AUCTION_ENABLED}>
+                        <AuctionDetail />
+                      </FeatureGate>
+                    } />
+                    
+                    {/* Seller auction routes - protected for sellers only */}
+                    <Route 
+                      path="/manage-auctions" 
+                      element={
+                        <FeatureGate feature={FEATURES.AUCTION_ENABLED}>
+                          {
+                            user && user.role === 'SELLER' 
+                            ? <SellerAuctionList /> 
+                            : <Navigate to="/auctions" replace />
+                          }
+                        </FeatureGate>
+                      } 
+                    />
+                    <Route 
+                      path="/manage-auctions/create" 
+                      element={
+                        <FeatureGate feature={FEATURES.AUCTION_ENABLED}>
+                          {
+                            user && user.role === 'SELLER' 
+                            ? <CreateAuction /> 
+                            : <Navigate to="/auctions" replace />
+                          }
+                        </FeatureGate>
+                      } 
+                    />
+                    <Route 
+                      path="/manage-auctions/:id" 
+                      element={
+                        <FeatureGate feature={FEATURES.AUCTION_ENABLED}>
+                          {
+                          user && user.role === 'SELLER' 
+                            ? <SellerAuctionManage /> 
+                            : <Navigate to="/auctions" replace />
+                          }
+                        </FeatureGate>
+                      } 
+                    />
+                    
+                    {/* Chat route - requires authentication */}
+                    <Route 
+                      path="/chat" 
+                      element={
+                        <FeatureGate feature={FEATURES.CHAT_ENABLED}>
+                          {
+                            isAuthenticated 
+                              ? <ChatPage /> 
+                              : <Navigate to="/auth/login" replace />
+                          }
+                        </FeatureGate>
+                      } 
+                    />
+                    
+                    {/* Future routes for Milestone 2 */}
+                    {/* <Route path="/admin" element={<AdminDashboard />} /> */}
+                    
+                    {/* Redirect any unmatched routes back to auctions */}
+                    <Route path="*" element={<Navigate to="/auctions" replace />} />
+                  </Routes>
+                </main>
+
+          <footer className="app-footer">
+            <div className="footer-content">
+              <p>&copy; 2025 Nimonspedia - Auction Platform</p>
+              <p className="tech-stack">
+                Built with React 18 | Socket.io | Node.js Express
+              </p>
+            </div>
+          </footer>
         </div>
-      </footer>
-    </div>
+      } />
+    </Routes>
   );
 }

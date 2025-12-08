@@ -1,0 +1,135 @@
+/**
+ * FeatureGate Component Styles
+ */
+
+/* Loading State */
+.feature-gate-loading {
+    min-height: 50vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Disabled Page */
+.feature-disabled-page {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.feature-disabled-content {
+    text-align: center;
+    max-width: 500px;
+}
+
+.feature-disabled-icon {
+    font-size: 80px;
+    margin-bottom: 24px;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.maintenance-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    color: #1565c0;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.feature-disabled-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+}
+
+.feature-disabled-description {
+    font-size: 16px;
+    color: var(--text-medium);
+    line-height: 1.6;
+    margin-bottom: 32px;
+    padding: 16px;
+    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+    border-radius: 12px;
+    border-left: 4px solid #ffca28;
+}
+
+.feature-disabled-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.feature-disabled-actions .btn {
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.feature-disabled-actions .btn-primary {
+    background: var(--primary-green);
+    color: white;
+}
+
+.feature-disabled-actions .btn-primary:hover {
+    background: var(--primary-green-hover);
+    transform: translateY(-1px);
+}
+
+.feature-disabled-actions .btn-secondary {
+    background: var(--background-gray);
+    color: var(--text-dark);
+}
+
+.feature-disabled-actions .btn-secondary:hover {
+    background: var(--border-color);
+}
+
+.feature-disabled-note {
+    font-size: 14px;
+    color: var(--text-light);
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .feature-disabled-title {
+        font-size: 22px;
+    }
+
+    .feature-disabled-icon {
+        font-size: 60px;
+    }
+
+    .feature-disabled-actions {
+        flex-direction: column;
+    }
+
+    .feature-disabled-actions .btn {
+        width: 100%;
+    }
+}
