@@ -31,11 +31,13 @@ const NewChatModal = ({ isOpen, onClose, onStoreSelect }) => {
     }, [isOpen, fetchStores]);
 
     useEffect(() => {
-        debouncedFetchStores(searchQuery);
+        if (isOpen) {
+            debouncedFetchStores(searchQuery);
+        }
         return () => {
             debouncedFetchStores.cancel();
         };
-    }, [searchQuery, debouncedFetchStores]);
+    }, [searchQuery, debouncedFetchStores, isOpen]);
 
     if (!isOpen) {
         return null;

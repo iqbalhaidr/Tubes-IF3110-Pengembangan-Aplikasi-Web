@@ -9,7 +9,9 @@ export const useSocket = () => {
 
 export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
+    const [chatSocket, setChatSocket] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [isChatConnected, setIsChatConnected] = useState(false);
 
     useEffect(() => {
         // Connect to the root namespace through the reverse proxy at /socket.io
@@ -17,7 +19,7 @@ export const SocketProvider = ({ children }) => {
             withCredentials: true,
             transports: ['websocket'],
             autoConnect: true,
-            path: '/socket.io', 
+            path: '/socket.io',
         });
 
         setSocket(newSocket);
@@ -44,16 +46,43 @@ export const SocketProvider = ({ children }) => {
             console.error('[WebSocket] Server Error:', error.message || error);
         });
 
+        // Connect to the /chat namespace for chat functionality
+        const newChatSocket = io('/chat', {
+            withCredentials: true,
+            transports: ['websocket'],
+            autoConnect: true,
+            path: '/socket.io',
+        });
+
+        setChatSocket(newChatSocket);
+
+        newChatSocket.on('connect', () => {
+            console.log('[WebSocket CHAT] Connected to /chat namespace. Socket ID:', newChatSocket.id);
+            setIsChatConnected(true);
+        });
+
+        newChatSocket.on('disconnect', (reason) => {
+            console.log('[WebSocket CHAT] Disconnected from /chat namespace. Reason:', reason);
+            setIsChatConnected(false);
+        });
+
+        newChatSocket.on('error', (error) => {
+            console.error('[WebSocket CHAT] Error:', error.message || error);
+        });
+
         // Cleanup on component unmount
         return () => {
-            console.log('[WebSocket] Disconnecting socket...');
+            console.log('[WebSocket] Disconnecting sockets...');
             newSocket.disconnect();
+            newChatSocket.disconnect();
         };
     }, []);
 
     const value = {
         socket,
+        chatSocket,
         isConnected,
+        isChatConnected,
     };
 
     return (

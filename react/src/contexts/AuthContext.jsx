@@ -30,6 +30,13 @@ export const AuthProvider = ({ children, user: initialUser }) => {
         }
     }, []);
 
+    // Fetch user on mount if no initialUser provided
+    useEffect(() => {
+        if (!initialUser) {
+            fetchUser();
+        }
+    }, [initialUser, fetchUser]);
+
     // Update currentUser when initialUser prop changes
     useEffect(() => {
         if (initialUser) {

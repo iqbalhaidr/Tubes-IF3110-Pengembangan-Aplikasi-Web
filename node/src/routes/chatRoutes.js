@@ -50,7 +50,7 @@ const authMiddleware = requireAuth;
  * Get all chat rooms for the current user
  */
 router.get('/rooms', authMiddleware, async (req, res) => {
-    const userId = req.user.user_id;
+    const userId = req.user.userId;
     const userRole = req.user.role;
 
     try {
@@ -66,8 +66,8 @@ router.get('/rooms', authMiddleware, async (req, res) => {
                     cr.last_message_at,
                     cr.unread_count,
                     s.store_name,
-                    s.logo_path as store_logo,
-                    u.username as other_username,
+                    s.store_logo_path as store_logo,
+                    u.name as other_username,
                     (SELECT content FROM chat_messages cm 
                      WHERE cm.store_id = cr.store_id AND cm.buyer_id = cr.buyer_id 
                      ORDER BY cm.created_at DESC LIMIT 1) as last_message_preview
@@ -87,8 +87,8 @@ router.get('/rooms', authMiddleware, async (req, res) => {
                     cr.last_message_at,
                     cr.unread_count,
                     s.store_name,
-                    u.username as other_username,
-                    u.profile_picture_path as buyer_avatar,
+                    u.name as other_username,
+                    NULL as buyer_avatar,
                     (SELECT content FROM chat_messages cm 
                      WHERE cm.store_id = cr.store_id AND cm.buyer_id = cr.buyer_id 
                      ORDER BY cm.created_at DESC LIMIT 1) as last_message_preview
@@ -102,7 +102,7 @@ router.get('/rooms', authMiddleware, async (req, res) => {
         }
 
         const result = await pool.query(query, params);
-        
+
         res.json({
             status: 'success',
             data: result.rows
@@ -121,7 +121,7 @@ router.get('/rooms', authMiddleware, async (req, res) => {
  * Create a new chat room or get existing one
  */
 router.post('/rooms', authMiddleware, async (req, res) => {
-    const userId = req.user.user_id;
+    const userId = req.user.userId;
     const userRole = req.user.role;
     const { store_id } = req.body;
 
@@ -151,7 +151,7 @@ router.post('/rooms', authMiddleware, async (req, res) => {
 
         if (existingRoom.rows.length > 0) {
             await client.query('COMMIT');
-            
+
             // Fetch full room details
             const roomDetails = await client.query(`
                 SELECT 
@@ -160,8 +160,8 @@ router.post('/rooms', authMiddleware, async (req, res) => {
                     cr.last_message_at,
                     cr.unread_count,
                     s.store_name,
-                    s.logo_path as store_logo,
-                    u.username as other_username
+                    s.store_logo_path as store_logo,
+                    u.name as other_username
                 FROM chat_room cr
                 JOIN store s ON cr.store_id = s.store_id
                 JOIN "user" u ON s.user_id = u.user_id
@@ -190,8 +190,8 @@ router.post('/rooms', authMiddleware, async (req, res) => {
                 cr.last_message_at,
                 cr.unread_count,
                 s.store_name,
-                s.logo_path as store_logo,
-                u.username as other_username
+                s.store_logo_path as store_logo,
+                u.name as other_username
             FROM chat_room cr
             JOIN store s ON cr.store_id = s.store_id
             JOIN "user" u ON s.user_id = u.user_id
@@ -219,7 +219,7 @@ router.post('/rooms', authMiddleware, async (req, res) => {
  * Get messages for a specific chat room
  */
 router.get('/rooms/:storeId/:buyerId/messages', authMiddleware, async (req, res) => {
-    const userId = req.user.user_id;
+    const userId = req.user.userId;
     const userRole = req.user.role;
     const { storeId, buyerId } = req.params;
     const { limit = 50, before } = req.query;
@@ -227,7 +227,7 @@ router.get('/rooms/:storeId/:buyerId/messages', authMiddleware, async (req, res)
     try {
         // Verify user has access to this room
         let hasAccess = false;
-        
+
         if (userRole === 'BUYER' && parseInt(buyerId) === userId) {
             hasAccess = true;
         } else if (userRole === 'SELLER') {
@@ -256,7 +256,7 @@ router.get('/rooms/:storeId/:buyerId/messages', authMiddleware, async (req, res)
                 cm.product_id,
                 cm.is_read,
                 cm.created_at,
-                u.username as sender_username
+                u.name as sender_username
             FROM chat_messages cm
             JOIN "user" u ON cm.sender_id = u.user_id
             WHERE cm.store_id = $1 AND cm.buyer_id = $2

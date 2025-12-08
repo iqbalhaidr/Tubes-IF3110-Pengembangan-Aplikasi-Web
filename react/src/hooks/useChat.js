@@ -3,14 +3,14 @@ import { useSocket } from '../contexts/SocketContext';
 import { nodeApi } from '../api';
 
 export const useChat = (currentUser) => {
-    const { socket, isConnected } = useSocket();
+    const { chatSocket, isChatConnected } = useSocket();
     const [rooms, setRooms] = useState([]);
     const [activeRoom, setActiveRoom] = useState(null);
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState({ rooms: false, messages: false });
     const [typingUsers, setTypingUsers] = useState([]);
     const typingTimers = useRef({});
-    
+
     // Fetch all chat rooms for the user
     const fetchRooms = useCallback(async () => {
         setLoading(prev => ({ ...prev, rooms: true }));
@@ -43,19 +43,19 @@ export const useChat = (currentUser) => {
     }, []);
 
     useEffect(() => {
-        // Fetch initial data when socket is connected
-        if (isConnected && currentUser) {
+        // Fetch initial data when chat socket is connected
+        if (isChatConnected && currentUser) {
             fetchRooms();
         }
-    }, [isConnected, currentUser, fetchRooms]);
+    }, [isChatConnected, currentUser, fetchRooms]);
 
     // Set up socket event listeners
     useEffect(() => {
-        if (!socket || !currentUser) return;
+        if (!chatSocket || !currentUser) return;
 
         const handleNewMessage = (data) => {
             const newMessage = data.message;
-            
+
             const isForActiveRoom = activeRoom && String(activeRoom.store_id) === String(newMessage.store_id) && String(activeRoom.buyer_id) === String(newMessage.buyer_id);
             const amISender = String(currentUser.user_id) === String(newMessage.sender_id);
 
@@ -69,7 +69,7 @@ export const useChat = (currentUser) => {
                 const roomIndex = prevRooms.findIndex(
                     r => String(r.store_id) === String(newMessage.store_id) && String(r.buyer_id) === String(newMessage.buyer_id)
                 );
-                
+
                 if (roomIndex > -1) {
                     const originalRoom = prevRooms[roomIndex];
 
@@ -98,7 +98,7 @@ export const useChat = (currentUser) => {
 
                     return [updatedRoom, ...filteredRooms];
                 }
-                
+
                 fetchRooms();
                 return prevRooms;
             });
@@ -134,39 +134,39 @@ export const useChat = (currentUser) => {
             });
         };
 
-        socket.on('new_message', handleNewMessage);
-        socket.on('user_typing', handleUserTyping);
-        socket.on('messages_read', handleMessagesRead);
+        chatSocket.on('new_message', handleNewMessage);
+        chatSocket.on('user_typing', handleUserTyping);
+        chatSocket.on('messages_read', handleMessagesRead);
 
         return () => {
-            socket.off('new_message', handleNewMessage);
-            socket.off('user_typing', handleUserTyping);
-            socket.off('messages_read', handleMessagesRead);
+            chatSocket.off('new_message', handleNewMessage);
+            chatSocket.off('user_typing', handleUserTyping);
+            chatSocket.off('messages_read', handleMessagesRead);
         };
-    }, [socket, currentUser, activeRoom, fetchRooms]);
+    }, [chatSocket, currentUser, activeRoom, fetchRooms]);
 
     const markRoomAsRead = useCallback((storeId, buyerId) => {
-        if (socket) {
-            socket.emit('mark_read', { storeId, buyerId });
+        if (chatSocket) {
+            chatSocket.emit('mark_read', { storeId, buyerId });
             // Also optimistically update the main room list
-            setRooms(prev => prev.map(r => 
+            setRooms(prev => prev.map(r =>
                 (r.store_id === storeId && r.buyer_id === buyerId)
-                ? { ...r, unread_count: 0 }
-                : r
+                    ? { ...r, unread_count: 0 }
+                    : r
             ));
         }
-    }, [socket]);
+    }, [chatSocket]);
 
     const selectRoom = useCallback((room) => {
         setTypingUsers([]);
-        
+
         setActiveRoom(room);
         if (room) {
             fetchMessages(room.store_id, room.buyer_id);
-            if (socket) {
-                socket.emit('join_room', { 
-                    storeId: room.store_id, 
-                    buyerId: room.buyer_id 
+            if (chatSocket) {
+                chatSocket.emit('join_room', {
+                    storeId: room.store_id,
+                    buyerId: room.buyer_id
                 });
             }
             // Mark messages as read when entering the room
@@ -174,12 +174,12 @@ export const useChat = (currentUser) => {
         } else {
             setMessages([]);
         }
-    }, [fetchMessages, socket, markRoomAsRead]);
+    }, [fetchMessages, chatSocket, markRoomAsRead]);
 
     const sendMessage = useCallback((messageData) => {
-        console.log('Attempting to send message...', { socket, activeRoom, messageData });
-        if (socket && socket.connected && activeRoom && messageData.content) {
-            socket.emit('send_message', {
+        console.log('Attempting to send message...', { chatSocket, activeRoom, messageData });
+        if (chatSocket && chatSocket.connected && activeRoom && messageData.content) {
+            chatSocket.emit('send_message', {
                 storeId: activeRoom.store_id,
                 buyerId: activeRoom.buyer_id,
                 messageType: messageData.messageType || 'text',
@@ -188,22 +188,22 @@ export const useChat = (currentUser) => {
             });
             console.log('Message emitted.');
         } else {
-            console.error('Cannot send message. Socket not connected or no active room.', { 
-                isConnected: socket?.connected, 
-                activeRoom 
+            console.error('Cannot send message. Chat socket not connected or no active room.', {
+                isConnected: chatSocket?.connected,
+                activeRoom
             });
         }
-    }, [socket, activeRoom]);
+    }, [chatSocket, activeRoom]);
 
     const emitTyping = useCallback((isTyping) => {
-        if (socket && activeRoom) {
-            socket.emit('typing', {
+        if (chatSocket && activeRoom) {
+            chatSocket.emit('typing', {
                 storeId: activeRoom.store_id,
                 buyerId: activeRoom.buyer_id,
                 isTyping
             });
         }
-    }, [socket, activeRoom]);
+    }, [chatSocket, activeRoom]);
 
     const createOrSelectRoom = useCallback(async (storeId) => {
         try {
