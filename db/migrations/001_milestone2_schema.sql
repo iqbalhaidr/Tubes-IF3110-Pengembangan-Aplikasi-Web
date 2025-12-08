@@ -152,7 +152,7 @@ $$ language 'plpgsql';
 CREATE TABLE push_subscriptions (
     subscription_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
-    endpoint TEXT NOT NULL,
+    endpoint TEXT NOT NULL UNIQUE,
     p256dh_key TEXT NOT NULL,
     auth_key TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
