@@ -18,7 +18,7 @@ const MessageBubble = ({ message }) => {
                 <img 
                     src={message.content} 
                     alt="Uploaded content" 
-                    className="rounded-lg max-w-full h-auto"
+                    className="rounded-lg max-w-full h-auto shadow-sm"
                     style={{ maxWidth: '200px' }}
                 />
             );
@@ -31,18 +31,18 @@ const MessageBubble = ({ message }) => {
                 return <div className="text-sm italic text-gray-500">[Invalid item preview]</div>;
             }
         }
-        return <p className="text-sm" style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>;
+        return <p className="text-sm font-medium" style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>;
     };
 
     return (
-        <div className={`flex my-1 ${isSender ? 'justify-end' : 'justify-start'}`}>
-            <div className={`relative max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${
+        <div className={`flex my-2 ${isSender ? 'justify-end' : 'justify-start'}`}>
+            <div className={`relative max-w-xs lg:max-w-md px-4 py-3 rounded-lg shadow-sm ${
                 isSender 
-                ? 'bg-primary-green text-white bubble-sent' 
-                : 'bg-white text-main-text bubble-received'
+                ? 'bg-primary-green text-white' 
+                : 'bg-white text-gray-900 border border-gray-200'
             }`}>
                 {renderContent()}
-                <div className="text-xs text-right mt-1 opacity-75 flex justify-end items-center">
+                <div className="text-xs text-right mt-2 opacity-80 flex justify-end items-center gap-1">
                     <span>{new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     {isSender && <ReadReceipt isRead={message.is_read} />}
                 </div>

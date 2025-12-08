@@ -44,9 +44,14 @@ export default function AuctionDetail() {
   // Handle auction expiration - call the end auction API
   const handleAuctionExpired = useCallback(async () => {
     try {
-      // Call the end auction API
-      await axios.put(`/api/node/auctions/${id}/end`);
-      console.log('[Auction] Auction ended, order created if there was a winner');
+      // Call the end auction API with credentials for proper session handling
+      const response = await axios.put(`/api/node/auctions/${id}/end`, {}, { withCredentials: true });
+      console.log('[Auction] Auction ended:', response.data);
+      if (response.data.order_id) {
+        console.log('[Auction] Order created:', response.data.order_id);
+      } else if (response.data.order_error) {
+        console.warn('[Auction] Order creation failed:', response.data.order_error);
+      }
       // Refetch to get updated auction status
       refetch();
     } catch (err) {
@@ -118,7 +123,7 @@ export default function AuctionDetail() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      <button onClick={() => navigate('/auctions')} className="mb-6 px-4 py-2 bg-gray-200 text-text-dark rounded-lg hover:bg-gray-300 transition-colors">
+      <button onClick={() => navigate('/auctions')} className="mb-8 inline-flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold">
         ← Back to Auctions
       </button>
 
@@ -126,27 +131,27 @@ export default function AuctionDetail() {
         {/* Left Column: Product Info & Countdown */}
         <div className="lg:col-span-2 space-y-6">
           {/* Product Image/Info */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="aspect-video w-full bg-gray-100 flex items-center justify-center">
               {productImageUrl ? (
                 <img src={productImageUrl} alt={auction.product_name} className="w-full h-full object-cover" />
               ) : (
-                <div className="text-gray-400 text-lg">No Image</div>
+                <div className="text-gray-400 text-lg font-medium">No Image</div>
               )}
             </div>
             <div className="p-6">
-              <h2 className="text-3xl font-bold text-text-dark mb-4">{auction.product_name}</h2>
-              <p className="text-text-muted mb-6 leading-relaxed">{auction.product_description}</p>
-              <div className="flex flex-wrap gap-4 text-sm">
-                <span className="flex items-center gap-2">
-                  <strong className="text-text-dark">Seller:</strong>
-                  <span className="text-text-muted">{auction.seller_username}</span>
-                </span>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">{auction.product_name}</h2>
+              <p className="text-gray-700 mb-6 leading-relaxed text-base">{auction.product_description}</p>
+              <div className="space-y-3 border-t border-gray-200 pt-6">
+                <div className="flex items-center justify-between">
+                  <strong className="text-gray-700 font-semibold">Seller:</strong>
+                  <span className="text-gray-900 font-medium">{auction.seller_username}</span>
+                </div>
                 {auction.seller_address && (
-                  <span className="flex items-center gap-2">
-                    <strong className="text-text-dark">Location:</strong>
-                    <span className="text-text-muted">{auction.seller_address}</span>
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <strong className="text-gray-700 font-semibold">Location:</strong>
+                    <span className="text-gray-900 font-medium">{auction.seller_address}</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -162,25 +167,25 @@ export default function AuctionDetail() {
 
           {/* Status Badge */}
           {!isAuctionActive && (
-            <div className={`bg-white rounded-xl shadow-md p-6 text-center ${
-              auction.status === 'ENDED' ? 'border-l-4 border-primary-green' : 'border-l-4 border-error-red'
+            <div className={`bg-white rounded-lg shadow-sm p-8 text-center border-l-4 ${
+              auction.status === 'ENDED' ? 'border-primary-green' : 'border-red-500'
             }`}>
               {auction.status === 'ENDED' && (
                 <>
-                  <strong className="block text-2xl text-text-dark mb-4">Auction Ended</strong>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Auction Ended</h3>
                   {auction.winner_id ? (
-                    <div className="space-y-2">
-                      <div className="text-sm text-text-muted uppercase tracking-wide">Winner</div>
-                      <div className="text-xl font-bold text-primary-green">{auction.winner_username}</div>
-                      <div className="text-2xl font-bold text-text-dark mt-2">Rp {parseFloat(auction.current_bid).toLocaleString('id-ID')}</div>
+                    <div className="space-y-3">
+                      <div className="text-sm text-gray-600 uppercase tracking-wider font-semibold">Winner</div>
+                      <div className="text-2xl font-bold text-primary-green mb-3">{auction.winner_username}</div>
+                      <div className="text-3xl font-bold text-gray-900">Rp {parseFloat(auction.current_bid).toLocaleString('id-ID')}</div>
                     </div>
                   ) : (
-                    <p className="text-text-muted">No bids were placed on this auction</p>
+                    <p className="text-gray-700 text-lg">No bids were placed on this auction</p>
                   )}
                 </>
               )}
               {auction.status === 'CANCELLED' && (
-                <strong className="block text-2xl text-error-red">Auction Cancelled</strong>
+                <h3 className="text-2xl font-bold text-red-600">Auction Cancelled</h3>
               )}
             </div>
           )}
@@ -208,25 +213,25 @@ export default function AuctionDetail() {
               )}
             </>
           ) : !isAuthenticated ? (
-            <div className="bg-white rounded-xl shadow-md p-6 text-center">
-              <h3 className="text-xl font-bold text-text-dark mb-3">Want to place a bid?</h3>
-              <p className="text-text-muted mb-4">Please log in to participate in this auction.</p>
-              <a href="/login" className="block w-full px-6 py-3 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium text-center">
+            <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Want to place a bid?</h3>
+              <p className="text-gray-600 mb-6">Please log in to participate in this auction.</p>
+              <a href="/login" className="block w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-bold text-center">
                 Login to Bid
               </a>
             </div>
           ) : isUserSeller ? (
-            <div className="bg-white rounded-xl shadow-md p-6 text-center">
-              <h3 className="text-xl font-bold text-text-dark mb-3">Your Auction</h3>
-              <p className="text-text-muted mb-4">You cannot bid on your own auction.</p>
-              <button onClick={() => navigate(`/manage-auctions/${id}`)} className="w-full px-6 py-3 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium">
+            <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Your Auction</h3>
+              <p className="text-gray-600 mb-6">You cannot bid on your own auction.</p>
+              <button onClick={() => navigate(`/manage-auctions/${id}`)} className="w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-bold">
                 Manage This Auction
               </button>
             </div>
           ) : !isAuctionActive ? (
-            <div className="bg-white rounded-xl shadow-md p-6 text-center">
-              <h3 className="text-xl font-bold text-text-dark mb-3">Auction Ended</h3>
-              <p className="text-text-muted">This auction is no longer accepting bids.</p>
+            <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Auction Ended</h3>
+              <p className="text-gray-600">This auction is no longer accepting bids.</p>
             </div>
           ) : null}
 
@@ -241,10 +246,10 @@ export default function AuctionDetail() {
               isConnected={isConnected}
             />
           ) : (
-            <div className="bg-white rounded-xl shadow-md p-6 text-center">
-              <h3 className="text-xl font-bold text-text-dark mb-3">Auction Chat</h3>
-              <p className="text-text-muted">
-                <a href="/login" className="text-primary-green hover:underline font-medium">Login</a> to join the conversation.
+            <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Auction Chat</h3>
+              <p className="text-gray-600">
+                <a href="/login" className="text-primary-green hover:underline font-semibold">Login</a> to join the conversation.
               </p>
             </div>
           )}

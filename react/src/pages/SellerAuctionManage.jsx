@@ -44,7 +44,13 @@ export default function SellerAuctionManage() {
   // Handle auction expiration
   const handleAuctionExpired = useCallback(async () => {
     try {
-      await axios.put(`/api/node/auctions/${id}/end`);
+      const response = await axios.put(`/api/node/auctions/${id}/end`, {}, { withCredentials: true });
+      console.log('[Auction] Auction ended:', response.data);
+      if (response.data.order_id) {
+        console.log('[Auction] Order created:', response.data.order_id);
+      } else if (response.data.order_error) {
+        console.warn('[Auction] Order creation failed:', response.data.order_error);
+      }
       refetch();
     } catch (err) {
       console.log('[Auction] End auction response:', err.response?.data?.error || err.message);

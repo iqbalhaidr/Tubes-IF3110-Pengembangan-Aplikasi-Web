@@ -22,7 +22,7 @@ export default function BidForm({
   }, [currentBid, minIncrement]);
 
   if (!auction) {
-    return <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-200 flex items-center justify-center min-h-[200px] text-gray-500">Loading auction data...</div>;
+    return <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 flex items-center justify-center min-h-[200px] text-gray-500 font-medium">Loading auction data...</div>;
   }
 
   const handleChange = (e) => {
@@ -42,7 +42,7 @@ export default function BidForm({
     const amount = parseFloat(bidAmount);
     if (amount < minimumBid) {
       setValidationError(
-        `Bid must be at least ${minimumBid.toLocaleString()}`
+        `Bid must be at least Rp ${minimumBid.toLocaleString('id-ID')}`
       );
       return;
     }
@@ -52,29 +52,29 @@ export default function BidForm({
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-md border-t-4 border-primary-green">
-      <div className="mb-5 rounded-lg overflow-hidden">
-        <div className="flex justify-between items-center p-3 border-b border-gray-200">
-          <span className="text-xs font-semibold text-gray-600">Current Bid:</span>
-          <span className="text-sm font-bold text-gray-900">
+    <div className="bg-white rounded-lg p-6 shadow-sm border border-primary-green border-t-4">
+      <div className="mb-6 space-y-2">
+        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+          <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Current Bid</span>
+          <span className="text-lg font-bold text-gray-900">
             Rp {currentBid.toLocaleString('id-ID')}
           </span>
         </div>
-        <div className="flex justify-between items-center p-3 border-b border-gray-200">
-          <span className="text-xs font-semibold text-gray-600">Minimum Increment:</span>
-          <span className="text-sm font-bold text-gray-900">
+        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+          <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Minimum Increment</span>
+          <span className="text-lg font-bold text-gray-900">
             Rp {minIncrement.toLocaleString('id-ID')}
           </span>
         </div>
-        <div className="flex justify-between items-center p-3.5 bg-gray-50 border-2 border-gray-200 rounded-lg -mx-3 -mb-px">
-          <span className="text-xs font-bold text-gray-900">Minimum Next Bid:</span>
-          <span className="text-base font-bold text-error-red">
+        <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border-2 border-orange-200">
+          <span className="text-xs font-bold text-gray-900 uppercase tracking-wide">Minimum Next Bid</span>
+          <span className="text-lg font-bold text-orange-600">
             Rp {minimumBid.toLocaleString('id-ID')}
           </span>
         </div>
         {auction.highest_bidder_username && (
-          <div className="flex justify-between items-center p-3 border-t border-gray-200 mt-1">
-            <span className="text-xs font-semibold text-gray-600">Highest Bidder:</span>
+          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Highest Bidder</span>
             <span className="text-sm font-bold text-gray-900">{auction.highest_bidder_username}</span>
           </div>
         )}
@@ -82,7 +82,7 @@ export default function BidForm({
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <label htmlFor="bidAmount" className="text-sm font-bold text-gray-900">Your Bid Amount (Rp)</label>
+          <label htmlFor="bidAmount" className="text-sm font-bold text-gray-900 uppercase tracking-wide">Your Bid Amount (Rp)</label>
           <input
             id="bidAmount"
             type="number"
@@ -92,18 +92,18 @@ export default function BidForm({
             min={minimumBid}
             step={auction.min_bid_increment}
             disabled={isLoading}
-            className={`w-full px-4 py-3 border-2 ${validationError ? 'border-error-red' : 'border-gray-200'} rounded-lg text-sm text-gray-900 bg-gray-50 hover:border-primary-green hover:bg-white focus:outline-none focus:border-primary-green focus:bg-white focus:ring-4 focus:ring-primary-green focus:ring-opacity-10 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed`}
+            className={`w-full px-4 py-3 border-2 ${validationError ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base font-medium text-gray-900 bg-white hover:border-primary-green focus:outline-none focus:border-primary-green focus:ring-2 focus:ring-primary-green focus:ring-opacity-30 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200`}
           />
           {validationError && (
-            <span className="text-error-red text-xs font-medium flex items-center gap-1">{validationError}</span>
+            <span className="text-red-600 text-xs font-semibold flex items-center gap-1">⚠ {validationError}</span>
           )}
-          {error && <span className="text-error-red text-xs font-medium flex items-center gap-1">{error}</span>}
+          {error && <span className="text-red-600 text-xs font-semibold flex items-center gap-1">⚠ {error}</span>}
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-gradient-to-br from-primary-green to-green-700 text-white font-bold py-3 px-6 rounded-lg hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400"
+          className="w-full bg-primary-green text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 hover:shadow-md active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary-green disabled:hover:shadow-sm text-base"
         >
           {isLoading ? 'Placing Bid...' : 'Place Bid'}
         </button>

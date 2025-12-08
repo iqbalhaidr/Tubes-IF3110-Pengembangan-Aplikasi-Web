@@ -40,20 +40,20 @@ export default function AuctionCountdown({ countdownSeconds, onExpired }) {
   };
 
   const getCountdownColors = () => {
-    if (!displaySeconds) return 'bg-gray-500 border-gray-400';
-    if (displaySeconds < 60) return 'bg-error-red border-red-600 animate-pulse';
-    if (displaySeconds < 300) return 'bg-warning-orange border-orange-600';
-    return 'bg-primary-green border-green-600';
+    if (!displaySeconds) return 'bg-gray-500 border-gray-600 text-white';
+    if (displaySeconds < 60) return 'bg-red-600 border-red-700 text-white animate-pulse';
+    if (displaySeconds < 300) return 'bg-orange-500 border-orange-600 text-white';
+    return 'bg-primary-green border-green-700 text-white';
   };
 
   return (
-    <div className={`${getCountdownColors()} rounded-xl p-6 shadow-lg border-2 text-white text-center mb-6`}>
-      <div className="text-sm font-semibold opacity-90 mb-2">Auction Ends In</div>
-      <div className="text-4xl font-bold tracking-tight">
+    <div className={`${getCountdownColors()} rounded-lg p-8 shadow-md border-2 text-center`}>
+      <div className="text-sm font-bold opacity-95 mb-3 uppercase tracking-wider">Auction Ends In</div>
+      <div className="text-5xl font-bold tracking-tight mb-3">
         {formatCountdown(displaySeconds)}
       </div>
       {displaySeconds && displaySeconds < 60 && (
-        <div className="mt-3 text-sm font-semibold animate-pulse">
+        <div className="text-sm font-bold animate-pulse">
           ⚠️ Auction ending soon!
         </div>
       )}

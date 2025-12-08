@@ -268,6 +268,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                   <div className="user-dropdown-menu" id="userDropdownMenu">
                     <a href="/buyer/profile" className="dropdown-item">Profile</a>
                     <a href="/buyer/order-history" className="dropdown-item">Order History</a>
+                    <a href="/chat" className="dropdown-item">Chat</a>
                     <a href="/auctions" className="dropdown-item">Live Auctions</a>
                     <button 
                       type="button" 
