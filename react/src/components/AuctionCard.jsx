@@ -56,7 +56,7 @@ export default function AuctionCard({ auction }) {
 
       <div className="p-4 flex-1 flex flex-col">
         <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2">{auction.product_name}</h3>
-        <p className="text-sm text-gray-600 mb-3 font-medium">by {auction.seller_username}</p>
+        <p className="text-sm text-gray-600 mb-3 font-medium">Toko {auction.seller_username}</p>
 
         <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
           <div className="flex flex-col">
@@ -70,12 +70,16 @@ export default function AuctionCard({ auction }) {
         </div>
 
         <div className="mb-3">
-          {auction.seconds_remaining !== undefined && (
+          {auction.seconds_remaining !== undefined && auction.seconds_remaining > 0 ? (
             <div className="flex justify-between items-center">
               <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Time Left</span>
               <span className={`text-sm font-bold ${auction.seconds_remaining < 3600 ? 'text-orange-600' : 'text-gray-700'}`}>
                 {formatTime(auction.seconds_remaining)}
               </span>
+            </div>
+          ) : (
+            <div className="text-center">
+              <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Auction Ended</span>
             </div>
           )}
         </div>
@@ -89,7 +93,6 @@ export default function AuctionCard({ auction }) {
           ) : (
             <div className="text-center">
               <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">No Bids Yet</span>
-              <span className="text-sm font-bold text-primary-green block mt-1">Be the first!</span>
             </div>
           )}
         </div>

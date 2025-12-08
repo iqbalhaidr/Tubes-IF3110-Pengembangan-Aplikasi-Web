@@ -215,10 +215,10 @@ export default function AuctionDetail() {
           ) : !isAuthenticated ? (
             <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 mb-3">Want to place a bid?</h3>
-              <p className="text-gray-600 mb-6">Please log in to participate in this auction.</p>
-              <a href="/login" className="block w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-bold text-center">
+              <p className="text-gray-600 mb-6">Log in to participate in this auction.</p>
+              <button onClick={() => window.location.href = '/auth/login'} className="block w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-bold text-center">
                 Login to Bid
-              </a>
+              </button>
             </div>
           ) : isUserSeller ? (
             <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
@@ -249,7 +249,7 @@ export default function AuctionDetail() {
             <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 mb-3">Auction Chat</h3>
               <p className="text-gray-600">
-                <a href="/login" className="text-primary-green hover:underline font-semibold">Login</a> to join the conversation.
+                <button onClick={() => window.location.href = '/auth/login'} className="text-primary-green hover:underline font-semibold bg-none border-none cursor-pointer">Login</button> to join the conversation.
               </p>
             </div>
           )}

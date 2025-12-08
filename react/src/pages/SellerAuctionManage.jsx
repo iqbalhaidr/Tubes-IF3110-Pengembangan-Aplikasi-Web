@@ -151,16 +151,16 @@ export default function SellerAuctionManage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      <button onClick={() => navigate('/manage-auctions')} className="mb-6 px-4 py-2 bg-gray-200 text-text-dark rounded-lg hover:bg-gray-300 transition-colors">
+      <button onClick={() => navigate('/manage-auctions')} className="mb-8 inline-flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold">
         ← Back to My Auctions
       </button>
 
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold text-text-dark">Manage Auction</h1>
-        <span className={`px-4 py-2 rounded-full font-medium text-sm ${
-          auction.status === 'ACTIVE' ? 'bg-success-green text-white' : 
-          auction.status === 'ENDED' ? 'bg-blue-500 text-white' : 
-          'bg-error-red text-white'
+      <div className="flex items-center justify-between mb-8 bg-white p-6 rounded-lg shadow-sm border-l-4 border-primary-green">
+        <h1 className="text-4xl font-bold text-gray-900">Manage Auction</h1>
+        <span className={`px-4 py-2 rounded-lg font-bold text-sm ${
+          auction.status === 'ACTIVE' ? 'bg-green-100 text-green-900' : 
+          auction.status === 'ENDED' ? 'bg-blue-100 text-blue-900' : 
+          'bg-red-100 text-red-900'
         }`}>
           {auction.status}
         </span>
@@ -170,31 +170,31 @@ export default function SellerAuctionManage() {
         {/* Left Column: Product Info & Countdown */}
         <div className="lg:col-span-2 space-y-6">
           {/* Product Image/Info */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
             <div className="aspect-video w-full bg-gray-100 flex items-center justify-center">
               {productImageUrl ? (
                 <img src={productImageUrl} alt={auction.product_name} className="w-full h-full object-cover" />
               ) : (
-                <div className="text-gray-400 text-lg">No Image</div>
+                <div className="text-gray-400 text-lg font-medium">No Image</div>
               )}
             </div>
             <div className="p-6">
-              <h2 className="text-3xl font-bold text-text-dark mb-4">{auction.product_name}</h2>
-              <p className="text-text-muted mb-6 leading-relaxed">{auction.product_description}</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">{auction.product_name}</h2>
+              <p className="text-gray-700 mb-6 leading-relaxed">{auction.product_description}</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <strong className="block text-text-dark mb-1">Current Bid:</strong>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <strong className="block text-gray-700 mb-2 font-semibold uppercase tracking-wide text-xs">Current Bid</strong>
                   <span className="text-2xl font-bold text-primary-green">Rp {parseFloat(auction.current_bid).toLocaleString('id-ID')}</span>
                 </div>
                 {auction.highest_bidder_username && (
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <strong className="block text-text-dark mb-1">Highest Bidder:</strong>
-                    <span className="text-lg font-medium text-text-dark">{auction.highest_bidder_username}</span>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <strong className="block text-gray-700 mb-2 font-semibold uppercase tracking-wide text-xs">Highest Bidder</strong>
+                    <span className="text-lg font-medium text-gray-900">{auction.highest_bidder_username}</span>
                   </div>
                 )}
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <strong className="block text-text-dark mb-1">Total Bids:</strong>
-                  <span className="text-lg font-medium text-text-dark">{bidHistory.length}</span>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <strong className="block text-gray-700 mb-2 font-semibold uppercase tracking-wide text-xs">Total Bids</strong>
+                  <span className="text-lg font-medium text-gray-900">{bidHistory.length}</span>
                 </div>
               </div>
             </div>
@@ -210,25 +210,25 @@ export default function SellerAuctionManage() {
 
           {/* Status Badge */}
           {!isAuctionActive && (
-            <div className={`bg-white rounded-xl shadow-md p-6 text-center ${
-              auction.status === 'ENDED' ? 'border-l-4 border-primary-green' : 'border-l-4 border-error-red'
+            <div className={`bg-white rounded-lg shadow-sm p-6 text-center border-l-4 ${
+              auction.status === 'ENDED' ? 'border-primary-green' : 'border-red-500'
             }`}>
               {auction.status === 'ENDED' && (
                 <>
-                  <strong className="block text-2xl text-text-dark mb-4">Auction Ended</strong>
+                  <strong className="block text-2xl text-gray-900 mb-4 font-bold">Auction Ended</strong>
                   {auction.winner_id ? (
                     <div className="space-y-2">
-                      <div className="text-sm text-text-muted uppercase tracking-wide">Winner</div>
+                      <div className="text-sm text-gray-600 uppercase tracking-wide font-semibold">Winner</div>
                       <div className="text-xl font-bold text-primary-green">{auction.winner_username}</div>
-                      <div className="text-2xl font-bold text-text-dark mt-2">Rp {parseFloat(auction.current_bid).toLocaleString('id-ID')}</div>
+                      <div className="text-2xl font-bold text-gray-900 mt-2">Rp {parseFloat(auction.current_bid).toLocaleString('id-ID')}</div>
                     </div>
                   ) : (
-                    <p className="text-text-muted">No bids were placed on this auction</p>
+                    <p className="text-gray-600 font-medium">No bids were placed on this auction</p>
                   )}
                 </>
               )}
               {auction.status === 'CANCELLED' && (
-                <strong className="block text-2xl text-error-red">Auction Cancelled</strong>
+                <strong className="block text-2xl text-red-600 font-bold">Auction Cancelled</strong>
               )}
             </div>
           )}
@@ -241,18 +241,18 @@ export default function SellerAuctionManage() {
         <div className="space-y-6">
           {/* Seller Actions */}
           {isAuctionActive && (
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-xl font-bold text-text-dark mb-4">Seller Actions</h3>
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Seller Actions</h3>
               
               {actionError && (
-                <div className="bg-error-red/10 border border-error-red text-error-red px-4 py-3 rounded-lg mb-4">{actionError}</div>
+                <div className="border-l-4 border-red-500 bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 font-medium">{actionError}</div>
               )}
               
               <div className="space-y-3">
                 {hasBids && (
                   <button 
                     onClick={handleAcceptBid}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-success-green to-success-green text-white rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                     disabled={actionLoading}
                   >
                     {actionLoading ? 'Processing...' : '✓ Accept Current Bid'}
@@ -262,7 +262,7 @@ export default function SellerAuctionManage() {
                 {!hasBids && (
                   <button 
                     onClick={handleCancelAuction}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-error-red to-error-red text-white rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                     disabled={actionLoading}
                   >
                     {actionLoading ? 'Processing...' : '✕ Cancel Auction'}
@@ -270,7 +270,7 @@ export default function SellerAuctionManage() {
                 )}
               </div>
               
-              <p className="text-sm text-text-muted mt-4">
+              <p className="text-sm text-gray-600 mt-4 leading-relaxed">
                 {hasBids 
                   ? 'Accept the current bid to end the auction immediately and create an order.'
                   : 'You can cancel the auction since there are no bids yet.'}
@@ -279,14 +279,14 @@ export default function SellerAuctionManage() {
           )}
 
           {!isAuctionActive && (
-            <div className="bg-white rounded-xl shadow-md p-6 text-center">
-              <h3 className="text-xl font-bold text-text-dark mb-3">Auction {auction.status === 'ENDED' ? 'Completed' : 'Cancelled'}</h3>
+            <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Auction {auction.status === 'ENDED' ? 'Completed' : 'Cancelled'}</h3>
               {auction.status === 'ENDED' && auction.winner_id ? (
-                <p className="text-text-muted mb-4">The order has been created for the winner. Check your orders page for details.</p>
+                <p className="text-gray-600 mb-4 leading-relaxed">The order has been created for the winner. Check your orders page for details.</p>
               ) : (
-                <p className="text-text-muted mb-4">This auction has ended.</p>
+                <p className="text-gray-600 mb-4 leading-relaxed">This auction has ended.</p>
               )}
-              <a href="/seller/orders" className="inline-block w-full px-6 py-3 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium text-center">
+              <a href="/seller/orders" className="inline-block w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-bold text-center active:scale-95">
                 View Orders
               </a>
             </div>

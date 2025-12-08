@@ -268,6 +268,15 @@ class AuthController {
         $current_user = AuthMiddleware::getCurrentUser();
         $user = $this->userModel->getUserById($current_user['user_id']);
 
+        // If user is a seller, fetch store balance
+        if ($user && $user['role'] === 'SELLER') {
+            $storeModel = new Store();
+            $store = $storeModel->findBySeller($user['user_id']);
+            if ($store) {
+                $user['storeBalance'] = isset($store['balance']) ? (int)$store['balance'] : 0;
+            }
+        }
+
         Response::success('User retrieved', $user, 200);
     }
 

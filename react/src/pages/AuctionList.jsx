@@ -44,18 +44,18 @@ export default function AuctionList() {
   return (
     <div className="w-full">
       <div className="bg-white p-6 mb-6 rounded-lg shadow-sm border-b-4 border-primary-green">
-        <div className="mb-4">
+        <div className="mb-4 flex items-center gap-4">
           <select
             id="status-filter"
             value={statusFilter}
             onChange={(e) => handleStatusChange(e.target.value)}
             className="text-2xl font-bold text-gray-900 bg-transparent border-none outline-none cursor-pointer hover:text-primary-green transition-colors"
           >
-            <option value="ACTIVE">Active Auctions</option>
-            <option value="ENDED">Ended Auctions</option>
+            <option value="ACTIVE">Your Active Auctions</option>
+            <option value="ENDED">Your Ended Auctions</option>
           </select>
         </div>
-        <p className="text-gray-600">
+        <p className="text-gray-600 text-sm font-medium">
           {loading ? 'Loading...' : `${pagination.totalCount} auctions available`}
         </p>
       </div>
@@ -113,7 +113,6 @@ export default function AuctionList() {
         </div>
       ) : sortedAuctions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center bg-gray-50 rounded-lg">
-          <div className="text-6xl mb-6">🔨</div>
           <h3 className="text-3xl font-bold text-gray-900 mb-3">No Active Auctions</h3>
           <p className="text-gray-600 mb-8 max-w-md text-lg">There are no active auctions at the moment. Check back later or create one from the seller dashboard!</p>
           <div className="flex gap-4">

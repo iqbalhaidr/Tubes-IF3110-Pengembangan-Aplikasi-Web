@@ -151,6 +151,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
   // Seller navigation links
   const sellerLinks = [
     { href: '/seller/dashboard', label: 'Dashboard', key: 'dashboard' },
+    { href: '/chat', label: 'Chat', key: 'chat' },
     { href: '/seller/products', label: 'Produk', key: 'products' },
     { href: '/seller/orders', label: 'Orders', key: 'orders' },
     { href: '/manage-auctions', label: 'Auctions', key: 'auctions' },

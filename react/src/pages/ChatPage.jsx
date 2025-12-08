@@ -35,7 +35,7 @@ const ChatPage = () => {
   }
 
   if (!currentUser) {
-    return <div className="h-screen w-full flex items-center justify-center"><p>Please <a href="/auth/login" className="text-blue-500">log in</a> to use the chat.</p></div>;
+    return <div className="h-screen w-full flex items-center justify-center"><p>Please <button onClick={() => window.location.href = '/auth/login'} className="text-blue-500 hover:underline font-semibold bg-none border-none cursor-pointer">log in</button> to use the chat.</p></div>;
   }
 
   const backUrl = currentUser.role === 'seller' ? '/seller/dashboard' : '/home';
