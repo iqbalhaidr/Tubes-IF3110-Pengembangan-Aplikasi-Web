@@ -66,8 +66,8 @@ router.get('/rooms', authMiddleware, async (req, res) => {
                     cr.last_message_at,
                     cr.unread_count,
                     s.store_name,
-                    s.logo_path as store_logo,
-                    u.username as other_username,
+                    s.store_logo_path as store_logo,
+                    u.name as other_username,
                     (SELECT content FROM chat_messages cm 
                      WHERE cm.store_id = cr.store_id AND cm.buyer_id = cr.buyer_id 
                      ORDER BY cm.created_at DESC LIMIT 1) as last_message_preview
@@ -87,8 +87,7 @@ router.get('/rooms', authMiddleware, async (req, res) => {
                     cr.last_message_at,
                     cr.unread_count,
                     s.store_name,
-                    u.username as other_username,
-                    u.profile_picture_path as buyer_avatar,
+                    u.name as other_username,
                     (SELECT content FROM chat_messages cm 
                      WHERE cm.store_id = cr.store_id AND cm.buyer_id = cr.buyer_id 
                      ORDER BY cm.created_at DESC LIMIT 1) as last_message_preview
@@ -160,8 +159,8 @@ router.post('/rooms', authMiddleware, async (req, res) => {
                     cr.last_message_at,
                     cr.unread_count,
                     s.store_name,
-                    s.logo_path as store_logo,
-                    u.username as other_username
+                    s.store_logo_path as store_logo,
+                    u.name as other_username
                 FROM chat_room cr
                 JOIN store s ON cr.store_id = s.store_id
                 JOIN "user" u ON s.user_id = u.user_id
@@ -190,8 +189,8 @@ router.post('/rooms', authMiddleware, async (req, res) => {
                 cr.last_message_at,
                 cr.unread_count,
                 s.store_name,
-                s.logo_path as store_logo,
-                u.username as other_username
+                s.store_logo_path as store_logo,
+                u.name as other_username
             FROM chat_room cr
             JOIN store s ON cr.store_id = s.store_id
             JOIN "user" u ON s.user_id = u.user_id
@@ -256,7 +255,7 @@ router.get('/rooms/:storeId/:buyerId/messages', authMiddleware, async (req, res)
                 cm.product_id,
                 cm.is_read,
                 cm.created_at,
-                u.username as sender_username
+                u.name as sender_username
             FROM chat_messages cm
             JOIN "user" u ON cm.sender_id = u.user_id
             WHERE cm.store_id = $1 AND cm.buyer_id = $2

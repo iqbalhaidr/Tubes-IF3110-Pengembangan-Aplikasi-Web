@@ -84,7 +84,6 @@ services:
       - "3000:3000"
     volumes:
       - ./node/src:/app/src
-      - ./node/.env:/app/.env
     depends_on:
       db:
         condition: service_healthy
@@ -102,6 +101,7 @@ services:
       - JWT_EXPIRE=3600
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_SUBJECT=${VAPID_SUBJECT}
       - SESSION_NAME=${SESSION_NAME}
       - REDIS_HOST=redis
       - REDIS_PORT=6379

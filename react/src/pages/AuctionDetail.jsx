@@ -3,9 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import BidForm from '../components/BidForm';
 import AuctionCountdown from '../components/AuctionCountdown';
-import AuctionChat from '../components/AuctionChat';
 import BidHistory from '../components/BidHistory';
-import { useAuction, useBid, useWebSocket } from '../hooks/useAuction';
+import { useAuction, useBid } from '../hooks/useAuction';
 
 export default function AuctionDetail() {
   const { id } = useParams();
@@ -24,22 +23,12 @@ export default function AuctionDetail() {
 
   const { auction, bidHistory, loading, error, refetch, refetchBids } = useAuction(id);
   const { bidAmount, setBidAmount, isSubmitting, bidError, bidSuccess, placeBid, validateBid } = useBid(id);
-  const {
-    isConnected,
-    countdownSeconds,
-    bidPlaced,
-    messages,
-    sendMessage,
-    setTyping,
-  } = useWebSocket(id, userId);
 
-  // When a bid is placed via WebSocket, immediately refresh auction and bid history
+  // When a bid is placed, immediately refresh auction and bid history
   useEffect(() => {
-    if (bidPlaced) {
-      refetch();
-      refetchBids();
-    }
-  }, [bidPlaced, refetch, refetchBids]);
+    refetch();
+    refetchBids();
+  }, [refetch, refetchBids]);
 
   // Handle auction expiration - call the end auction API
   const handleAuctionExpired = useCallback(async () => {
@@ -234,25 +223,6 @@ export default function AuctionDetail() {
               <p className="text-gray-600">This auction is no longer accepting bids.</p>
             </div>
           ) : null}
-
-          {/* Chat Section - only for authenticated users */}
-          {isAuthenticated ? (
-            <AuctionChat
-              auctionId={id}
-              userId={userId}
-              messages={messages}
-              onSendMessage={sendMessage}
-              onTyping={setTyping}
-              isConnected={isConnected}
-            />
-          ) : (
-            <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Auction Chat</h3>
-              <p className="text-gray-600">
-                <button onClick={() => window.location.href = '/auth/login'} className="text-primary-green hover:underline font-semibold bg-none border-none cursor-pointer">Login</button> to join the conversation.
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>

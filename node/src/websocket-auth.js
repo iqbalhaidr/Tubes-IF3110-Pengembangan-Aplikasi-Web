@@ -17,8 +17,6 @@ const parseUserIdFromPHPSession = (sessionData) => {
     return match ? parseInt(match[1], 10) : null;
 };
 
-// Extracts a specific cookie value from a cookie header string.
-
 const getCookie = (cookieHeader, cookieName) => {
     if (!cookieHeader) return null;
     const name = cookieName + "=";
@@ -36,33 +34,37 @@ const getCookie = (cookieHeader, cookieName) => {
     return null;
 }
 
-
 // Verify PHP session from Redis and get user data from PostgreSQL
-
 export const verifyPHPSession = async (rawCookieHeader) => {
   try {
+    console.log('[WebSocket Auth] Verifying session. Full cookie header:', rawCookieHeader);
     const sessionName = process.env.SESSION_NAME || 'NIMONSPEDIA_SESSION';
     const sessionId = getCookie(rawCookieHeader, sessionName);
     
     if (!sessionId) {
-        console.log('[WebSocket Auth] No session ID found in cookie.');
+        console.log(`[WebSocket Auth] Could not find cookie with name '${sessionName}'.`);
         return null;
     }
+    console.log(`[WebSocket Auth] Found session ID: ${sessionId}`);
 
     const redisKey = `PHPREDIS_SESSION:${sessionId}`;
+    console.log(`[WebSocket Auth] Constructed Redis key: ${redisKey}`);
+    
     const sessionData = await redisClient.get(redisKey);
 
     if (!sessionData) {
-        console.log(`[WebSocket Auth] Session data not found in Redis for key: ${redisKey}`);
+        console.log(`[WebSocket Auth] Session data NOT FOUND in Redis for key: ${redisKey}`);
         return null;
     }
+    console.log(`[WebSocket Auth] Found session data in Redis: ${sessionData}`);
 
     const userId = parseUserIdFromPHPSession(sessionData);
 
     if (!userId) {
-        console.log(`[WebSocket Auth] Could not parse userId from session data: ${sessionData}`);
+        console.log(`[WebSocket Auth] Could not parse user_id from session data.`);
         return null;
     }
+    console.log(`[WebSocket Auth] Parsed user_id: ${userId}`);
 
     // fetch user details from PostgreSQL
     const { rows } = await pool.query('SELECT user_id, name, email, role FROM "user" WHERE user_id = $1', [userId]);

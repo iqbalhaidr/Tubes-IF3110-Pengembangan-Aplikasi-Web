@@ -5,27 +5,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-// import webpush from 'web-push';
 import auctionRoutes from './routes/auctionRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import pushRoutes from './routes/pushRoutes.js';
 import { registerAuctionEvents } from './events/auctionEvents.js';
+import { socketAuthMiddleware } from './websocket-auth.js';
+import pool from './db.js';
 
 // Load environment variables
 dotenv.config();
-
-/*
-// Configure web-push
-const vapidDetails = {
-    publicKey: process.env.VAPID_PUBLIC_KEY,
-    privateKey: process.env.VAPID_PRIVATE_KEY,
-    subject: 'mailto:admin@example.com'
-};
-webpush.setVapidDetails(vapidDetails.subject, vapidDetails.publicKey, vapidDetails.privateKey);
-*/
-
-// Get __dirname equivalent in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Initialize Express app
 const app = express();
@@ -57,24 +45,12 @@ app.get('/api/node/health', (req, res) => {
 // ============== ROUTES ==============
 app.use('/api/node/auctions', auctionRoutes);
 app.use('/api/node/chat', chatRoutes);
-// TODO (uncomment): Add other route modules here
-// import authRoutes from './routes/auth.js';
-// import adminRoutes from './routes/admin.js';
-// import pushRoutes from './routes/push.js';
-// 
-// app.use('/api/node/auth', authRoutes);
-// app.use('/api/node/admin', adminRoutes);
-// app.use('/api/node/push', pushRoutes);
-
-import { socketAuthMiddleware } from './websocket-auth.js';
-import pool from './db.js';
+app.use('/api/node/push', pushRoutes);
 
 // ============== WEBSOCKET EVENTS ==============
 
 // Register auction-related WebSocket events
 const cleanupAuctionEvents = registerAuctionEvents(io);
-
-// WebSocket connection handler for general events
 io.on('connection', (socket) => {
   console.log(`[WebSocket] User connected to main namespace: ${socket.id}`);
   socket.on('disconnect', () => {
@@ -88,6 +64,16 @@ const chatNamespace = io.of('/chat');
 // Apply authentication middleware
 chatNamespace.use(socketAuthMiddleware);
 
+// Helper to get a socket ID for a given user ID within the chat namespace
+function getUserSocketId(userId) {
+    for (const [id, socket] of chatNamespace.sockets) {
+        if (socket.userId === userId) {
+            return id;
+        }
+    }
+    return null;
+}
+
 // Handle connections to the '/chat' namespace
 chatNamespace.on('connection', (socket) => {
   console.log(`[WebSocket CHAT] Authenticated user connected: ${socket.id}, UserID: ${socket.userId}, Role: ${socket.userRole}`);
@@ -96,8 +82,8 @@ chatNamespace.on('connection', (socket) => {
   socket.join(`user:${socket.userId}`);
   console.log(`[WebSocket CHAT] User ${socket.userId} joined their personal room: user:${socket.userId}`);
 
-  // Event: Join Room
-  // Spec: socket.emit('join_room', { storeId, buyerId })
+  // Join Room
+  // socket.emit('join_room', { storeId, buyerId })
   socket.on('join_room', async (data) => {
     console.log(`[WebSocket CHAT] Received 'join_room' event for user ${socket.userId}`, data);
     const { storeId, buyerId } = data;
@@ -106,7 +92,7 @@ chatNamespace.on('connection', (socket) => {
     }
 
     try {
-      // Authorize: Check if the user is the buyer or the owner of the store
+      // Check if the user is the buyer or the owner of the store
       let canAccess = false;
       if (socket.userRole === 'BUYER' && socket.userId === buyerId) {
         canAccess = true;
@@ -128,8 +114,6 @@ chatNamespace.on('connection', (socket) => {
 
       // Confirm joining to the client
       socket.emit('joined_room', { roomId: roomName });
-
-      // TODO: Mark messages as read for this user
       
     } catch (err) {
       console.error(`[WebSocket CHAT] Error in join_room for user ${socket.userId}:`, err);
@@ -137,18 +121,18 @@ chatNamespace.on('connection', (socket) => {
     }
   });
 
-  // Event: Send Message
+  // Send Message
   // socket.emit('send_message', { storeId, buyerId, messageType, content, productId })
   socket.on('send_message', async (data) => {
     let { storeId, buyerId, messageType, content, productId } = data;
     const roomName = `chat:${storeId}:${buyerId}`;
 
-    // Basic validation
+    // validation
     if (!storeId || !buyerId || !messageType || (!content && !productId)) {
       return socket.emit('error', { message: 'storeId, buyerId, messageType, and content/productId are required.' });
     }
 
-    // Authorization: Check if user is in the room
+    // Check if user is in the room
     if (!socket.rooms.has(roomName)) {
       return socket.emit('error', { message: 'Forbidden: You must join the room before sending a message.' });
     }
@@ -165,7 +149,6 @@ chatNamespace.on('connection', (socket) => {
           throw new Error(`Product with ID ${productId} not found.`);
         }
       }
-
       // Begin transaction
       await dbClient.query('BEGIN');
 
@@ -191,7 +174,7 @@ chatNamespace.on('connection', (socket) => {
       // Commit transaction
       await dbClient.query('COMMIT');
 
-      // --- REVISED BROADCAST LOGIC ---
+      // BROADCAST LOGIC
       const senderId = socket.userId;
       let recipientId;
 
@@ -199,23 +182,55 @@ chatNamespace.on('connection', (socket) => {
           // If sender is a buyer, the recipient is the seller who owns the store
           const storeOwnerQuery = await dbClient.query('SELECT user_id FROM store WHERE store_id = $1', [storeId]);
           recipientId = storeOwnerQuery.rows[0]?.user_id;
-      } else { // Sender's role is 'SELLER'
-          // If sender is a seller, the recipient is the buyer
+      } else {
           recipientId = buyerId;
       }
 
       // Broadcast the new message to both the sender and the recipient's personal rooms
       if (recipientId) {
-        // We emit to both sender and recipient to ensure both their UIs update.
+        // emit to both sender and recipient to ensure both their UIs update.
         chatNamespace.to(`user:${senderId}`).to(`user:${recipientId}`).emit('new_message', { message: newMessage });
         console.log(`[WebSocket CHAT] Message broadcasted to user:${senderId} and user:${recipientId}`);
       } else {
         console.error(`[WebSocket CHAT] Could not determine recipient for message in room chat:${storeId}:${buyerId}.`);
-        // Fallback to old room-based emit if something went wrong
         chatNamespace.to(roomName).emit('new_message', { message: newMessage });
       }
 
-      // (The old push notification logic that checked for active users in a room is no longer needed with this new broadcast approach)
+      // PUSH NOTIFICATION LOGIC
+      if (recipientId) {
+          const recipientSocketId = getUserSocketId(recipientId);
+          const isInRoom = recipientSocketId && chatNamespace.adapter.rooms.get(roomName)?.has(recipientSocketId);
+
+          console.log(`[Push Check] Recipient: ${recipientId}, Socket: ${recipientSocketId}, InRoom: ${isInRoom}`);
+
+          // Send push ONLY if recipient exists and is not in the room
+          if (!isInRoom) {
+              console.log(`[Push] Recipient ${recipientId} is not in the room. Sending push notification.`);
+              try {
+                  // Get sender's name for the notification
+                  const { rows: senderRows } = await dbClient.query('SELECT name FROM "user" WHERE user_id = $1', [senderId]);
+                  const senderName = senderRows.length > 0 ? senderRows[0].name : 'Someone';
+
+                  const body = messageType === 'text' ? content.substring(0, 100) :
+                               messageType === 'image' ? 'Sent you an image' :
+                               messageType === 'item_preview' ? 'Sent you a product' :
+                               'Sent you a message.';
+
+                  sendChatPushNotification(recipientId, {
+                      title: `New message from ${senderName}`,
+                      body,
+                      icon: '/icon.png',
+                      data: {
+                          type: 'chat',
+                          url: `/chat`
+                      }
+                  }).catch(err => console.error('[Push Service Error]', err));
+
+              } catch(pushError) {
+                  console.error('[Push] Error during push notification preparation:', pushError);
+              }
+          }
+      }
 
 
     } catch (err) {
@@ -227,8 +242,8 @@ chatNamespace.on('connection', (socket) => {
     }
   });
 
-  // Event: Typing Indicator
-  // Spec: socket.emit('typing', { storeId, buyerId, isTyping: true })
+  // Typing Indicator
+  // socket.emit('typing', { storeId, buyerId, isTyping: true })
   socket.on('typing', (data) => {
     const { storeId, buyerId, isTyping } = data;
     const roomName = `chat:${storeId}:${buyerId}`;
@@ -244,8 +259,8 @@ chatNamespace.on('connection', (socket) => {
     });
   });
 
-  // Event: Mark as Read
-  // Spec: socket.emit('mark_read', { storeId, buyerId, messageIds: [] })
+  // Mark as Read
+  // socket.emit('mark_read', { storeId, buyerId, messageIds: [] })
   socket.on('mark_read', async (data) => {
     const { storeId, buyerId } = data;
     const roomName = `chat:${storeId}:${buyerId}`;
@@ -298,7 +313,6 @@ chatNamespace.on('connection', (socket) => {
       
       await dbClient.query('COMMIT');
 
-      // Broadcast to the room that messages were read
       chatNamespace.to(roomName).emit('messages_read', {
         messageIds: readMessageIds,
         readBy: socket.userId
@@ -315,8 +329,8 @@ chatNamespace.on('connection', (socket) => {
     }
   });
 
-  // Event: Leave Room
-  // Spec: socket.emit('leave_room', { storeId, buyerId })
+  // Leave Room
+  // socket.emit('leave_room', { storeId, buyerId })
   socket.on('leave_room', (data) => {
     const { storeId, buyerId } = data;
     if (storeId && buyerId) {
@@ -337,9 +351,6 @@ chatNamespace.on('connection', (socket) => {
   });
 });
 
-
-// ============== ERROR HANDLING ==============
-
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
@@ -354,20 +365,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ============== SERVER STARTUP ==============
-
 const PORT = process.env.NODE_PORT || 3000;
 
 httpServer.listen(PORT, () => {
-  console.log(`
-╔════════════════════════════════════════╗
-║   Nimonspedia Node.js Backend Ready    ║
-╠════════════════════════════════════════╣
-║ HTTP Server:  http://localhost:${PORT}     ║
-║ WebSocket:    ws://localhost:${PORT}      ║
-║ Environment:  ${process.env.NODE_ENV || 'development'}            ║
-╚════════════════════════════════════════╝
-  `);
+  console.log(`   HTTP: http://localhost:${PORT}`);
+  console.log(`   WS:   ws://localhost:${PORT}`);
+  console.log(`   Env:  ${process.env.NODE_ENV || 'development'}\n`);
 });
 
 export { app, io };

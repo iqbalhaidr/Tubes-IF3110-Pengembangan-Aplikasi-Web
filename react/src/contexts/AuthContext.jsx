@@ -30,13 +30,16 @@ export const AuthProvider = ({ children, user: initialUser }) => {
         }
     }, []);
 
-    // Update currentUser when initialUser prop changes
+    // Fetch user on mount if no initialUser provided
     useEffect(() => {
         if (initialUser) {
             setCurrentUser(initialUser);
             setIsLoading(false);
+        } else if (isLoading) {
+            // Only fetch if we're in loading state and no initialUser
+            fetchUser();
         }
-    }, [initialUser]);
+    }, [initialUser, fetchUser]);
 
     const value = {
         currentUser,
