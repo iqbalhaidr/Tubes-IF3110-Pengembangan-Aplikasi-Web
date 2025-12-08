@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../auth.js';
 import { pool } from '../db.js';
+import { requireFeature, FEATURES } from '../middleware/featureFlagMiddleware.js';
 
 const router = express.Router();
 
@@ -283,7 +284,7 @@ router.get('/user/:userId/created', async (req, res) => {
  * Required: product_id, seller_id, initial_bid, min_bid_increment
  * Auth: Required
  */
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), async (req, res) => {
   const client = await pool.connect();
   try {
     const { product_id, initial_bid, min_bid_increment } = req.body;
@@ -344,7 +345,7 @@ router.post('/', authenticateToken, async (req, res) => {
  * Required: bid_amount
  * Auth: Required
  */
-router.post('/:id/bid', authenticateToken, async (req, res) => {
+router.post('/:id/bid', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), async (req, res) => {
   const { id } = req.params;
   const auctionIdNum = parseInt(id);
   const client = await pool.connect();
@@ -486,7 +487,7 @@ router.post('/:id/chat', authenticateToken, async (req, res) => {
  * Creates an order for the winner with status 'APPROVED'
  * Auth: Required (must be auction seller)
  */
-router.post('/:id/accept', authenticateToken, async (req, res) => {
+router.post('/:id/accept', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;

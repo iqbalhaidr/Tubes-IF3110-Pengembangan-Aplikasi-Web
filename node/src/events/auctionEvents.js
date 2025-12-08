@@ -1,4 +1,5 @@
 import { pool } from '../db.js';
+import { checkFeatureForSocket, FEATURES } from '../middleware/featureFlagMiddleware.js';
 
 /**
  * Helper function to create an order when an auction ends with a winner
@@ -118,6 +119,13 @@ export function registerAuctionEvents(io) {
             code: 'INVALID_BID',
             message: 'Missing required bid data',
           });
+          return;
+        }
+
+        // Jika auction disable maka tidak boleh bidding
+        const featureError = await checkFeatureForSocket(FEATURES.AUCTION_ENABLED, userId);
+        if (featureError) {
+          socket.emit('auction_error', featureError);
           return;
         }
 
