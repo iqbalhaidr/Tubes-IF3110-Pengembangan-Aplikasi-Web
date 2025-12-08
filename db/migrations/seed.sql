@@ -290,30 +290,15 @@ INSERT INTO auction_bids (auction_id, bidder_id, bid_amount, placed_at) VALUES
 (10, 12, 525000, CURRENT_TIMESTAMP - INTERVAL '2 days 12 hours'),
 (10, 14, 550000, CURRENT_TIMESTAMP - INTERVAL '2 days 6 hours');
 
--- Chat messages for auctions
-INSERT INTO chat_messages (auction_id, user_id, message, sent_at) VALUES
--- Chat for Auction 1 (Laptop Gaming)
-(1, 11, 'Apakah laptop ini masih garansi?', CURRENT_TIMESTAMP - INTERVAL '22 hours'),
-(1, 1, 'Iya, masih garansi resmi 1 tahun.', CURRENT_TIMESTAMP - INTERVAL '21 hours 50 minutes'),
-(1, 12, 'Spek lengkapnya gimana ya?', CURRENT_TIMESTAMP - INTERVAL '15 hours'),
-(1, 1, 'Core i7 12th Gen, RTX 4060, 16GB RAM, 512GB SSD', CURRENT_TIMESTAMP - INTERVAL '14 hours 30 minutes'),
-(1, 13, 'Bisa COD Jakarta?', CURRENT_TIMESTAMP - INTERVAL '8 hours'),
-(1, 1, 'Bisa, tapi tambah ongkir ya', CURRENT_TIMESTAMP - INTERVAL '7 hours 45 minutes'),
-
--- Chat for Auction 2 (Smartphone)
-(2, 14, 'Kondisi HP gimana?', CURRENT_TIMESTAMP - INTERVAL '1 day 18 hours'),
-(2, 6, 'Baru, masih segel resmi.', CURRENT_TIMESTAMP - INTERVAL '1 day 17 hours'),
-(2, 11, 'Warna apa yang ready?', CURRENT_TIMESTAMP - INTERVAL '1 day'),
-(2, 6, 'Hitam dan biru tersedia.', CURRENT_TIMESTAMP - INTERVAL '23 hours'),
-
--- Chat for Auction 5 (Gaun Pesta)
-(5, 15, 'Ukuran yang tersedia apa saja?', CURRENT_TIMESTAMP - INTERVAL '20 hours'),
-(5, 2, 'S, M, L tersedia. Mau yang mana?', CURRENT_TIMESTAMP - INTERVAL '19 hours 30 minutes'),
-(5, 12, 'Warna selain ini ada?', CURRENT_TIMESTAMP - INTERVAL '16 hours'),
-(5, 2, 'Ada merah maroon dan navy blue juga', CURRENT_TIMESTAMP - INTERVAL '15 hours 40 minutes');
-
--- Push subscriptions for testing
-INSERT INTO push_subscriptions (user_id, subscription_data) VALUES
-(11, '{"endpoint": "https://fcm.googleapis.com/fcm/send/test1", "keys": {"p256dh": "test_key_1", "auth": "test_auth_1"}}'),
-(12, '{"endpoint": "https://fcm.googleapis.com/fcm/send/test2", "keys": {"p256dh": "test_key_2", "auth": "test_auth_2"}}'),
-(13, '{"endpoint": "https://fcm.googleapis.com/fcm/send/test3", "keys": {"p256dh": "test_key_3", "auth": "test_auth_3"}}');
+-- Chat rooms (Store-Buyer pairs from different stores)
+INSERT INTO chat_room (store_id, buyer_id, last_message_at, unread_count, created_at) VALUES
+-- Store 1 (seller_id 1) with various buyers
+(1, 11, CURRENT_TIMESTAMP - INTERVAL '7 hours 45 minutes', 0, CURRENT_TIMESTAMP - INTERVAL '22 hours'),
+(1, 12, CURRENT_TIMESTAMP - INTERVAL '15 hours', 0, CURRENT_TIMESTAMP - INTERVAL '15 hours'),
+(1, 13, CURRENT_TIMESTAMP - INTERVAL '8 hours', 0, CURRENT_TIMESTAMP - INTERVAL '8 hours'),
+-- Store 2 (seller_id 6) with various buyers
+(2, 14, CURRENT_TIMESTAMP - INTERVAL '1 day 17 hours', 0, CURRENT_TIMESTAMP - INTERVAL '1 day 18 hours'),
+(2, 11, CURRENT_TIMESTAMP - INTERVAL '23 hours', 0, CURRENT_TIMESTAMP - INTERVAL '1 day'),
+-- Store 5 (seller_id 2) with various buyers
+(5, 15, CURRENT_TIMESTAMP - INTERVAL '20 hours', 0, CURRENT_TIMESTAMP - INTERVAL '20 hours'),
+(5, 12, CURRENT_TIMESTAMP - INTERVAL '15 hours 40 minutes', 0, CURRENT_TIMESTAMP - INTERVAL '16 hours');
