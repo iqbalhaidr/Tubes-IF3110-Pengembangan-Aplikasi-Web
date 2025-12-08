@@ -9,6 +9,8 @@
  * - Loading state during authentication
  * - User-friendly error messages
  * 
+ * Uses Tailwind CSS for styling.
+ * 
  * @module pages/admin/AdminLogin
  */
 
@@ -16,7 +18,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAdminAuth from '../hooks/useAdminAuth';
 import Spinner from '../components/admin/Spinner';
-import './AdminLogin.css';
 
 /**
  * Password validation rules
@@ -157,8 +158,8 @@ export default function AdminLogin() {
     // Show loading while checking auth
     if (authLoading) {
         return (
-            <div className="admin-login-page">
-                <div className="login-loading">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a2942] to-[#0d1421] p-5">
+                <div className="flex flex-col items-center justify-center">
                     <Spinner size="large" text="Checking authentication..." />
                 </div>
             </div>
@@ -166,36 +167,39 @@ export default function AdminLogin() {
     }
 
     return (
-        <div className="admin-login-page">
-            <div className="login-container">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a2942] to-[#0d1421] p-5 max-sm:p-0 max-sm:items-stretch">
+            <div className="w-full max-w-[420px] bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden max-sm:max-w-full max-sm:min-h-screen max-sm:rounded-none max-sm:flex max-sm:flex-col">
                 {/* Logo/Brand */}
-                <div className="login-header">
-                    <div className="login-logo">
-                        <span className="logo-icon">🛡️</span>
-                        <h1>Admin Panel</h1>
+                <div className="bg-gradient-to-br from-[#1a2942] to-[#2d4263] py-8 px-6 text-center text-white">
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                        <span className="text-[32px]">🛡️</span>
+                        <h1 className="text-2xl font-bold text-white m-0">Admin Panel</h1>
                     </div>
-                    <p className="login-subtitle">Nimonspedia Administration</p>
+                    <p className="text-sm text-white/70 m-0">Nimonspedia Administration</p>
                 </div>
 
                 {/* Login Form */}
-                <form className="login-form" onSubmit={handleSubmit} noValidate>
+                <form className="p-8 max-sm:flex-1 max-sm:flex max-sm:flex-col max-sm:justify-center" onSubmit={handleSubmit} noValidate>
                     {/* Auth Error Alert */}
                     {authError && (
-                        <div className="login-error-alert" role="alert">
-                            <span className="error-icon">⚠</span>
+                        <div className="flex items-center gap-3 py-3 px-4 bg-red-50 border border-red-200 rounded-lg mb-5 text-red-800 text-sm" role="alert">
+                            <span className="text-lg shrink-0">⚠</span>
                             <span>{authError}</span>
                         </div>
                     )}
 
                     {/* Email Field */}
-                    <div className={`form-group ${touched.email && formErrors.email ? 'has-error' : ''}`}>
-                        <label htmlFor="email" className="form-label">
+                    <div className="mb-5">
+                        <label
+                            htmlFor="email"
+                            className={`block text-sm font-semibold mb-2 ${touched.email && formErrors.email ? 'text-error-red' : 'text-text-dark'}`}
+                        >
                             Email Address
                         </label>
                         <input
                             type="email"
                             id="email"
-                            className="form-input"
+                            className={`w-full py-3 px-4 text-[15px] font-sans border-[1.5px] rounded-lg bg-white text-text-dark outline-none transition-all placeholder:text-text-light focus:border-primary-green focus:shadow-[0_0_0_3px_rgba(3,172,14,0.1)] disabled:bg-background-gray disabled:cursor-not-allowed ${touched.email && formErrors.email ? 'border-error-red' : 'border-border-color'}`}
                             placeholder="admin@nimonspedia.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -205,20 +209,23 @@ export default function AdminLogin() {
                             autoFocus
                         />
                         {touched.email && formErrors.email && (
-                            <span className="form-error">{formErrors.email}</span>
+                            <span className="block text-[13px] text-error-red mt-1.5">{formErrors.email}</span>
                         )}
                     </div>
 
                     {/* Password Field */}
-                    <div className={`form-group ${touched.password && formErrors.password ? 'has-error' : ''}`}>
-                        <label htmlFor="password" className="form-label">
+                    <div className="mb-5">
+                        <label
+                            htmlFor="password"
+                            className={`block text-sm font-semibold mb-2 ${touched.password && formErrors.password ? 'text-error-red' : 'text-text-dark'}`}
+                        >
                             Password
                         </label>
-                        <div className="password-input-wrapper">
+                        <div className="relative flex items-center">
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 id="password"
-                                className="form-input"
+                                className={`w-full py-3 px-4 pr-[50px] text-[15px] font-sans border-[1.5px] rounded-lg bg-white text-text-dark outline-none transition-all placeholder:text-text-light focus:border-primary-green focus:shadow-[0_0_0_3px_rgba(3,172,14,0.1)] disabled:bg-background-gray disabled:cursor-not-allowed ${touched.password && formErrors.password ? 'border-error-red' : 'border-border-color'}`}
                                 placeholder="Enter your password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -228,7 +235,7 @@ export default function AdminLogin() {
                             />
                             <button
                                 type="button"
-                                className="password-toggle"
+                                className="absolute right-3 bg-transparent border-none text-lg cursor-pointer p-1 opacity-70 transition-opacity hover:opacity-100"
                                 onClick={() => setShowPassword(!showPassword)}
                                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 tabIndex={-1}
@@ -237,27 +244,27 @@ export default function AdminLogin() {
                             </button>
                         </div>
                         {touched.password && formErrors.password && (
-                            <span className="form-error">{formErrors.password}</span>
+                            <span className="block text-[13px] text-error-red mt-1.5">{formErrors.password}</span>
                         )}
 
                         {/* Password Requirements */}
                         {password && touched.password && (
-                            <div className="password-requirements">
-                                <p className="requirements-title">Password must contain:</p>
-                                <ul className="requirements-list">
-                                    <li className={passwordValidation?.isLongEnough ? 'valid' : 'invalid'}>
+                            <div className="mt-3 p-3 bg-background-gray rounded-lg">
+                                <p className="text-xs font-semibold text-text-medium m-0 mb-2">Password must contain:</p>
+                                <ul className="list-none p-0 m-0 grid grid-cols-2 gap-x-3 gap-y-1 max-sm:grid-cols-1">
+                                    <li className={`text-xs flex items-center gap-1 ${passwordValidation?.isLongEnough ? 'text-success-green' : 'text-text-light'}`}>
                                         {passwordValidation?.isLongEnough ? '✓' : '○'} At least 8 characters
                                     </li>
-                                    <li className={passwordValidation?.hasUppercase ? 'valid' : 'invalid'}>
+                                    <li className={`text-xs flex items-center gap-1 ${passwordValidation?.hasUppercase ? 'text-success-green' : 'text-text-light'}`}>
                                         {passwordValidation?.hasUppercase ? '✓' : '○'} Uppercase letter (A-Z)
                                     </li>
-                                    <li className={passwordValidation?.hasLowercase ? 'valid' : 'invalid'}>
+                                    <li className={`text-xs flex items-center gap-1 ${passwordValidation?.hasLowercase ? 'text-success-green' : 'text-text-light'}`}>
                                         {passwordValidation?.hasLowercase ? '✓' : '○'} Lowercase letter (a-z)
                                     </li>
-                                    <li className={passwordValidation?.hasNumber ? 'valid' : 'invalid'}>
+                                    <li className={`text-xs flex items-center gap-1 ${passwordValidation?.hasNumber ? 'text-success-green' : 'text-text-light'}`}>
                                         {passwordValidation?.hasNumber ? '✓' : '○'} Number (0-9)
                                     </li>
-                                    <li className={passwordValidation?.hasSymbol ? 'valid' : 'invalid'}>
+                                    <li className={`text-xs flex items-center gap-1 ${passwordValidation?.hasSymbol ? 'text-success-green' : 'text-text-light'}`}>
                                         {passwordValidation?.hasSymbol ? '✓' : '○'} Symbol (!@#$%^&*)
                                     </li>
                                 </ul>
@@ -268,11 +275,11 @@ export default function AdminLogin() {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        className="login-btn"
+                        className="w-full py-3.5 px-6 text-base font-semibold font-sans bg-gradient-to-br from-primary-green to-[#028a0c] text-white border-none rounded-lg cursor-pointer transition-all mt-2 hover:enabled:-translate-y-0.5 hover:enabled:shadow-[0_4px_12px_rgba(3,172,14,0.3)] active:enabled:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed"
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? (
-                            <span className="btn-spinner">
+                            <span className="flex items-center justify-center gap-2.5">
                                 <Spinner size="small" color="#ffffff" />
                                 <span>Signing in...</span>
                             </span>
@@ -283,8 +290,8 @@ export default function AdminLogin() {
                 </form>
 
                 {/* Footer */}
-                <div className="login-footer">
-                    <a href="/" className="back-link">
+                <div className="px-6 pb-6 text-center">
+                    <a href="/" className="text-sm text-text-medium no-underline transition-colors hover:text-primary-green">
                         ← Back to Main Site
                     </a>
                 </div>

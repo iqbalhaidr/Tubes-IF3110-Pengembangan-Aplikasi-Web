@@ -3,6 +3,7 @@
  * 
  * Wraps content that requires a specific feature to be enabled.
  * Shows a "feature disabled" message if the feature is off.
+ * Uses Tailwind CSS for styling.
  * 
  * Usage:
  *   <FeatureGate feature="auction_enabled" fallback={<DisabledPage />}>
@@ -14,7 +15,6 @@
 
 import { useFeatureEnabled, FEATURES } from '../../hooks/useFeatureFlags';
 import Spinner from './Spinner';
-import './FeatureGate.css';
 
 /**
  * Feature gate component
@@ -40,7 +40,7 @@ export default function FeatureGate({
     // Show loading state
     if (loading) {
         return (
-            <div className="feature-gate-loading">
+            <div className="min-h-[50vh] flex items-center justify-center">
                 <Spinner size="medium" text="Loading..." />
             </div>
         );
@@ -74,40 +74,47 @@ function FeatureDisabledPage({ feature, reason, isGlobal }) {
     const info = featureInfo[feature] || { name: feature, icon: '🔒', description: 'This feature' };
 
     return (
-        <div className="feature-disabled-page">
-            <div className="feature-disabled-content">
-                <div className="feature-disabled-icon">{info.icon}</div>
+        <div className="min-h-[60vh] flex items-center justify-center py-10 px-5">
+            <div className="text-center max-w-[500px]">
+                <div className="text-[80px] mb-6 animate-float max-sm:text-[60px]">
+                    {info.icon}
+                </div>
 
                 {isGlobal && (
-                    <span className="maintenance-badge">🔧 Under Maintenance</span>
+                    <span className="inline-block py-1.5 px-4 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 rounded-full text-[13px] font-semibold mb-4">
+                        🔧 Under Maintenance
+                    </span>
                 )}
 
-                <h1 className="feature-disabled-title">
+                <h1 className="text-[28px] font-bold text-text-dark mb-4 max-sm:text-[22px]">
                     {info.name} is Currently Unavailable
                 </h1>
 
-                <p className="feature-disabled-description">
+                <p className="text-base text-text-medium leading-relaxed mb-8 p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl border-l-4 border-amber-400">
                     {reason || `${info.description} is temporarily unavailable. Please try again later.`}
                 </p>
 
-                <div className="feature-disabled-actions">
-                    <a href="/" className="btn btn-primary">
+                <div className="flex gap-3 justify-center flex-wrap mb-6 max-sm:flex-col">
+                    <a
+                        href="/"
+                        className="py-3 px-6 text-[15px] font-semibold rounded-lg no-underline border-none cursor-pointer transition-all bg-primary-green text-white hover:bg-primary-green-hover hover:-translate-y-0.5 max-sm:w-full"
+                    >
                         ← Back to Home
                     </a>
                     <button
                         onClick={() => window.location.reload()}
-                        className="btn btn-secondary"
+                        className="py-3 px-6 text-[15px] font-semibold rounded-lg no-underline border-none cursor-pointer transition-all bg-background-gray text-text-dark hover:bg-border-color max-sm:w-full"
                     >
                         Try Again
                     </button>
                 </div>
 
                 {isGlobal ? (
-                    <p className="feature-disabled-note">
+                    <p className="text-sm text-text-light m-0">
                         Our team is working on it. Please check back later.
                     </p>
                 ) : (
-                    <p className="feature-disabled-note">
+                    <p className="text-sm text-text-light m-0">
                         If you believe this is an error, please contact support.
                     </p>
                 )}

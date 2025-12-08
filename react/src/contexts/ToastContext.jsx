@@ -58,7 +58,7 @@ export function ToastProvider({ children }) {
         <ToastContext.Provider value={{ showToast, removeToast }}>
             {children}
             {/* Toast Container - renders all active toasts */}
-            <div className="toast-container">
+            <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-3 max-w-[400px] pointer-events-none max-sm:top-auto max-sm:bottom-5 max-sm:left-5 max-sm:right-5 max-sm:max-w-full">
                 {toasts.map(toast => (
                     <Toast
                         key={toast.id}

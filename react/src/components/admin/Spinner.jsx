@@ -2,11 +2,10 @@
  * Spinner Component - Loading Indicator
  * 
  * A customizable loading spinner with different sizes.
+ * Uses Tailwind CSS for styling.
  * 
  * @module components/common/Spinner
  */
-
-import './Spinner.css';
 
 /**
  * Loading spinner component
@@ -23,17 +22,27 @@ export default function Spinner({
     text,
     fullPage = false
 }) {
+    // Size classes mapping
+    const sizeClasses = {
+        small: 'w-5 h-5 border-2',
+        medium: 'w-10 h-10 border-[3px]',
+        large: 'w-[60px] h-[60px] border-4',
+    };
+
     const spinnerStyle = color ? { borderTopColor: color } : {};
 
     const content = (
-        <div className={`spinner-wrapper ${fullPage ? 'spinner-fullpage' : ''}`}>
+        <div
+            className={`flex flex-col items-center justify-center gap-3 ${fullPage ? 'fixed inset-0 bg-white/90 z-[9999]' : ''
+                }`}
+        >
             <div
-                className={`spinner spinner-${size}`}
+                className={`rounded-full border-border-color border-t-primary-green animate-spinner ${sizeClasses[size] || sizeClasses.medium}`}
                 style={spinnerStyle}
                 role="status"
                 aria-label="Loading"
             />
-            {text && <p className="spinner-text">{text}</p>}
+            {text && <p className="text-sm text-text-medium m-0">{text}</p>}
         </div>
     );
 
@@ -55,21 +64,35 @@ export function Skeleton({
     height,
     lines = 1
 }) {
-    const style = {
+    // Variant-specific default styles
+    const getVariantClasses = () => {
+        switch (variant) {
+            case 'circle':
+                return 'rounded-full';
+            case 'rect':
+                return 'rounded-lg';
+            case 'text':
+            default:
+                return 'rounded';
+        }
+    };
+
+    const defaultStyle = {
         width: width || (variant === 'text' ? '100%' : undefined),
         height: height || (variant === 'text' ? '16px' : variant === 'circle' ? '40px' : '100px'),
-        borderRadius: variant === 'circle' ? '50%' : variant === 'text' ? '4px' : '8px'
     };
+
+    const baseClasses = `bg-gradient-to-r from-background-gray via-[#e8e8e8] to-background-gray bg-[length:200%_100%] animate-skeleton ${getVariantClasses()}`;
 
     if (variant === 'text' && lines > 1) {
         return (
-            <div className="skeleton-lines">
+            <div className="flex flex-col">
                 {Array.from({ length: lines }).map((_, index) => (
                     <div
                         key={index}
-                        className="skeleton"
+                        className={baseClasses}
                         style={{
-                            ...style,
+                            ...defaultStyle,
                             width: index === lines - 1 ? '60%' : '100%',
                             marginBottom: index < lines - 1 ? '8px' : 0
                         }}
@@ -79,5 +102,5 @@ export function Skeleton({
         );
     }
 
-    return <div className="skeleton" style={style} />;
+    return <div className={baseClasses} style={defaultStyle} />;
 }
