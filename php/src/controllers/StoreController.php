@@ -197,11 +197,6 @@ class StoreController {
     public function getAllStores() {
         $userData = AuthMiddleware::getCurrentUser();
         if (!$userData) return;
-
-        if ($userData['role'] !== 'BUYER') {
-            Response::error('Forbidden: Only buyers can view the store list.', null, 403);
-            return;
-        }
         
         $searchQuery = $_GET['search'] ?? null;
 
