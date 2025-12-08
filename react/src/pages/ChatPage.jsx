@@ -5,18 +5,59 @@ import { useChat } from '../hooks/useChat';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api';
 import { VAPID_PUBLIC_KEY } from '../config';
+import usePushNotification from '../hooks/usePushNotification';
 
-// Helper function to convert VAPID key
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
+// component to handle the UI and logic for push notification subscriptions.
+const PushNotificationButton = ({ userId }) => {
+  const { 
+    permission, 
+    subscription, 
+    subscribeToPush, 
+    unsubscribeFromPush,
+    error,
+    loading 
+  } = usePushNotification();
+
+  const handleSubscribe = async () => {
+    try {
+      await subscribeToPush(userId);
+      alert('You are now subscribed to notifications!');
+    } catch (err) {
+      alert(`Subscription failed: ${err.message}`);
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    try {
+      await unsubscribeFromPush(userId);
+      alert('You have unsubscribed from notifications.');
+    } catch (err) {
+      alert(`Unsubscription failed: ${err.message}`);
+    }
+  };
+
+  if (loading) {
+    return <button className="w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-lg cursor-not-allowed" disabled>Loading...</button>;
   }
-  return outputArray;
-}
+
+  if (permission === 'denied') {
+    return <p className="text-sm text-red-500 text-center">Notifications blocked. Please enable them in your browser settings.</p>;
+  }
+
+  if (subscription) {
+    return (
+      <button onClick={handleUnsubscribe} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
+        Disable Notifications
+      </button>
+    );
+  }
+
+  return (
+    <button onClick={handleSubscribe} className="w-full bg-primary-green hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+      Enable Notifications
+    </button>
+  );
+};
 
 const ChatPage = () => {
   const { currentUser, isLoading: isAuthLoading } = useAuth();
@@ -58,9 +99,7 @@ const ChatPage = () => {
           loading={loading.rooms}
         />
         <div className="p-4 border-t border-secondary-text">
-          <button onClick={handleSubscribe} className="w-full bg-primary-green hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
-            Enable Notifications
-          </button>
+           <PushNotificationButton userId={currentUser.user_id} />
         </div>
       </div>
       <div className="w-2/3 flex flex-col">

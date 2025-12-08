@@ -10,6 +10,10 @@ import auctionRoutes from './routes/auctionRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import { registerAuctionEvents } from './events/auctionEvents.js';
+import { sendChatPushNotification } from './services/pushService.js';
+import { socketAuthMiddleware } from './websocket-auth.js';
+import pool from './db.js';
+import pushRoutes from './routes/pushRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -59,6 +63,7 @@ app.get('/api/node/health', (req, res) => {
 app.use('/api/node/auctions', auctionRoutes);
 app.use('/api/node/chat', chatRoutes);
 app.use('/api/node/admin', adminRoutes);
+app.use('/api/node/push', pushRoutes);
 // TODO (uncomment): Add other route modules here
 // import authRoutes from './routes/auth.js';
 // import pushRoutes from './routes/push.js';
@@ -66,8 +71,6 @@ app.use('/api/node/admin', adminRoutes);
 // app.use('/api/node/auth', authRoutes);
 // app.use('/api/node/push', pushRoutes);
 
-import { socketAuthMiddleware } from './websocket-auth.js';
-import pool from './db.js';
 
 // ============== WEBSOCKET EVENTS ==============
 
@@ -87,6 +90,16 @@ const chatNamespace = io.of('/chat');
 
 // Apply authentication middleware
 chatNamespace.use(socketAuthMiddleware);
+
+// Helper to get a socket ID for a given user ID within the chat namespace
+function getUserSocketId(userId) {
+    for (const [id, socket] of chatNamespace.sockets) {
+        if (socket.userId === userId) {
+            return id;
+        }
+    }
+    return null;
+}
 
 // Handle connections to the '/chat' namespace
 chatNamespace.on('connection', (socket) => {
@@ -129,7 +142,6 @@ chatNamespace.on('connection', (socket) => {
       // Confirm joining to the client
       socket.emit('joined_room', { roomId: roomName });
 
-      // TODO: Mark messages as read for this user
       
     } catch (err) {
       console.error(`[WebSocket CHAT] Error in join_room for user ${socket.userId}:`, err);
@@ -217,6 +229,41 @@ chatNamespace.on('connection', (socket) => {
 
       // (The old push notification logic that checked for active users in a room is no longer needed with this new broadcast approach)
 
+      // PUSH NOTIFICATION LOGIC
+      if (recipientId) {
+          const recipientSocketId = getUserSocketId(recipientId);
+          const isInRoom = recipientSocketId && chatNamespace.adapter.rooms.get(roomName)?.has(recipientSocketId);
+
+          console.log(`[Push Check] Recipient: ${recipientId}, Socket: ${recipientSocketId}, InRoom: ${isInRoom}`);
+
+          // Send push ONLY if recipient exists and is not in the room
+          if (!isInRoom) {
+              console.log(`[Push] Recipient ${recipientId} is not in the room. Sending push notification.`);
+              try {
+                  // Get sender's name for the notification
+                  const { rows: senderRows } = await dbClient.query('SELECT name FROM "user" WHERE user_id = $1', [senderId]);
+                  const senderName = senderRows.length > 0 ? senderRows[0].name : 'Someone';
+
+                  const body = messageType === 'text' ? content.substring(0, 100) :
+                               messageType === 'image' ? 'Sent you an image' :
+                               messageType === 'item_preview' ? 'Sent you a product' :
+                               'Sent you a message.';
+
+                  sendChatPushNotification(recipientId, {
+                      title: `New message from ${senderName}`,
+                      body,
+                      icon: '/icon.png',
+                      data: {
+                          type: 'chat',
+                          url: `/chat`
+                      }
+                  }).catch(err => console.error('[Push Service Error]', err));
+
+              } catch(pushError) {
+                  console.error('[Push] Error during push notification preparation:', pushError);
+              }
+          }
+      }
 
     } catch (err) {
       await dbClient.query('ROLLBACK');
