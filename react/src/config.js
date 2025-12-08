@@ -1,2 +1,2 @@
-// TODO: FIX JGN HARDCODE
-export const VAPID_PUBLIC_KEY = process.env.VITE_VAPID_PUBLIC_KEY || 'YOUR_VAPID_PUBLIC_KEY_FROM_ENV';
+// VAPID Public Key for Push Notifications
+export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BJf1lUofvHsnMP94qsXPo7iA8FBHVqs6WNNzrnqgOtl7t0llTahWGyvK0W0noV2vWlHfaaXiFeRafTfClY-TzNo';
