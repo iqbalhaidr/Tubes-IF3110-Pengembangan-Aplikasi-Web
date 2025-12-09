@@ -259,7 +259,7 @@ export default function CreateAuction() {
               <div className="space-y-2">
                 <label htmlFor="startTime" className="block text-sm font-medium text-text-dark">Scheduled Start Time (Optional)</label>
                 <div className="bg-green-50 border border-primary-green rounded-lg p-4 mb-3">
-                  <p className="text-sm text-green-900 font-medium mb-3">💡 Schedule your auction to start at a specific time</p>
+                  <p className="text-sm text-green-900 font-medium mb-3">Schedule your auction to start at a specific time</p>
                   <input
                     type="datetime-local"
                     id="startTime"
@@ -276,7 +276,7 @@ export default function CreateAuction() {
 
             {/* Auction Rules Info */}
             <div className="bg-green-50 border border-primary-green rounded-lg p-6">
-              <h3 className="text-xl font-bold text-text-dark mb-4">📋 Auction Rules</h3>
+              <h3 className="text-xl font-bold text-text-dark mb-4">Auction Rules</h3>
               <ul className="space-y-2 text-text-dark">
                 <li className="flex items-start gap-2">
                   <span className="text-primary-green mt-1">•</span>

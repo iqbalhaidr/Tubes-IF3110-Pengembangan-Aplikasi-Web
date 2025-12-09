@@ -97,7 +97,6 @@ export default function AuctionCard({ auction }) {
           ) : (
             <div className="text-center">
               <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">No Bids Yet</span>
-              <span className="text-sm font-bold text-primary-green block mt-1">Be the first!</span>
             </div>
           )}
         </div>

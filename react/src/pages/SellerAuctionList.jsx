@@ -92,14 +92,15 @@ export default function SellerAuctionList() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <div className="flex gap-2 border-b border-gray-300 mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">Manage Auctions</h1>
+          <div className="flex gap-2 border-b-2 border-gray-200">
             {['SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED'].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-4 py-2 font-semibold transition-all border-b-2 ${
+                className={`px-4 py-3 font-semibold transition-all border-b-2 -mb-0.5 ${
                   statusFilter === status
                     ? 'border-primary-green text-primary-green'
                     : 'border-transparent text-gray-600 hover:text-primary-green'
@@ -110,13 +111,13 @@ export default function SellerAuctionList() {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <p className="text-text-muted">
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:justify-end">
+          <p className="text-gray-600 font-medium">
             {loading ? 'Loading...' : `${sellerAuctions.length} auctions`}
           </p>
           <button 
             onClick={() => navigate('/manage-auctions/create')} 
-            className="px-6 py-3 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium"
+            className="px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-colors font-bold shadow-md"
           >
             + Create Auction
           </button>
@@ -124,26 +125,26 @@ export default function SellerAuctionList() {
       </div>
 
       {error && (
-        <div className="bg-error-red/10 border border-error-red rounded-lg p-4 mb-6 flex items-start justify-between">
+        <div className="bg-red-50 border border-red-300 rounded-lg p-4 mb-6 flex items-start justify-between">
           <div>
-            <strong className="text-error-red font-bold block mb-1">Error loading auctions</strong>
-            <p className="text-error-red">{error}</p>
+            <strong className="text-red-700 font-bold block mb-1">Error loading auctions</strong>
+            <p className="text-red-600">{error}</p>
           </div>
-          <button onClick={refetch} className="px-4 py-2 bg-primary-green text-white rounded-lg hover:bg-primary-green/90 transition-colors text-sm font-medium">
+          <button onClick={refetch} className="px-4 py-2 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-bold">
             Retry
           </button>
         </div>
       )}
 
       {/* Controls */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6 flex flex-col sm:flex-row gap-4 justify-between">
-        <div className="flex items-center gap-2">
-          <label htmlFor="sort" className="text-sm font-medium text-text-dark">Sort by:</label>
+      <div className="bg-white rounded-lg shadow-sm p-5 mb-6 flex flex-col sm:flex-row gap-4 justify-between border-t-4 border-primary-green">
+        <div className="flex items-center gap-3">
+          <label htmlFor="sort" className="text-sm font-bold text-gray-700 uppercase">Sort by:</label>
           <select
             id="sort"
             value={sortBy}
             onChange={(e) => handleSort(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent transition-all text-sm"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent transition-all text-sm font-medium text-gray-700 bg-white cursor-pointer"
           >
             <option value="countdown">Ending Soon</option>
             <option value="price-low">Price: Low to High</option>
@@ -152,13 +153,13 @@ export default function SellerAuctionList() {
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label htmlFor="limit" className="text-sm font-medium text-text-dark">Items per page:</label>
+        <div className="flex items-center gap-3">
+          <label htmlFor="limit" className="text-sm font-bold text-gray-700 uppercase">Per page:</label>
           <select
             id="limit"
             value={pagination.limit}
             onChange={(e) => changeLimit(parseInt(e.target.value))}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent transition-all text-sm"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent transition-all text-sm font-medium text-gray-700 bg-white cursor-pointer"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -170,20 +171,19 @@ export default function SellerAuctionList() {
 
       {/* Auctions Grid */}
       {loading && !auctions.length ? (
-        <div className="flex flex-col items-center justify-center py-20">
+        <div className="flex flex-col items-center justify-center py-24">
           <div className="w-12 h-12 border-4 border-primary-green border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-text-muted">Loading your auctions...</p>
+          <p className="text-gray-600 font-medium">Loading your auctions...</p>
         </div>
       ) : sortedAuctions.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-md p-12 text-center">
-          <div className="text-6xl mb-4">🔨</div>
-          <h3 className="text-2xl font-bold text-text-dark mb-3">No Auctions Yet</h3>
-          <p className="text-text-muted mb-6 max-w-md mx-auto">You haven't created any auctions yet. Create your first auction to start selling!</p>
+        <div className="bg-white rounded-lg shadow-sm p-16 text-center border border-gray-200">
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">No Auctions Yet</h3>
+          <p className="text-gray-600 mb-8 max-w-md mx-auto">You haven't created any auctions yet. Create your first auction to start selling!</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button onClick={() => navigate('/manage-auctions/create')} className="px-6 py-3 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium">
+            <button onClick={() => navigate('/manage-auctions/create')} className="px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-colors font-bold">
               Create Auction
             </button>
-            <a href="/seller/products" className="px-6 py-3 bg-gray-200 text-text-dark rounded-lg hover:bg-gray-300 transition-colors font-medium inline-block">
+            <a href="/seller/products" className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-bold inline-block">
               Manage Products
             </a>
           </div>
@@ -206,12 +206,12 @@ export default function SellerAuctionList() {
                         handleDeleteAuction(auction.id);
                       }}
                       disabled={deleteLoading[auction.id]}
-                      className="bg-primary-green hover:bg-primary-green/90 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all shadow-md"
+                      className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm font-bold transition-all shadow-md"
                     >
                       {deleteLoading[auction.id] ? '🗑️ Deleting...' : '🗑️ Delete'}
                     </button>
                     {deleteError[auction.id] && (
-                      <div className="absolute top-full right-0 mt-2 bg-white border border-error-red text-error-red text-xs p-3 rounded shadow-lg z-10 max-w-xs">
+                      <div className="absolute top-full right-0 mt-2 bg-white border border-red-500 text-red-700 text-xs p-3 rounded shadow-lg z-10 max-w-xs font-medium">
                         {deleteError[auction.id]}
                       </div>
                     )}
@@ -223,23 +223,23 @@ export default function SellerAuctionList() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 mt-8">
+            <div className="flex items-center justify-center gap-4 mt-12">
               <button
                 onClick={() => goToPage(pagination.page - 1)}
                 disabled={pagination.page === 1}
-                className="px-4 py-2 bg-white border border-gray-300 text-text-dark rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+                className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-800 rounded-lg hover:border-primary-green hover:text-primary-green transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold"
               >
                 ← Previous
               </button>
 
-              <span className="text-sm text-text-muted font-medium">
+              <span className="text-gray-700 font-bold px-4">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
 
               <button
                 onClick={() => goToPage(pagination.page + 1)}
                 disabled={pagination.page === pagination.totalPages}
-                className="px-4 py-2 bg-white border border-gray-300 text-text-dark rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+                className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-800 rounded-lg hover:border-primary-green hover:text-primary-green transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold"
               >
                 Next →
               </button>

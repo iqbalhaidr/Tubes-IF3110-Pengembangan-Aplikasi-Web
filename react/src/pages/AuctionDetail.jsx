@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import BidForm from '../components/BidForm';
 import AuctionCountdown from '../components/AuctionCountdown';
-import AuctionChat from '../components/AuctionChat';
 import BidHistory from '../components/BidHistory';
 import { useAuction, useBid, useWebSocket } from '../hooks/useAuction';
 
@@ -28,10 +27,12 @@ export default function AuctionDetail() {
     isConnected,
     countdownSeconds,
     bidPlaced,
-    messages,
-    sendMessage,
-    setTyping,
   } = useWebSocket(id, userId);
+
+  const isAuctionActive = auction?.status === 'ACTIVE';
+  const isAuctionScheduled = auction?.status === 'SCHEDULED';
+  const isUserSeller = userId && userId === auction?.seller_id;
+  const canBid = isAuthenticated && !isUserSeller && isAuctionActive;
 
   // Auto-refetch for scheduled auctions every 5 seconds
   useEffect(() => {
@@ -116,11 +117,6 @@ export default function AuctionDetail() {
       </div>
     );
   }
-
-  const isAuctionActive = auction.status === 'ACTIVE';
-  const isAuctionScheduled = auction.status === 'SCHEDULED';
-  const isUserSeller = userId && userId === auction.seller_id;
-  const canBid = isAuthenticated && !isUserSeller && isAuctionActive;
 
   // Format product image path - PHP stores as /public/images/products/X.jpg
   const getImageUrl = (imagePath) => {
@@ -274,25 +270,6 @@ export default function AuctionDetail() {
               <p className="text-gray-600">This auction is no longer accepting bids.</p>
             </div>
           ) : null}
-
-          {/* Chat Section - only for authenticated users */}
-          {isAuthenticated ? (
-            <AuctionChat
-              auctionId={id}
-              userId={userId}
-              messages={messages}
-              onSendMessage={sendMessage}
-              onTyping={setTyping}
-              isConnected={isConnected}
-            />
-          ) : (
-            <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Auction Chat</h3>
-              <p className="text-gray-600">
-                <a href="/login" className="text-primary-green hover:underline font-semibold">Login</a> to join the conversation.
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>
