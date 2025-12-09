@@ -30,11 +30,11 @@ export const FEATURES = {
  */
 export async function checkFeatureAccess(featureFlag, userId = null) {
     try {
-        // 1. Check global feature flag first
+        // 1. Check global feature flag first (user_id IS NULL = global)
         const globalResult = await pool.query(
-            `SELECT is_enabled, disable_reason 
-       FROM global_feature_flags 
-       WHERE feature_flag = $1`,
+            `SELECT is_enabled, reason 
+       FROM user_feature_access 
+       WHERE user_id IS NULL AND feature_name = $1`,
             [featureFlag]
         );
 
@@ -50,17 +50,17 @@ export async function checkFeatureAccess(featureFlag, userId = null) {
         // 2. If userId provided, check user-specific flag
         if (userId !== null) {
             const userResult = await pool.query(
-                `SELECT access_enabled, disable_reason 
+                `SELECT is_enabled, reason 
          FROM user_feature_access 
-         WHERE user_id = $1 AND feature_flag = $2`,
+         WHERE user_id = $1 AND feature_name = $2`,
                 [userId, featureFlag]
             );
 
             // If user has specific restriction
-            if (userResult.rows.length > 0 && !userResult.rows[0].access_enabled) {
+            if (userResult.rows.length > 0 && !userResult.rows[0].is_enabled) {
                 return {
                     enabled: false,
-                    reason: userResult.rows[0].disable_reason || 'This feature has been disabled for your account.',
+                    reason: userResult.rows[0].reason || 'This feature has been disabled for your account.',
                     isGlobal: false
                 };
             }

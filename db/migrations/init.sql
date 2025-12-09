@@ -269,51 +269,32 @@ BEFORE UPDATE ON push_preferences
 FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
 
 -- ============================================
--- 6. FEATURE FLAGS
+-- 6. FEATURE FLAGS (Unified Table)
 -- ============================================
+-- Single table for both global flags (user_id = NULL) and user-specific flags
 
-CREATE TABLE IF NOT EXISTS user_feature_access (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    feature_flag VARCHAR(100) NOT NULL,
-    access_enabled BOOLEAN DEFAULT true,
-    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE user_feature_access (
+    access_id SERIAL PRIMARY KEY,
+    user_id INT NULL,  -- NULL = global flag, otherwise user-specific
+    feature_name feature_name_enum NOT NULL,
+    is_enabled BOOLEAN DEFAULT TRUE,
+    reason TEXT,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-    disable_reason TEXT,
-    disabled_at TIMESTAMP WITH TIME ZONE,
-    disabled_by INTEGER, -- Optional: Add REFERENCES admin(admin_id) if you want strict constraints
-    
     -- Constraints
     CONSTRAINT fk_feature_user FOREIGN KEY (user_id) REFERENCES "user"(user_id) ON DELETE CASCADE,
-    CONSTRAINT unique_user_feature UNIQUE(user_id, feature_flag)
+    CONSTRAINT unique_user_feature_rule UNIQUE NULLS NOT DISTINCT (user_id, feature_name)
 );
+
+-- Trigger for auto-updating timestamp
+CREATE TRIGGER update_feature_access_timestamp
+BEFORE UPDATE ON user_feature_access
+FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
 
 -- Indexes for feature flag queries
 CREATE INDEX IF NOT EXISTS idx_feature_user ON user_feature_access(user_id);
-CREATE INDEX IF NOT EXISTS idx_feature_flag ON user_feature_access(feature_flag);
-CREATE INDEX IF NOT EXISTS idx_feature_enabled ON user_feature_access(access_enabled);
-
--- Catatan: Pake yang lama dulu aja yang bang, nanti gw coba untuk sesuaikan dengan skema yang baru ini
--- CREATE TABLE user_feature_access (
---     access_id SERIAL PRIMARY KEY,
---     user_id INT NULL,
---     feature_name feature_name_enum NOT NULL,
---     is_enabled BOOLEAN DEFAULT TRUE,
---     reason TEXT,
---     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
---     CONSTRAINT fk_feature_user FOREIGN KEY (user_id) REFERENCES "user"(user_id) ON DELETE CASCADE,
---     CONSTRAINT unique_user_feature_rule UNIQUE NULLS NOT DISTINCT (user_id, feature_name)
--- );
-
--- CREATE TRIGGER update_feature_access_timestamp
--- BEFORE UPDATE ON user_feature_access
--- FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
-
--- -- Indexes diperbaiki (sesuai nama kolom yang benar)
--- CREATE INDEX IF NOT EXISTS idx_feature_user ON user_feature_access(user_id);
--- CREATE INDEX IF NOT EXISTS idx_feature_name ON user_feature_access(feature_name); -- FIX: feature_flag -> feature_name
--- CREATE INDEX IF NOT EXISTS idx_feature_enabled ON user_feature_access(is_enabled); -- FIX: access_enabled -> is_enabled
+CREATE INDEX IF NOT EXISTS idx_feature_name ON user_feature_access(feature_name);
+CREATE INDEX IF NOT EXISTS idx_feature_enabled ON user_feature_access(is_enabled);
 
 -- ============================================
 -- 7. VIEWS
@@ -383,34 +364,16 @@ CREATE TABLE IF NOT EXISTS admin (
 CREATE INDEX IF NOT EXISTS idx_admin_email ON admin(email);
 
 -- ============================================
--- GLOBAL FEATURE FLAGS TABLE
--- ============================================
--- System-wide feature toggles that affect all users
--- When disabled, features are in "maintenance mode"
-
-CREATE TABLE IF NOT EXISTS global_feature_flags (
-    id SERIAL PRIMARY KEY,
-    feature_flag VARCHAR(100) UNIQUE NOT NULL,
-    is_enabled BOOLEAN DEFAULT true NOT NULL,
-    disable_reason TEXT,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_by INTEGER REFERENCES admin(admin_id) ON DELETE SET NULL
-);
-
--- Index for faster flag lookups
-CREATE INDEX IF NOT EXISTS idx_global_flags_feature ON global_feature_flags(feature_flag);
-
--- ============================================
 -- INSERT DEFAULT DATA
 -- ============================================
 
--- Insert default global flags (only if they don't exist)
-INSERT INTO global_feature_flags (feature_flag, is_enabled) 
+-- Insert default global flags (user_id = NULL means global)
+INSERT INTO user_feature_access (user_id, feature_name, is_enabled) 
 VALUES 
-    ('auction_enabled', true),
-    ('chat_enabled', true),
-    ('checkout_enabled', true)
-ON CONFLICT (feature_flag) DO NOTHING;
+    (NULL, 'auction_enabled', true),
+    (NULL, 'chat_enabled', true),
+    (NULL, 'checkout_enabled', true)
+ON CONFLICT (user_id, feature_name) DO NOTHING;
 
 -- Insert hardcoded admin account
 -- Password: Admin@1234 (bcrypt hashed with cost 10)
@@ -440,15 +403,16 @@ SELECT
     COALESCE(
         json_agg(
             json_build_object(
-                'feature_flag', ufa.feature_flag,
-                'access_enabled', ufa.access_enabled,
-                'disable_reason', ufa.disable_reason,
-                'disabled_at', ufa.disabled_at
+                'feature_name', ufa.feature_name,
+                'is_enabled', ufa.is_enabled,
+                'reason', ufa.reason,
+                'updated_at', ufa.updated_at
             )
-        ) FILTER (WHERE ufa.feature_flag IS NOT NULL),
+        ) FILTER (WHERE ufa.feature_name IS NOT NULL),
         '[]'::json
     ) as feature_flags
 FROM "user" u
 LEFT JOIN user_feature_access ufa ON u.user_id = ufa.user_id
 GROUP BY u.user_id, u.name, u.email, u.role, u.balance, u.created_at
 ORDER BY u.user_id;
+
