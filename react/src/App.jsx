@@ -118,7 +118,7 @@ export default function App() {
       <Route path="/*" element={
         <div className="app">
           {/* Use shared Navbar component matching PHP styling */}
-          <Navbar user={user} onLogout={handleLogout} onBalanceUpdate={handleBalanceUpdate} />
+          <Navbar key={user?.user_id || 'guest'} user={user} onLogout={handleLogout} onBalanceUpdate={handleBalanceUpdate} />
 
           <main className="app-main">
                   
