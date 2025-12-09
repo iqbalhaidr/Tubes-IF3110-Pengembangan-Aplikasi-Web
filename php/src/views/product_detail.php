@@ -63,28 +63,40 @@
                 <h4>Atur Jumlah</h4>
                 
                 <?php if ($isUserLoggedIn): ?>
-                    <div id="cartForm">
-                        <div class="quantity-selector">
-                            <button id="qty-minus" class="qty-btn" disabled aria-label="Kurangi jumlah">–</button>
-                            <label for="qty-input" class="sr-only">Jumlah produk</label>
-                            <input type="number" id="qty-input" value="1" min="1" 
-                                   max="<?php echo $product['stock']; ?>" 
-                                   data-max-stock="<?php echo $product['stock']; ?>"
-                                   aria-label="Jumlah produk yang ingin ditambahkan">
-                            <button id="qty-plus" class="qty-btn" 
-                                   aria-label="Tambah jumlah"
-                                   <?php echo ($product['stock'] <= 1) ? 'disabled' : ''; ?>>+</button>
-                        </div>
-                        <span class="stock-info">
-                            Stok tersisa: <strong><?php echo $product['stock']; ?></strong>
-                        </span>
+                    <?php
+                        if (!class_exists('FeatureFlag')) {
+                            require_once __DIR__ . '/../../utils/FeatureFlag.php';
+                        }
+                        $userId = $current_user['user_id'] ?? null;
+                    ?>
+                    <?php if (FeatureFlag::isEnabled(FeatureFlag::CHECKOUT_ENABLED, $userId)): ?>
+                        <div id="cartForm">
+                            <div class="quantity-selector">
+                                <button id="qty-minus" class="qty-btn" disabled aria-label="Kurangi jumlah">–</button>
+                                <label for="qty-input" class="sr-only">Jumlah produk</label>
+                                <input type="number" id="qty-input" value="1" min="1" 
+                                       max="<?php echo $product['stock']; ?>" 
+                                       data-max-stock="<?php echo $product['stock']; ?>"
+                                       aria-label="Jumlah produk yang ingin ditambahkan">
+                                <button id="qty-plus" class="qty-btn" 
+                                       aria-label="Tambah jumlah"
+                                       <?php echo ($product['stock'] <= 1) ? 'disabled' : ''; ?>>+</button>
+                            </div>
+                            <span class="stock-info">
+                                Stok tersisa: <strong><?php echo $product['stock']; ?></strong>
+                            </span>
 
-                        <button id="addToCartBtn" class="btn btn-primary" 
-                                <?php echo ($product['stock'] == 0) ? 'disabled' : ''; ?>
-                                data-product-id="<?php echo $product['id']; ?>">
-                            <?php echo ($product['stock'] == 0) ? 'Stok Habis' : 'Tambah ke Keranjang'; ?>
-                        </button>
-                    </div>
+                            <button id="addToCartBtn" class="btn btn-primary" 
+                                    <?php echo ($product['stock'] == 0) ? 'disabled' : ''; ?>
+                                    data-product-id="<?php echo $product['id']; ?>">
+                                <?php echo ($product['stock'] == 0) ? 'Stok Habis' : 'Tambah ke Keranjang'; ?>
+                            </button>
+                        </div>
+                    <?php else: ?>
+                        <div class="guest-message">
+                            <p>Fitur checkout sedang tidak tersedia saat ini.</p>
+                        </div>
+                    <?php endif; ?>
                 
                 <?php else: ?>
                     <div class="guest-message">
