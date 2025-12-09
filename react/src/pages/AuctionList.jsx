@@ -44,16 +44,21 @@ export default function AuctionList() {
   return (
     <div className="w-full">
       <div className="bg-white p-6 mb-6 rounded-lg shadow-sm border-b-4 border-primary-green">
-        <div className="mb-4">
-          <select
-            id="status-filter"
-            value={statusFilter}
-            onChange={(e) => handleStatusChange(e.target.value)}
-            className="text-2xl font-bold text-gray-900 bg-transparent border-none outline-none cursor-pointer hover:text-primary-green transition-colors"
-          >
-            <option value="ACTIVE">Active Auctions</option>
-            <option value="ENDED">Ended Auctions</option>
-          </select>
+        {/* Tabs for Status Filter */}
+        <div className="mb-4 flex gap-2 border-b border-gray-200">
+          {['SCHEDULED', 'ACTIVE', 'ENDED'].map((status) => (
+            <button
+              key={status}
+              onClick={() => handleStatusChange(status)}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 ${
+                statusFilter === status
+                  ? 'border-primary-green text-primary-green'
+                  : 'border-transparent text-gray-600 hover:text-primary-green'
+              }`}
+            >
+              {status === 'SCHEDULED' ? 'Lelang Belum Dimulai' : status === 'ACTIVE' ? 'Lelang Aktif' : 'Lelang Sudah Berakhir'}
+            </button>
+          ))}
         </div>
         <p className="text-gray-600">
           {loading ? 'Loading...' : `${pagination.totalCount} auctions available`}
@@ -113,7 +118,6 @@ export default function AuctionList() {
         </div>
       ) : sortedAuctions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center bg-gray-50 rounded-lg">
-          <div className="text-6xl mb-6">🔨</div>
           <h3 className="text-3xl font-bold text-gray-900 mb-3">No Active Auctions</h3>
           <p className="text-gray-600 mb-8 max-w-md text-lg">There are no active auctions at the moment. Check back later or create one from the seller dashboard!</p>
           <div className="flex gap-4">

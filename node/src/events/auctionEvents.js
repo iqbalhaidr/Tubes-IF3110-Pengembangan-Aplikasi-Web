@@ -490,12 +490,177 @@ export function registerAuctionEvents(io) {
   }
 
   return () => {
+    // Cleanup countdown timers
     auctionTimers.forEach((timerData) => {
       if (timerData.countdownInterval) {
         clearInterval(timerData.countdownInterval);
       }
     });
     auctionTimers.clear();
+  };
+}
+
+/**
+ * Background job to start SCHEDULED auctions when their start_time arrives
+ * Runs every 5 seconds to check for auctions that should be activated
+ */
+function startScheduledAuctionCheckJob(io) {
+  console.log('[Auction] Starting scheduled auction check job...');
+  
+  const scheduledCheckInterval = setInterval(async () => {
+    try {
+      // Find all SCHEDULED auctions that should start now
+      const result = await pool.query(
+        `SELECT a.id, a.product_id, a.seller_id, a.start_time,
+                p.product_name, u.name as seller_username
+         FROM auctions a
+         JOIN product p ON a.product_id = p.product_id
+         JOIN "user" u ON a.seller_id = u.user_id
+         WHERE a.status = 'SCHEDULED' 
+         AND a.start_time <= CURRENT_TIMESTAMP
+         AND a.deleted_at IS NULL
+         ORDER BY a.start_time ASC`
+      );
+
+      if (result.rows.length > 0) {
+        console.log(`[Auction] Found ${result.rows.length} auctions to start`);
+
+        for (const auction of result.rows) {
+          // Update auction to ACTIVE
+          const updateResult = await pool.query(
+            `UPDATE auctions 
+             SET status = 'ACTIVE', 
+                 started_at = CURRENT_TIMESTAMP,
+                 countdown_end_time = CURRENT_TIMESTAMP + INTERVAL '15 seconds'
+             WHERE id = $1
+             RETURNING *`,
+            [auction.id]
+          );
+
+          if (updateResult.rows.length > 0) {
+            console.log(`[Auction] Auction #${auction.id} (${auction.product_name}) started automatically`);
+            
+            // Broadcast to all connected clients that this auction is now active
+            io.emit('auction_started', {
+              auctionId: auction.id,
+              status: 'ACTIVE',
+              startedAt: new Date(),
+              message: `Auction "${auction.product_name}" by ${auction.seller_username} is now live!`,
+            });
+            
+            // Send to specific room
+            const room = `auction_${auction.id}`;
+            io.to(room).emit('auction_activated', {
+              auctionId: auction.id,
+              status: 'ACTIVE',
+              startedAt: new Date(),
+              countdownSeconds: 15,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[Auction] Error in scheduled auction check job:', error);
+    }
+  }, 5000); // Check every 5 seconds
+
+  return () => clearInterval(scheduledCheckInterval);
+}
+
+/**
+ * Background job to update auction statuses
+ * Checks for ACTIVE auctions that have passed their countdown_end_time and marks them ENDED
+ * Runs every 5 seconds to keep statuses in sync across all clients
+ */
+function startAuctionStatusUpdateJob(io) {
+  console.log('[Auction] Starting auction status update job...');
+  
+  const statusUpdateInterval = setInterval(async () => {
+    try {
+      // Find all ACTIVE auctions that have passed their countdown_end_time
+      const result = await pool.query(
+        `SELECT a.id, a.highest_bidder_id, a.current_bid
+         FROM auctions a
+         WHERE a.status = 'ACTIVE' 
+         AND a.countdown_end_time <= CURRENT_TIMESTAMP
+         AND a.deleted_at IS NULL
+         ORDER BY a.countdown_end_time ASC`
+      );
+
+      if (result.rows.length > 0) {
+        console.log(`[Auction] Found ${result.rows.length} auctions that have expired`);
+
+        for (const auction of result.rows) {
+          // Update auction to ENDED
+          const updateResult = await pool.query(
+            `UPDATE auctions 
+             SET status = 'ENDED', ended_at = CURRENT_TIMESTAMP
+             WHERE id = $1 AND status = 'ACTIVE'
+             RETURNING *`,
+            [auction.id]
+          );
+
+          if (updateResult.rows.length > 0) {
+            console.log(`[Auction] Auction #${auction.id} marked as ENDED (status update job)`);
+            
+            // Try to create order if there's a winner
+            let orderId = null;
+            let orderError = null;
+            if (auction.highest_bidder_id) {
+              const client = await pool.connect();
+              try {
+                const orderResult = await createOrderFromAuction(client, auction);
+                if (orderResult.success) {
+                  orderId = orderResult.orderId;
+                  console.log(`[Auction] Order #${orderId} created for auction #${auction.id}`);
+                } else {
+                  orderError = orderResult.error;
+                  console.warn(`[Auction] Could not create order: ${orderError}`);
+                }
+              } finally {
+                client.release();
+              }
+            }
+
+            // Broadcast auction ended event
+            io.emit('auction_ended_background', {
+              auctionId: auction.id,
+              status: 'ENDED',
+              winnerId: auction.highest_bidder_id,
+              finalBid: auction.current_bid,
+              orderId: orderId,
+              orderError: orderError,
+              timestamp: new Date(),
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[Auction] Error in auction status update job:', error);
+    }
+  }, 5000); // Check every 5 seconds
+
+  return () => clearInterval(statusUpdateInterval);
+}
+
+/**
+ * Initialize background jobs for auction system
+ * Should be called once on server startup
+ */
+export function initializeAuctionJobs(io) {
+  console.log('[Auction] Initializing auction background jobs...');
+  
+  // Start the scheduled auction check job
+  const stopScheduledCheck = startScheduledAuctionCheckJob(io);
+  
+  // Start the auction status update job (check for expired countdowns)
+  const stopStatusUpdate = startAuctionStatusUpdateJob(io);
+  
+  // Return cleanup function
+  return () => {
+    console.log('[Auction] Cleaning up auction background jobs...');
+    stopScheduledCheck();
+    stopStatusUpdate();
   };
 }
 

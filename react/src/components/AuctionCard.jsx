@@ -16,7 +16,8 @@ export default function AuctionCard({ auction }) {
     if (!seconds || seconds < 0) return 'Ended';
     if (seconds < 60) return `${seconds}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-    return `${Math.floor(seconds / 3600)}h`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
+    return `${Math.floor(seconds / 86400)}d`;
   };
 
   // Format product image path - PHP stores as /public/images/products/X.jpg
@@ -70,14 +71,21 @@ export default function AuctionCard({ auction }) {
         </div>
 
         <div className="mb-3">
-          {auction.seconds_remaining !== undefined && (
+          {auction.status === 'SCHEDULED' && auction.seconds_until_start !== undefined ? (
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Starts In</span>
+              <span className="text-sm font-bold text-blue-600">
+                {formatTime(auction.seconds_until_start)}
+              </span>
+            </div>
+          ) : auction.seconds_remaining !== undefined ? (
             <div className="flex justify-between items-center">
               <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Time Left</span>
               <span className={`text-sm font-bold ${auction.seconds_remaining < 3600 ? 'text-orange-600' : 'text-gray-700'}`}>
                 {formatTime(auction.seconds_remaining)}
               </span>
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="mt-auto">
@@ -89,7 +97,6 @@ export default function AuctionCard({ auction }) {
           ) : (
             <div className="text-center">
               <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">No Bids Yet</span>
-              <span className="text-sm font-bold text-primary-green block mt-1">Be the first!</span>
             </div>
           )}
         </div>

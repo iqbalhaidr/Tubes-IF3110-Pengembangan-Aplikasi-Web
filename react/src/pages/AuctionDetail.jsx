@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import BidForm from '../components/BidForm';
 import AuctionCountdown from '../components/AuctionCountdown';
-import AuctionChat from '../components/AuctionChat';
 import BidHistory from '../components/BidHistory';
 import { useAuction, useBid, useWebSocket } from '../hooks/useAuction';
 
@@ -28,10 +27,23 @@ export default function AuctionDetail() {
     isConnected,
     countdownSeconds,
     bidPlaced,
-    messages,
-    sendMessage,
-    setTyping,
   } = useWebSocket(id, userId);
+
+  const isAuctionActive = auction?.status === 'ACTIVE';
+  const isAuctionScheduled = auction?.status === 'SCHEDULED';
+  const isUserSeller = userId && userId === auction?.seller_id;
+  const canBid = isAuthenticated && !isUserSeller && isAuctionActive;
+
+  // Auto-refetch for scheduled auctions every 5 seconds
+  useEffect(() => {
+    if (!isAuctionScheduled) return;
+    
+    const interval = setInterval(() => {
+      refetch();
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [isAuctionScheduled, refetch]);
 
   // When a bid is placed via WebSocket, immediately refresh auction and bid history
   useEffect(() => {
@@ -106,10 +118,6 @@ export default function AuctionDetail() {
     );
   }
 
-  const isAuctionActive = auction.status === 'ACTIVE';
-  const isUserSeller = userId && userId === auction.seller_id;
-  const canBid = isAuthenticated && !isUserSeller && isAuctionActive;
-
   // Format product image path - PHP stores as /public/images/products/X.jpg
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
@@ -141,7 +149,9 @@ export default function AuctionDetail() {
             </div>
             <div className="p-6">
               <h2 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">{auction.product_name}</h2>
-              <p className="text-gray-700 mb-6 leading-relaxed text-base">{auction.product_description}</p>
+              <p className="text-gray-700 mb-6 leading-relaxed text-base">
+                {auction.product_description?.replace(/<[^>]*>/g, '') || 'No description available'}
+              </p>
               <div className="space-y-3 border-t border-gray-200 pt-6">
                 <div className="flex items-center justify-between">
                   <strong className="text-gray-700 font-semibold">Seller:</strong>
@@ -165,8 +175,27 @@ export default function AuctionDetail() {
             />
           )}
 
+          {/* Scheduled Start Countdown */}
+          {isAuctionScheduled && (
+            <div className="bg-primary-green rounded-lg p-8 shadow-md border-2 border-green-700 text-center">
+              <div className="text-sm font-bold opacity-95 mb-3 uppercase tracking-wider text-green-50">Auction Starts In</div>
+              <div className="text-5xl font-bold tracking-tight mb-3 text-white">
+                {auction.seconds_until_start !== undefined ? (
+                  auction.seconds_until_start > 0 ? (
+                    auction.seconds_until_start < 60
+                      ? `${auction.seconds_until_start}s`
+                      : auction.seconds_until_start < 3600
+                      ? `${Math.floor(auction.seconds_until_start / 60)}m ${(auction.seconds_until_start % 60)}s`
+                      : `${Math.floor(auction.seconds_until_start / 3600)}h ${Math.floor((auction.seconds_until_start % 3600) / 60)}m`
+                  ) : 'Starting...'
+                ) : 'Loading...'}
+              </div>
+              <p className="text-green-50 text-sm">Get ready! Bidding will start soon.</p>
+            </div>
+          )}
+
           {/* Status Badge */}
-          {!isAuctionActive && (
+          {!isAuctionActive && !isAuctionScheduled && (
             <div className={`bg-white rounded-lg shadow-sm p-8 text-center border-l-4 ${
               auction.status === 'ENDED' ? 'border-primary-green' : 'border-red-500'
             }`}>
@@ -197,13 +226,20 @@ export default function AuctionDetail() {
         {/* Right Column: Bid Form & Chat */}
         <div className="space-y-6">
           {/* Bid Form - only show for authenticated users who are not the seller */}
-          {canBid ? (
+          {isAuctionScheduled ? (
+            <div className="bg-blue-50 rounded-lg shadow-sm p-6 text-center border-2 border-blue-300">
+              <h3 className="text-xl font-bold text-blue-900 mb-3">Auction Not Started Yet</h3>
+              <p className="text-blue-800 mb-4">This auction is scheduled to start in the near future. Bidding will be available once the auction starts.</p>
+              <p className="text-sm text-blue-700">Scheduled start: {new Date(auction.start_time).toLocaleString()}</p>
+            </div>
+          ) : canBid ? (
             <>
               <BidForm
                 auction={auction}
                 onBidSubmit={handleBidSubmit}
                 isLoading={isSubmitting}
                 error={bidError}
+                userBalance={parseFloat(user?.balance) || 0}
               />
 
               {bidSuccess && (
@@ -234,25 +270,6 @@ export default function AuctionDetail() {
               <p className="text-gray-600">This auction is no longer accepting bids.</p>
             </div>
           ) : null}
-
-          {/* Chat Section - only for authenticated users */}
-          {isAuthenticated ? (
-            <AuctionChat
-              auctionId={id}
-              userId={userId}
-              messages={messages}
-              onSendMessage={sendMessage}
-              onTyping={setTyping}
-              isConnected={isConnected}
-            />
-          ) : (
-            <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Auction Chat</h3>
-              <p className="text-gray-600">
-                <a href="/login" className="text-primary-green hover:underline font-semibold">Login</a> to join the conversation.
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>

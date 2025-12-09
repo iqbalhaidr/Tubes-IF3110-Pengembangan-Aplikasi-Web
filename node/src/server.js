@@ -9,7 +9,7 @@ import { dirname } from 'path';
 import auctionRoutes from './routes/auctionRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-import { registerAuctionEvents } from './events/auctionEvents.js';
+import { registerAuctionEvents, initializeAuctionJobs } from './events/auctionEvents.js';
 import { sendChatPushNotification } from './services/pushService.js';
 import { socketAuthMiddleware } from './websocket-auth.js';
 import pool from './db.js';
@@ -416,6 +416,10 @@ httpServer.listen(PORT, () => {
 ║ Environment:  ${process.env.NODE_ENV || 'development'}            ║
 ╚════════════════════════════════════════╝
   `);
+
+  // Initialize background jobs for auction system
+  const cleanupAuctionJobs = initializeAuctionJobs(io);
+  console.log('[Startup] Auction background jobs initialized');
 });
 
 export { app, io };

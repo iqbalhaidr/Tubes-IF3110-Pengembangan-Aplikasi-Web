@@ -14,6 +14,7 @@ export default function CreateAuction() {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [initialBid, setInitialBid] = useState('');
   const [minBidIncrement, setMinBidIncrement] = useState('');
+  const [startTime, setStartTime] = useState(''); // New: auction start time
   
   // Get user from localStorage
   const [user] = useState(() => {
@@ -80,16 +81,32 @@ export default function CreateAuction() {
       return;
     }
     
+    // Validate start time if provided
+    if (startTime) {
+      const selectedTime = new Date(startTime);
+      if (isNaN(selectedTime.getTime())) {
+        setError('Invalid start time');
+        return;
+      }
+    }
+    
     setLoading(true);
     
     try {
+      const auctionData = {
+        product_id: parseInt(selectedProduct),
+        initial_bid: bidAmount,
+        min_bid_increment: incrementAmount,
+      };
+      
+      // Only include start_time if provided
+      if (startTime) {
+        auctionData.start_time = new Date(startTime).toISOString();
+      }
+      
       const response = await axios.post(
         '/api/node/auctions',
-        {
-          product_id: parseInt(selectedProduct),
-          initial_bid: bidAmount,
-          min_bid_increment: incrementAmount,
-        },
+        auctionData,
         {
           withCredentials: true,
         }
@@ -149,7 +166,7 @@ export default function CreateAuction() {
                 ) : products.length === 0 ? (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
                     <p className="text-text-muted mb-4">You don't have any products yet.</p>
-                    <a href="/seller/products/add" className="inline-block px-4 py-2 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm">
+                    <a href="/seller/products/add" className="inline-block px-4 py-2 bg-primary-green  text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm">
                       Add Product
                     </a>
                   </div>
@@ -238,15 +255,32 @@ export default function CreateAuction() {
                 </div>
                 <span className="block text-xs text-text-muted">Each new bid must be at least this much higher</span>
               </div>
+
+              <div className="space-y-2">
+                <label htmlFor="startTime" className="block text-sm font-medium text-text-dark">Scheduled Start Time (Optional)</label>
+                <div className="bg-green-50 border border-primary-green rounded-lg p-4 mb-3">
+                  <p className="text-sm text-green-900 font-medium mb-3">Schedule your auction to start at a specific time</p>
+                  <input
+                    type="datetime-local"
+                    id="startTime"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full px-4 py-3 border border-primary-green rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent transition-all"
+                  />
+                  <span className="block text-xs text-green-700 mt-2">
+                    Leave empty to start auction immediately, or select a future date/time to schedule it for later
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Auction Rules Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-text-dark mb-4">📋 Auction Rules</h3>
+            <div className="bg-green-50 border border-primary-green rounded-lg p-6">
+              <h3 className="text-xl font-bold text-text-dark mb-4">Auction Rules</h3>
               <ul className="space-y-2 text-text-dark">
                 <li className="flex items-start gap-2">
                   <span className="text-primary-green mt-1">•</span>
-                  <span>Auction starts immediately after creation</span>
+                  <span>Auction at scheduled time if provided, else immediately</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary-green mt-1">•</span>
@@ -254,11 +288,15 @@ export default function CreateAuction() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary-green mt-1">•</span>
-                  <span>Auction ends when no bids are placed for 15 seconds</span>
+                  <span>Auction ends when the timer runs out</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary-green mt-1">•</span>
                   <span>Winner will be automatically charged and order created</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary-green mt-1">•</span>
+                  <span>You can only have 1 active/scheduled auction per store at a time</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary-green mt-1">•</span>
@@ -277,7 +315,7 @@ export default function CreateAuction() {
               </button>
               <button 
                 type="submit" 
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-primary-green text-white rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading || !selectedProduct}
               >
                 {loading ? 'Creating...' : 'Start Auction'}

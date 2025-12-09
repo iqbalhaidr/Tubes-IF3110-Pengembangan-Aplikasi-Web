@@ -54,7 +54,7 @@ export default function AuctionCountdown({ countdownSeconds, onExpired }) {
       </div>
       {displaySeconds && displaySeconds < 60 && (
         <div className="text-sm font-bold animate-pulse">
-          ⚠️ Auction ending soon!
+          Auction ending soon!
         </div>
       )}
     </div>
