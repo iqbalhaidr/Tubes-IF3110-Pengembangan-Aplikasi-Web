@@ -243,10 +243,10 @@ export const getUserFlags = async (req, res) => {
         // Get user's feature flags
         const flagsResult = await pool.query(`
       SELECT 
-        feature_flag,
-        access_enabled,
-        disable_reason,
-        disabled_at
+        feature_name,
+        is_enabled,
+        reason,
+        updated_at
       FROM user_feature_access 
       WHERE user_id = $1
     `, [userId]);
@@ -260,16 +260,16 @@ export const getUserFlags = async (req, res) => {
             userFlags[flag] = {
                 enabled: true,
                 reason: null,
-                disabledAt: null
+                updatedAt: null
             };
         });
 
         // Override with actual user flags
         flagsResult.rows.forEach(row => {
-            userFlags[row.feature_flag] = {
-                enabled: row.access_enabled,
-                reason: row.disable_reason,
-                disabledAt: row.disabled_at
+            userFlags[row.feature_name] = {
+                enabled: row.is_enabled,
+                reason: row.reason,
+                updatedAt: row.updated_at
             };
         });
 
@@ -295,7 +295,7 @@ export const getUserFlags = async (req, res) => {
  * Enables/disables specific features for a user
  * 
  * Body params:
- * - flags: Object with feature_flag: { enabled: boolean, reason?: string }
+ * - flags: Object with feature_name: { enabled: boolean, reason?: string }
  * 
  * @param {Request} req - Express request with user ID and flags
  * @param {Response} res - Express response
@@ -354,21 +354,18 @@ export const updateUserFlags = async (req, res) => {
 
             // Upsert the flag
             await pool.query(`
-        INSERT INTO user_feature_access (user_id, feature_flag, access_enabled, disable_reason, disabled_at, disabled_by)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        ON CONFLICT (user_id, feature_flag) 
+        INSERT INTO user_feature_access (user_id, feature_name, is_enabled, reason)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (user_id, feature_name) 
         DO UPDATE SET 
-          access_enabled = $3,
-          disable_reason = CASE WHEN $3 = false THEN $4 ELSE NULL END,
-          disabled_at = CASE WHEN $3 = false THEN $5 ELSE NULL END,
-          disabled_by = CASE WHEN $3 = false THEN $6 ELSE NULL END
+          is_enabled = $3,
+          reason = CASE WHEN $3 = false THEN $4 ELSE NULL END,
+          updated_at = CURRENT_TIMESTAMP
       `, [
                 userId,
                 flagName,
                 enabled,
-                enabled ? null : reason.trim(),
-                enabled ? null : new Date(),
-                enabled ? null : req.admin.adminId
+                enabled ? null : reason.trim()
             ]);
 
             updates.push({ flag: flagName, enabled });
@@ -389,9 +386,10 @@ export const updateUserFlags = async (req, res) => {
     }
 };
 
+
 /**
  * Get Global Feature Flags
- * Returns all global/system-wide feature flags
+ * Returns all global/system-wide feature flags (where user_id IS NULL)
  * 
  * @param {Request} req - Express request
  * @param {Response} res - Express response
@@ -400,20 +398,21 @@ export const getGlobalFlags = async (req, res) => {
     try {
         const result = await pool.query(`
       SELECT 
-        feature_flag,
+        feature_name,
         is_enabled,
-        disable_reason,
+        reason,
         updated_at
-      FROM global_feature_flags
-      ORDER BY feature_flag
+      FROM user_feature_access
+      WHERE user_id IS NULL
+      ORDER BY feature_name
     `);
 
         // Convert to object for easier frontend use
         const flags = {};
         result.rows.forEach(row => {
-            flags[row.feature_flag] = {
+            flags[row.feature_name] = {
                 enabled: row.is_enabled,
-                reason: row.disable_reason,
+                reason: row.reason,
                 updatedAt: row.updated_at
             };
         });
@@ -437,7 +436,7 @@ export const getGlobalFlags = async (req, res) => {
  * Enables/disables global features (affects all users)
  * 
  * Body params:
- * - flags: Object with feature_flag: { enabled: boolean, reason?: string }
+ * - flags: Object with feature_name: { enabled: boolean, reason?: string }
  * 
  * @param {Request} req - Express request with flags
  * @param {Response} res - Express response
@@ -472,19 +471,17 @@ export const updateGlobalFlags = async (req, res) => {
                 });
             }
 
-            // Update the global flag
+            // Update the global flag (user_id IS NULL)
             await pool.query(`
-        UPDATE global_feature_flags
+        UPDATE user_feature_access
         SET 
           is_enabled = $1,
-          disable_reason = $2,
-          updated_at = CURRENT_TIMESTAMP,
-          updated_by = $3
-        WHERE feature_flag = $4
+          reason = $2,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE user_id IS NULL AND feature_name = $3
       `, [
                 enabled,
                 enabled ? null : reason.trim(),
-                req.admin.adminId,
                 flagName
             ]);
 
@@ -506,6 +503,7 @@ export const updateGlobalFlags = async (req, res) => {
     }
 };
 
+
 /**
  * Check Feature Access (Public endpoint - no auth required)
  * Used by PHP and frontend to check if features are enabled
@@ -520,17 +518,18 @@ export const checkFeatureAccess = async (req, res) => {
     try {
         const userId = req.query.userId ? parseInt(req.query.userId) : null;
 
-        // Get global flags
+        // Get global flags (user_id IS NULL)
         const globalResult = await pool.query(`
-      SELECT feature_flag, is_enabled, disable_reason
-      FROM global_feature_flags
+      SELECT feature_name, is_enabled, reason
+      FROM user_feature_access
+      WHERE user_id IS NULL
     `);
 
         const features = {};
 
         // Initialize with global flags
         globalResult.rows.forEach(row => {
-            features[row.feature_flag] = {
+            features[row.feature_name] = {
                 enabled: row.is_enabled,
                 reason: row.is_enabled ? null : 'This feature is currently under maintenance.',
                 isGlobal: !row.is_enabled
@@ -540,17 +539,17 @@ export const checkFeatureAccess = async (req, res) => {
         // If userId provided, check user-specific flags
         if (userId) {
             const userResult = await pool.query(`
-        SELECT feature_flag, access_enabled, disable_reason
+        SELECT feature_name, is_enabled, reason
         FROM user_feature_access
         WHERE user_id = $1
       `, [userId]);
 
             userResult.rows.forEach(row => {
                 // User flag overrides only if it's more restrictive
-                if (!row.access_enabled) {
-                    features[row.feature_flag] = {
+                if (!row.is_enabled) {
+                    features[row.feature_name] = {
                         enabled: false,
-                        reason: row.disable_reason || 'This feature has been disabled for your account.',
+                        reason: row.reason || 'This feature has been disabled for your account.',
                         isGlobal: false
                     };
                 }
