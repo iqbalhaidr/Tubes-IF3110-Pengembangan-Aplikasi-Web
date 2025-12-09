@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuctionsList } from '../hooks/useAuction';
 import AuctionCard from '../components/AuctionCard';
@@ -6,6 +6,10 @@ import AuctionCard from '../components/AuctionCard';
 
 export default function AuctionList() {
   const [statusFilter, setStatusFilter] = useState('ACTIVE');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchTimeoutRef = useRef(null);
+
   const {
     auctions,
     pagination,
@@ -14,9 +18,21 @@ export default function AuctionList() {
     goToPage,
     changeLimit,
     refetch,
-  } = useAuctionsList(statusFilter);
+  } = useAuctionsList(statusFilter, debouncedSearch);
 
   const [sortBy, setSortBy] = useState('countdown');
+
+  // Handle search button click
+  const handleSearchClick = () => {
+    setDebouncedSearch(searchQuery);
+    goToPage(1); // Reset to page 1 on search
+  };
+
+  // Handle auction started signal - trigger list refresh
+  const handleAuctionStarted = (auctionId) => {
+    console.log(`[AuctionList] Auction #${auctionId} just started, refreshing list...`);
+    refetch();
+  };
 
   const handleSort = (newSort) => {
     setSortBy(newSort);
@@ -24,6 +40,11 @@ export default function AuctionList() {
 
   const handleStatusChange = (newStatus) => {
     setStatusFilter(newStatus);
+    goToPage(1); // Reset to page 1 on status change
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
   const sortedAuctions = [...auctions].sort((a, b) => {
@@ -46,7 +67,7 @@ export default function AuctionList() {
       <div className="bg-white p-6 mb-6 rounded-lg shadow-sm border-b-4 border-primary-green">
         {/* Tabs for Status Filter */}
         <div className="mb-4 flex gap-2 border-b border-gray-200">
-          {['SCHEDULED', 'ACTIVE', 'ENDED'].map((status) => (
+          {['SCHEDULED', 'ACTIVE'].map((status) => (
             <button
               key={status}
               onClick={() => handleStatusChange(status)}
@@ -56,7 +77,7 @@ export default function AuctionList() {
                   : 'border-transparent text-gray-600 hover:text-primary-green'
               }`}
             >
-              {status === 'SCHEDULED' ? 'Lelang Belum Dimulai' : status === 'ACTIVE' ? 'Lelang Aktif' : 'Lelang Sudah Berakhir'}
+              {status === 'SCHEDULED' ? 'Lelang Belum Dimulai' : 'Lelang Aktif'}
             </button>
           ))}
         </div>
@@ -78,35 +99,60 @@ export default function AuctionList() {
       )}
 
       {/* Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8 bg-white p-5 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex items-center gap-3">
-          <label htmlFor="sort" className="text-sm font-semibold text-gray-700">Sort by:</label>
-          <select
-            id="sort"
-            value={sortBy}
-            onChange={(e) => handleSort(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:border-primary-green focus:ring-2 focus:ring-primary-green focus:ring-opacity-50 outline-none text-sm font-medium transition-all duration-200"
+      <div className="flex flex-col gap-4 mb-8 bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+        {/* Search Bar with Button */}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Search by store name or product name..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleSearchClick();
+              }
+            }}
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:border-primary-green focus:ring-2 focus:ring-primary-green focus:ring-opacity-50 outline-none text-sm font-medium transition-all duration-200"
+          />
+          <button
+            onClick={handleSearchClick}
+            className="bg-primary-green text-white font-semibold px-6 py-3 rounded-lg hover:bg-green-700 transition-colors duration-200 whitespace-nowrap"
           >
-            <option value="countdown">Ending Soon</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="bids">Most Bids</option>
-          </select>
+            Search
+          </button>
         </div>
 
-        <div className="flex items-center gap-3">
-          <label htmlFor="limit" className="text-sm font-semibold text-gray-700">Items per page:</label>
-          <select
-            id="limit"
-            value={pagination.limit}
-            onChange={(e) => changeLimit(parseInt(e.target.value))}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:border-primary-green focus:ring-2 focus:ring-primary-green focus:ring-opacity-50 outline-none text-sm font-medium transition-all duration-200"
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-          </select>
+        {/* Sort and Limit Controls */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <label htmlFor="sort" className="text-sm font-semibold text-gray-700 whitespace-nowrap">Sort by:</label>
+            <select
+              id="sort"
+              value={sortBy}
+              onChange={(e) => handleSort(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:border-primary-green focus:ring-2 focus:ring-primary-green focus:ring-opacity-50 outline-none text-sm font-medium transition-all duration-200"
+            >
+              <option value="countdown">Ending Soon</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="bids">Most Bids</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <label htmlFor="limit" className="text-sm font-semibold text-gray-700 whitespace-nowrap">Items per page:</label>
+            <select
+              id="limit"
+              value={pagination.limit}
+              onChange={(e) => changeLimit(parseInt(e.target.value))}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:border-primary-green focus:ring-2 focus:ring-primary-green focus:ring-opacity-50 outline-none text-sm font-medium transition-all duration-200"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -118,8 +164,7 @@ export default function AuctionList() {
         </div>
       ) : sortedAuctions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center bg-gray-50 rounded-lg">
-          <h3 className="text-3xl font-bold text-gray-900 mb-3">No Active Auctions</h3>
-          <p className="text-gray-600 mb-8 max-w-md text-lg">There are no active auctions at the moment. Check back later or create one from the seller dashboard!</p>
+          <h3 className="text-3xl font-bold text-gray-900 mb-3">No Auctions Found</h3>
           <div className="flex gap-4">
             <button onClick={refetch} className="bg-primary-green text-white font-bold px-8 py-3 rounded-lg hover:bg-green-700 transition-all duration-200 transform hover:-translate-y-1">
               Refresh
@@ -134,7 +179,7 @@ export default function AuctionList() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {sortedAuctions.map((auction) => (
               <Link key={auction.id} to={`/auction/${auction.id}`} className="h-full">
-                <AuctionCard auction={auction} />
+                <AuctionCard auction={auction} onAuctionStarted={handleAuctionStarted} />
               </Link>
             ))}
           </div>

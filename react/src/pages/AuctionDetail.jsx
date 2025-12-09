@@ -196,12 +196,18 @@ export default function AuctionDetail() {
               <div className="space-y-3 border-t border-gray-200 pt-6">
                 <div className="flex items-center justify-between">
                   <strong className="text-gray-700 font-semibold">Seller:</strong>
-                  <span className="text-gray-900 font-medium">{auction.seller_username}</span>
+                  <span className="text-gray-900 font-medium cursor-pointer hover:text-primary-green transition-colors">{auction.seller_username}</span>
                 </div>
                 {auction.seller_address && (
                   <div className="flex items-center justify-between">
                     <strong className="text-gray-700 font-semibold">Location:</strong>
                     <span className="text-gray-900 font-medium">{auction.seller_address}</span>
+                  </div>
+                )}
+                {auction.product_quantity && (
+                  <div className="flex items-center justify-between">
+                    <strong className="text-gray-700 font-semibold">Quantity Available:</strong>
+                    <span className="text-gray-900 font-medium">{auction.product_quantity} units</span>
                   </div>
                 )}
               </div>
@@ -213,6 +219,7 @@ export default function AuctionDetail() {
             <AuctionCountdown
               countdownSeconds={countdownSeconds}
               onExpired={handleAuctionExpired}
+              auctionId={id}
             />
           )}
 
@@ -247,17 +254,17 @@ export default function AuctionDetail() {
           )}
 
           {/* Bid History */}
-          <BidHistory bids={bidHistory} />
+          <BidHistory bids={bidHistory} currentUserId={userId} />
         </div>
 
-        {/* Right Column: Bid Form & Chat */}
+        {/* Right Column: Bid Form & Seller Actions */}
         <div className="space-y-6">
           {/* Bid Form - only show for authenticated users who are not the seller */}
           {isAuctionScheduled ? (
             <div className="bg-green-50 rounded-lg shadow-sm p-6 text-center border-2 border-primary-green">
               <h3 className="text-xl font-bold text-primary-green mb-3">Auction Not Started Yet</h3>
               <p className="text-green-800 mb-4">This auction is scheduled to start in the near future. Bidding will be available once the auction starts.</p>
-              <p className="text-sm text-green-700">Scheduled start: {new Date(auction.start_time).toLocaleString()}</p>
+              <p className="text-sm text-green-700">Auction Starts {new Date(auction.start_time).toLocaleString()}</p>
             </div>
           ) : canBid ? (
             <>
@@ -286,7 +293,7 @@ export default function AuctionDetail() {
           ) : isUserSeller ? (
             <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 mb-3">Your Auction</h3>
-              <p className="text-gray-600 mb-6">You cannot bid on your own auction.</p>
+              <p className="text-gray-600 mb-6">You are the seller of this auction.</p>
               <button onClick={() => navigate(`/manage-auctions/${id}`)} className="w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-bold">
                 Manage This Auction
               </button>

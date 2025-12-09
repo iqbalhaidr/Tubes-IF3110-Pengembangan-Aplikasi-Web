@@ -65,7 +65,7 @@ export function useAuction(auctionId, options = {}) {
   };
 }
 
-export function useAuctionsList(statusFilter = 'ACTIVE') {
+export function useAuctionsList(statusFilter = 'ACTIVE', searchQuery = '') {
   const [auctions, setAuctions] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -79,9 +79,11 @@ export function useAuctionsList(statusFilter = 'ACTIVE') {
   const fetchAuctions = useCallback(async (page = 1, limit = 10) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `/api/node/auctions?page=${page}&limit=${limit}&status=${statusFilter}`
-      );
+      let url = `/api/node/auctions?page=${page}&limit=${limit}&status=${statusFilter}`;
+      if (searchQuery) {
+        url += `&search=${encodeURIComponent(searchQuery)}`;
+      }
+      const response = await axios.get(url);
       setAuctions(response.data.data);
       setPagination(response.data.pagination);
       setError(null);
@@ -91,7 +93,7 @@ export function useAuctionsList(statusFilter = 'ACTIVE') {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, searchQuery]);
 
   useEffect(() => {
     fetchAuctions();
@@ -136,6 +138,7 @@ export function useBid(auctionId) {
             withCredentials: true, // Send session cookies
           }
         );
+        console.log('[Bid] Balance deducted, new balance:', response.data.data.new_balance);
 
         setBidSuccess(true);
         setBidAmount('');
