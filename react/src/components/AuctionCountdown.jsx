@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-export default function AuctionCountdown({ countdownSeconds, onExpired }) {
+export default function AuctionCountdown({ countdownSeconds, onExpired, isScheduled = false, onRefetch = null }) {
   const [displaySeconds, setDisplaySeconds] = useState(countdownSeconds);
   const hasExpiredRef = useRef(false);
 
@@ -11,6 +11,17 @@ export default function AuctionCountdown({ countdownSeconds, onExpired }) {
       hasExpiredRef.current = false;
     }
   }, [countdownSeconds]);
+
+  // Poll for scheduled auction updates every 1 second
+  useEffect(() => {
+    if (!isScheduled || !onRefetch) return;
+    
+    const interval = setInterval(() => {
+      onRefetch();
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [isScheduled, onRefetch]);
 
   // Call onExpired when countdown reaches 0
   useEffect(() => {
