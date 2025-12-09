@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import './Navbar.css';
+import { useFeatureEnabled, FEATURES } from '../hooks/useFeatureFlags';
 
 /**
  * Navbar component - exact translation from PHP navbar.php
@@ -14,6 +15,10 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
   const [topupLoading, setTopupLoading] = useState(false);
   const [topupError, setTopupError] = useState('');
   const dropdownRef = useRef(null);
+
+  // Feature flags
+  const { enabled: chatEnabled } = useFeatureEnabled(FEATURES.CHAT_ENABLED, user?.userId);
+  const { enabled: auctionEnabled } = useFeatureEnabled(FEATURES.AUCTION_ENABLED, user?.userId);
   
   // Determine navbar type based on user
   const navbarType = !user ? 'guest' : user.role === 'SELLER' ? 'seller' : 'buyer';
@@ -148,14 +153,16 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
     }
   };
 
-  // Seller navigation links
-  const sellerLinks = [
-    { href: '/seller/dashboard', label: 'Dashboard', key: 'dashboard' },
-    { href: '/chat', label: 'Chat', key: 'chat' },
-    { href: '/seller/products', label: 'Produk', key: 'products' },
-    { href: '/seller/orders', label: 'Orders', key: 'orders' },
-    { href: '/manage-auctions', label: 'Auctions', key: 'auctions' },
+  // Base seller navigation links
+  const baseSellerLinks = [
+    { href: '/seller/dashboard', label: 'Dashboard', key: 'dashboard', flag: true },
+    { href: '/chat', label: 'Chat', key: 'chat', flag: chatEnabled },
+    { href: '/seller/products', label: 'Produk', key: 'products', flag: true },
+    { href: '/seller/orders', label: 'Orders', key: 'orders', flag: true },
+    { href: '/manage-auctions', label: 'Auctions', key: 'auctions', flag: auctionEnabled },
   ];
+
+  const sellerLinks = baseSellerLinks.filter(link => link.flag);
 
   return (
     <>
@@ -269,8 +276,8 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                   <div className="user-dropdown-menu" id="userDropdownMenu">
                     <a href="/buyer/profile" className="dropdown-item">Profile</a>
                     <a href="/buyer/order-history" className="dropdown-item">Order History</a>
-                    <a href="/chat" className="dropdown-item">Chat</a>
-                    <a href="/auctions" className="dropdown-item">Live Auctions</a>
+                    {chatEnabled && <a href="/chat" className="dropdown-item">Chat</a>}
+                    {auctionEnabled && <a href="/auctions" className="dropdown-item">Live Auctions</a>}
                     <button 
                       type="button" 
                       className="dropdown-item" 
@@ -304,9 +311,9 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                 </button>
                 <div className="user-dropdown-menu" id="userDropdownMenu">
                   <a href="/seller/dashboard" className="dropdown-item">Dashboard</a>
-                  <a href="/chat" className="dropdown-item">Chat</a>
+                  {chatEnabled && <a href="/chat" className="dropdown-item">Chat</a>}
                   <a href="/seller/orders" className="dropdown-item">Orders</a>
-                  <a href="/manage-auctions" className="dropdown-item">Auctions</a>
+                  {auctionEnabled && <a href="/manage-auctions" className="dropdown-item">Auctions</a>}
                   <button 
                     type="button" 
                     className="dropdown-item" 
