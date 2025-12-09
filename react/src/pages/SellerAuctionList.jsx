@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuctionsList } from '../hooks/useAuction';
 import AuctionCard from '../components/AuctionCard';
 
@@ -15,6 +16,9 @@ export default function SellerAuctionList() {
     changeLimit,
     refetch,
   } = useAuctionsList(statusFilter);
+
+  const [deleteLoading, setDeleteLoading] = useState({});
+  const [deleteError, setDeleteError] = useState({});
 
   // Check if user is seller
   const [user] = useState(() => {
@@ -36,6 +40,30 @@ export default function SellerAuctionList() {
       setSellerAuctions(auctions);
     }
   }, [auctions, user?.user_id]);
+
+  const handleDeleteAuction = async (auctionId) => {
+    if (!window.confirm('Are you sure you want to delete this auction?')) {
+      return;
+    }
+
+    setDeleteLoading(prev => ({ ...prev, [auctionId]: true }));
+    setDeleteError(prev => ({ ...prev, [auctionId]: '' }));
+
+    try {
+      await axios.delete(
+        `/api/node/auctions/${auctionId}`,
+        { withCredentials: true }
+      );
+      
+      // Refetch auctions after deletion
+      refetch();
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'Failed to delete auction';
+      setDeleteError(prev => ({ ...prev, [auctionId]: errorMsg }));
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [auctionId]: false }));
+    }
+  };
 
   const [sortBy, setSortBy] = useState('countdown');
 
@@ -66,15 +94,21 @@ export default function SellerAuctionList() {
     <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <select
-            id="status-filter"
-            value={statusFilter}
-            onChange={(e) => handleStatusChange(e.target.value)}
-            className="text-3xl font-bold bg-transparent border-none focus:outline-none focus:ring-0 text-text-dark cursor-pointer"
-          >
-            <option value="ACTIVE">My Active Auctions</option>
-            <option value="ENDED">My Ended Auctions</option>
-          </select>
+          <div className="flex gap-2 border-b border-gray-300 mb-4">
+            {['SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-4 py-2 font-semibold transition-all border-b-2 ${
+                  statusFilter === status
+                    ? 'border-primary-green text-primary-green'
+                    : 'border-transparent text-gray-600 hover:text-primary-green'
+                }`}
+              >
+                {status === 'SCHEDULED' ? 'Scheduled' : status === 'ACTIVE' ? 'Active' : status === 'ENDED' ? 'Ended' : 'Cancelled'}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <p className="text-text-muted">
@@ -158,9 +192,32 @@ export default function SellerAuctionList() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {sortedAuctions.map((auction) => (
-              <Link key={auction.id} to={`/manage-auctions/${auction.id}`}>
-                <AuctionCard auction={auction} showSellerBadge={false} />
-              </Link>
+              <div key={auction.id} className="relative group">
+                <Link to={`/manage-auctions/${auction.id}`}>
+                  <AuctionCard auction={auction} showSellerBadge={false} />
+                </Link>
+                
+                {/* Delete Button for SCHEDULED auctions with no bids */}
+                {auction.status === 'SCHEDULED' && auction.total_bids === 0 && (
+                  <div className="absolute top-3 right-3">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDeleteAuction(auction.id);
+                      }}
+                      disabled={deleteLoading[auction.id]}
+                      className="bg-primary-green hover:bg-primary-green/90 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all shadow-md"
+                    >
+                      {deleteLoading[auction.id] ? '🗑️ Deleting...' : '🗑️ Delete'}
+                    </button>
+                    {deleteError[auction.id] && (
+                      <div className="absolute top-full right-0 mt-2 bg-white border border-error-red text-error-red text-xs p-3 rounded shadow-lg z-10 max-w-xs">
+                        {deleteError[auction.id]}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
 

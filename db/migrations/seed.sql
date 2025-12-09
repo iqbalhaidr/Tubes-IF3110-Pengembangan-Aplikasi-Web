@@ -215,24 +215,43 @@ WHERE
 -- Store 10 (seller_id=10): products 37-40 (Novel Bumi, Kamus, Buku Anak, Harry Potter)
 -- Buyers: user_id 11-15 (Lina, Mega, Nina, Oscar, Rina)
 
--- Active auctions with various countdown times
-INSERT INTO auctions (product_id, seller_id, initial_bid, current_bid, highest_bidder_id, min_bid_increment, status, countdown_end_time, started_at) VALUES
--- Auction 1: Laptop Gaming (product 2, store 1, seller 1) - ends in 2 hours
-(2, 1, 10000000, 12500000, 12, 500000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '2 hours', CURRENT_TIMESTAMP - INTERVAL '1 day'),
--- Auction 2: Smartphone Flagship Pro (product 21, store 6, seller 6) - ends in 30 minutes
-(21, 6, 8000000, 10000000, 11, 250000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '30 minutes', CURRENT_TIMESTAMP - INTERVAL '2 days'),
--- Auction 3: Sepeda Statis X-Bike (product 36, store 9, seller 9) - ends in 5 hours, no bids
-(36, 9, 900000, 900000, NULL, 50000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '5 hours', CURRENT_TIMESTAMP - INTERVAL '6 hours'),
--- Auction 4: TV LED 50 inch Smart 4K (product 1, store 1, seller 1) - ends in 1 hour
-(1, 1, 3000000, 3500000, 13, 100000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '1 hour', CURRENT_TIMESTAMP - INTERVAL '3 days'),
--- Auction 5: Gaun Pesta Brokat (product 6, store 2, seller 2) - ends in 4 hours
-(6, 2, 500000, 650000, 15, 50000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '4 hours', CURRENT_TIMESTAMP - INTERVAL '1 day'),
--- Auction 6: Smartwatch Pro GPS (product 24, store 6, seller 6) - ends tomorrow
-(24, 6, 1000000, 1200000, 14, 100000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '2 days'),
--- Auction 7: Raket Badminton Carbon (product 18, store 5, seller 5) - just started, ends in 6 hours
-(18, 5, 350000, 350000, NULL, 25000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '6 hours', CURRENT_TIMESTAMP - INTERVAL '10 minutes'),
--- Auction 8: Dumbbell Set 10kg (product 33, store 9, seller 9) - ending soon!
-(33, 9, 250000, 375000, 11, 25000, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '15 minutes', CURRENT_TIMESTAMP - INTERVAL '2 days');
+-- Scheduled auctions (will auto-activate at scheduled time)
+INSERT INTO auctions (product_id, seller_id, initial_bid, current_bid, highest_bidder_id, min_bid_increment, status, countdown_end_time, start_time) VALUES
+-- Scheduled Auction 1: Kipas Angin Berdiri (product 3, store 1, seller 1) - starts in 1 hour
+(3, 1, 200000, 200000, NULL, 20000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '1 hour', CURRENT_TIMESTAMP + INTERVAL '1 hour'),
+-- Scheduled Auction 2: Kemeja Batik Wanita (product 5, store 2, seller 2) - starts in 3 hours
+(5, 2, 150000, 150000, NULL, 15000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '3 hours', CURRENT_TIMESTAMP + INTERVAL '3 hours'),
+-- Scheduled Auction 3: Buku Resep Masakan (product 10, store 3, seller 3) - starts in 30 minutes
+(10, 3, 100000, 100000, NULL, 10000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '30 minutes', CURRENT_TIMESTAMP + INTERVAL '30 minutes'),
+-- Scheduled Auction 4: Pisau Dapur Chef Set (product 14, store 4, seller 4) - starts in 2 hours
+(14, 4, 180000, 180000, NULL, 20000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '2 hours', CURRENT_TIMESTAMP + INTERVAL '2 hours'),
+-- Scheduled Auction 5: Sepatu Lari Pria Original (product 17, store 5, seller 5) - starts tomorrow
+(17, 5, 700000, 700000, NULL, 50000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '1 day', CURRENT_TIMESTAMP + INTERVAL '1 day'),
+-- Scheduled Auction 6: Powerbank 20000mAh (product 22, store 6, seller 6) - starts in 4 hours
+(22, 6, 300000, 300000, NULL, 30000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '4 hours', CURRENT_TIMESTAMP + INTERVAL '4 hours'),
+-- Scheduled Auction 7: Kaos Polos Katun (product 25, store 7, seller 7) - starts in 2.5 hours
+(25, 7, 65000, 65000, NULL, 10000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '2.5 hours', CURRENT_TIMESTAMP + INTERVAL '2.5 hours'),
+-- Scheduled Auction 8: Lampu Belajar LED (product 29, store 8, seller 8) - starts in 45 minutes
+(29, 8, 120000, 120000, NULL, 10000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '45 minutes', CURRENT_TIMESTAMP + INTERVAL '45 minutes');
+
+-- Active auctions with various countdown times (converted to SCHEDULED for testing)
+INSERT INTO auctions (product_id, seller_id, initial_bid, current_bid, highest_bidder_id, min_bid_increment, status, countdown_end_time, start_time) VALUES
+-- Auction 1: Laptop Gaming (product 2, store 1, seller 1) - scheduled to start in 10 minutes
+(2, 1, 10000000, 10000000, NULL, 500000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '15 minutes', CURRENT_TIMESTAMP + INTERVAL '10 minutes'),
+-- Auction 2: Smartphone Flagship Pro (product 21, store 6, seller 6) - scheduled to start in 20 minutes
+(21, 6, 8000000, 8000000, NULL, 250000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '20 minutes', CURRENT_TIMESTAMP + INTERVAL '20 minutes'),
+-- Auction 3: Sepeda Statis X-Bike (product 36, store 9, seller 9) - scheduled to start in 5 minutes, no bids yet
+(36, 9, 900000, 900000, NULL, 50000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '20 minutes', CURRENT_TIMESTAMP + INTERVAL '5 minutes'),
+-- Auction 4: TV LED 50 inch Smart 4K (product 1, store 1, seller 1) - scheduled to start in 15 minutes
+(1, 1, 3000000, 3000000, NULL, 100000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '20 minutes', CURRENT_TIMESTAMP + INTERVAL '15 minutes'),
+-- Auction 5: Gaun Pesta Brokat (product 6, store 2, seller 2) - scheduled to start in 25 minutes
+(6, 2, 500000, 500000, NULL, 50000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '40 minutes', CURRENT_TIMESTAMP + INTERVAL '25 minutes'),
+-- Auction 6: Smartwatch Pro GPS (product 24, store 6, seller 6) - scheduled to start in 30 minutes
+(24, 6, 1000000, 1000000, NULL, 100000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '45 minutes', CURRENT_TIMESTAMP + INTERVAL '30 minutes'),
+-- Auction 7: Raket Badminton Carbon (product 18, store 5, seller 5) - scheduled to start in 8 minutes
+(18, 5, 350000, 350000, NULL, 25000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '20 minutes', CURRENT_TIMESTAMP + INTERVAL '8 minutes'),
+-- Auction 8: Dumbbell Set 10kg (product 33, store 9, seller 9) - scheduled to start in 12 minutes
+(33, 9, 250000, 250000, NULL, 25000, 'SCHEDULED', CURRENT_TIMESTAMP + INTERVAL '27 minutes', CURRENT_TIMESTAMP + INTERVAL '12 minutes');
 
 -- Ended auctions (for history)
 INSERT INTO auctions (product_id, seller_id, initial_bid, current_bid, highest_bidder_id, min_bid_increment, status, countdown_end_time, started_at, ended_at, winner_id) VALUES

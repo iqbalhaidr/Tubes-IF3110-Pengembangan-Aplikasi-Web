@@ -65,7 +65,7 @@ export function useAuction(auctionId, options = {}) {
   };
 }
 
-export function useAuctionsList(statusFilter = 'ACTIVE') {
+export function useAuctionsList(statusFilter = 'ACTIVE', pollInterval = 5000) {
   const [auctions, setAuctions] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -75,8 +75,14 @@ export function useAuctionsList(statusFilter = 'ACTIVE') {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const currentPageRef = useRef(1);
+  const currentLimitRef = useRef(10);
 
   const fetchAuctions = useCallback(async (page = 1, limit = 10) => {
+    // Update refs to track current pagination state
+    currentPageRef.current = page;
+    currentLimitRef.current = limit;
+    
     try {
       setLoading(true);
       const response = await axios.get(
@@ -93,12 +99,23 @@ export function useAuctionsList(statusFilter = 'ACTIVE') {
     }
   }, [statusFilter]);
 
+  // Initial fetch
   useEffect(() => {
-    fetchAuctions();
+    fetchAuctions(1, 10);
   }, [fetchAuctions]);
 
+  // Polling effect - refresh auctions every 5 seconds to update countdowns and statuses
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      // Fetch with current pagination state to keep user on same page
+      fetchAuctions(currentPageRef.current, currentLimitRef.current);
+    }, pollInterval);
+
+    return () => clearInterval(intervalId);
+  }, [fetchAuctions, pollInterval]);
+
   const goToPage = (page) => {
-    fetchAuctions(page, pagination.limit);
+    fetchAuctions(page, currentLimitRef.current);
   };
 
   const changeLimit = (limit) => {

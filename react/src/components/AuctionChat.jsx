@@ -62,7 +62,7 @@ export default function AuctionChat({
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-[500px]">
-      <div className="bg-gradient-to-r from-primary-green to-green-600 text-white p-4 flex justify-between items-center">
+      <div className="bg-primary-green text-white p-4 flex justify-between items-center">
         <h3 className="font-bold text-lg">Live Chat</h3>
         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${isConnected ? 'bg-green-900 bg-opacity-30' : 'bg-red-900 bg-opacity-30'}`}>
           {isConnected ? '🟢 Connected' : '🔴 Disconnected'}

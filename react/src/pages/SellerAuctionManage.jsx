@@ -184,7 +184,9 @@ export default function SellerAuctionManage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <strong className="block text-text-dark mb-1">Current Bid:</strong>
-                  <span className="text-2xl font-bold text-primary-green">Rp {parseFloat(auction.current_bid).toLocaleString('id-ID')}</span>
+                  <span className="text-2xl font-bold text-primary-green">
+                    {bidHistory.length > 0 ? `Rp ${parseFloat(auction.current_bid).toLocaleString('id-ID')}` : '-'}
+                  </span>
                 </div>
                 {auction.highest_bidder_username && (
                   <div className="bg-gray-50 p-3 rounded-lg">
@@ -286,7 +288,7 @@ export default function SellerAuctionManage() {
               ) : (
                 <p className="text-text-muted mb-4">This auction has ended.</p>
               )}
-              <a href="/seller/orders" className="inline-block w-full px-6 py-3 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium text-center">
+              <a href="/seller/orders" className="inline-block w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:shadow-lg transition-all font-medium text-center">
                 View Orders
               </a>
             </div>
