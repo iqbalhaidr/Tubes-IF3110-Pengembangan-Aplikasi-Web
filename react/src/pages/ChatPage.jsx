@@ -61,7 +61,10 @@ const PushNotificationButton = ({ userId }) => {
 
 const ChatPage = () => {
   const { currentUser, isLoading: isAuthLoading } = useAuth();
-  const { rooms, activeRoom, messages, loading, typingUsers, selectRoom, sendMessage, emitTyping, createOrSelectRoom, uploadImage } = useChat(currentUser);
+  const { 
+    rooms, activeRoom, messages, loading, loadingMore, hasMore, fetchMoreMessages,
+    typingUsers, selectRoom, sendMessage, emitTyping, createOrSelectRoom, uploadImage 
+  } = useChat(currentUser);
 
   const handleSelectRoom = (room) => {
     selectRoom(room);
@@ -85,33 +88,38 @@ const ChatPage = () => {
   return (
     <div className="h-screen w-full flex bg-page-background text-main-text">
       <div className="w-1/3 border-r border-secondary-text flex flex-col">
-        <div className="p-4 border-b border-secondary-text bg-background-main">
+        <div className="p-4 border-b border-secondary-text bg-background-main flex-shrink-0">
             <a href={backUrl} className="text-primary-green hover:underline font-semibold">
                 &larr; {backText}
             </a>
         </div>
-        <ChatSidebar 
-          currentUser={currentUser}
-          rooms={rooms}
-          activeRoom={activeRoom}
-          onSelectRoom={handleSelectRoom}
-          onStoreSelect={createOrSelectRoom}
-          loading={loading.rooms}
-        />
-        <div className="p-4 border-t border-secondary-text">
+        <div className="flex-grow min-h-0">
+          <ChatSidebar 
+            currentUser={currentUser}
+            rooms={rooms}
+            activeRoom={activeRoom}
+            onSelectRoom={handleSelectRoom}
+            onStoreSelect={createOrSelectRoom}
+            loading={loading.rooms}
+          />
+        </div>
+        <div className="p-4 border-t border-secondary-text flex-shrink-0">
            <PushNotificationButton userId={currentUser.user_id} />
         </div>
       </div>
       <div className="w-2/3 flex flex-col">
         <ChatPanel 
+          currentUser={currentUser}
           activeRoom={activeRoom}
           messages={messages}
           loading={loading.messages}
+          loadingMore={loadingMore}
+          hasMore={hasMore}
+          onFetchMoreMessages={fetchMoreMessages}
           onSendMessage={sendMessage}
           onUploadImage={uploadImage}
           typingUsers={typingUsers}
           onTyping={emitTyping}
-          currentUserId={currentUser.user_id}
         />
       </div>
     </div>

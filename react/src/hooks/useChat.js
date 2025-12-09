@@ -8,6 +8,8 @@ export const useChat = (currentUser) => {
     const [activeRoom, setActiveRoom] = useState(null);
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState({ rooms: false, messages: false });
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
     const [typingUsers, setTypingUsers] = useState([]);
     const typingTimers = useRef({});
 
@@ -30,10 +32,15 @@ export const useChat = (currentUser) => {
     const fetchMessages = useCallback(async (storeId, buyerId) => {
         setLoading(prev => ({ ...prev, messages: true }));
         setMessages([]); // Clear previous messages
+        setHasMore(true); // Reset for new room
         try {
             const response = await nodeApi.get(`/chat/rooms/${storeId}/${buyerId}/messages`);
             if (response.data.status === 'success') {
-                setMessages(response.data.data.reverse());
+                const fetchedMessages = response.data.data;
+                if (fetchedMessages.length < 50) {
+                    setHasMore(false);
+                }
+                setMessages(fetchedMessages.reverse());
             }
         } catch (error) {
             console.error(`Failed to fetch messages for room ${storeId}-${buyerId}:`, error);
@@ -41,6 +48,32 @@ export const useChat = (currentUser) => {
             setLoading(prev => ({ ...prev, messages: false }));
         }
     }, []);
+
+    const fetchMoreMessages = useCallback(async () => {
+        if (loading.messages || loadingMore || !hasMore || !activeRoom || messages.length === 0) {
+            return;
+        }
+
+        setLoadingMore(true);
+        const oldestMessage = messages[0];
+        
+        try {
+            const response = await nodeApi.get(`/chat/rooms/${activeRoom.store_id}/${activeRoom.buyer_id}/messages`, {
+                params: { before: oldestMessage.created_at }
+            });
+            if (response.data.status === 'success') {
+                const fetchedMessages = response.data.data;
+                if (fetchedMessages.length < 50) {
+                    setHasMore(false);
+                }
+                setMessages(prev => [...fetchedMessages.reverse(), ...prev]);
+            }
+        } catch (error) {
+            console.error('Failed to fetch more messages:', error);
+        } finally {
+            setLoadingMore(false);
+        }
+    }, [activeRoom, messages, loading.messages, loadingMore, hasMore]);
 
     useEffect(() => {
         // Fetch initial data when chat socket is connected
@@ -88,6 +121,7 @@ export const useChat = (currentUser) => {
                         ...originalRoom,
                         last_message_preview: newMessage.content,
                         last_message_at: newMessage.created_at,
+                        last_message_sender_id: newMessage.sender_id,
                         unread_count: newUnreadCount
                     };
 
@@ -104,7 +138,7 @@ export const useChat = (currentUser) => {
             });
         };
 
-        const handleUserTyping = ({ userId, isTyping }) => {
+        const handleUserTyping = ({ userId, username, isTyping }) => {
             setTypingUsers(prev => {
                 const existingUser = prev.find(u => u.userId === userId);
                 if (typingTimers.current[userId]) {
@@ -115,7 +149,7 @@ export const useChat = (currentUser) => {
                     typingTimers.current[userId] = setTimeout(() => {
                         setTypingUsers(current => current.filter(u => u.userId !== userId));
                     }, 3000);
-                    if (!existingUser) return [...prev, { userId }];
+                    if (!existingUser) return [...prev, { userId, username }];
                 } else {
                     return prev.filter(u => u.userId !== userId);
                 }
@@ -258,10 +292,13 @@ export const useChat = (currentUser) => {
         activeRoom,
         messages,
         loading,
+        loadingMore,
+        hasMore,
         typingUsers,
         selectRoom,
         fetchRooms,
         fetchMessages,
+        fetchMoreMessages,
         sendMessage,
         emitTyping,
         markRoomAsRead,

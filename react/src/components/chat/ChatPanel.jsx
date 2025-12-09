@@ -4,23 +4,34 @@ import TypingIndicator from './TypingIndicator';
 import SelectItemPreviewModal from './SelectItemPreviewModal';
 import { MessageListSkeleton } from './SkeletonLoader';
 
-const ChatPanel = ({ activeRoom, messages, loading, onSendMessage, onUploadImage, typingUsers, onTyping, currentUserId }) => {
+const ChatPanel = ({ 
+  currentUser, activeRoom, messages, loading, onSendMessage, 
+  onUploadImage, typingUsers, onTyping, loadingMore, hasMore, onFetchMoreMessages
+}) => {
   const [inputValue, setInputValue] = useState('');
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const messageEndRef = useRef(null);
+  const messageListRef = useRef(null);
 
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (!loadingMore) {
+      messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, loadingMore]);
+
+  const handleScroll = () => {
+    if (messageListRef.current?.scrollTop === 0 && hasMore && !loadingMore) {
+      onFetchMoreMessages();
+    }
+  };
 
   if (!activeRoom) {
     return <div className="h-full flex items-center justify-center text-gray-500 bg-gray-50"><p>Select a chat to start messaging.</p></div>;
   }
 
   const handleSendMessage = () => {
-    console.log('handleSendMessage called in ChatPanel');
     if (inputValue.trim()) {
       onSendMessage({ content: inputValue });
       setInputValue('');
@@ -59,24 +70,36 @@ const ChatPanel = ({ activeRoom, messages, loading, onSendMessage, onUploadImage
     setIsItemModalOpen(false);
   };
 
+  // Determine header details based on user role
+  const isSeller = currentUser.role === 'SELLER';
+  const displayName = isSeller ? activeRoom.buyer_name : activeRoom.store_name;
+  const displayImage = isSeller ? null : activeRoom.store_logo;
+
   return (
     <>
       <div className="h-full flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden">
         {/* Chat Header */}
         <div className="p-5 border-b border-gray-200 flex items-center bg-white shadow-sm">
-          <div className="w-12 h-12 rounded-full bg-primary-green mr-4 flex-shrink-0 flex items-center justify-center text-white font-bold text-lg">
-              {activeRoom.store_name.charAt(0)}
+          <div className="w-12 h-12 rounded-full bg-primary-green mr-4 flex-shrink-0 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+            {displayImage ? (
+              <img src={displayImage} alt={displayName} className="w-full h-full object-cover" />
+            ) : (
+              displayName ? displayName.charAt(0).toUpperCase() : '?'
+            )}
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">{activeRoom.store_name}</h2>
+            <h2 className="text-lg font-bold text-gray-900">{displayName || 'Chat'}</h2>
             <p className="text-sm text-gray-600 font-medium">Online</p>
           </div>
         </div>
 
         {/* Message List */}
-        <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
+        <div ref={messageListRef} onScroll={handleScroll} className="flex-1 p-6 overflow-y-auto bg-gray-50">
           {loading && <MessageListSkeleton />}
-          {!loading && messages.map((msg) => <MessageBubble key={msg.message_id} message={msg} currentUserId={currentUserId} />)}
+          {loadingMore && <div className="text-center text-gray-500 py-4">Loading more...</div>}
+          {!loading && hasMore && <div className="text-center text-gray-400 text-xs py-4">Scroll up to load more</div>}
+          
+          {!loading && messages.map((msg) => <MessageBubble key={msg.message_id} message={msg} />)}
           <div ref={messageEndRef} />
           {!loading && messages.length === 0 && <div className="text-center text-gray-600 font-medium py-12">No messages yet. Say hi!</div>}
         </div>
