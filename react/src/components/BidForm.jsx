@@ -5,6 +5,7 @@ export default function BidForm({
   onBidSubmit,
   isLoading = false,
   error = null,
+  userBalance = 0,
 }) {
   const [bidAmount, setBidAmount] = useState('');
   const [validationError, setValidationError] = useState(null);
@@ -47,6 +48,13 @@ export default function BidForm({
       return;
     }
 
+    if (amount > userBalance) {
+      setValidationError(
+        `Insufficient balance. Your balance: Rp ${userBalance.toLocaleString('id-ID')}`
+      );
+      return;
+    }
+
     onBidSubmit(amount);
     setBidAmount('');
   };
@@ -57,7 +65,7 @@ export default function BidForm({
         <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
           <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Current Bid</span>
           <span className="text-lg font-bold text-gray-900">
-            Rp {currentBid.toLocaleString('id-ID')}
+            {currentBid === 0 ? 'No bids yet' : `Rp ${currentBid.toLocaleString('id-ID')}`}
           </span>
         </div>
         <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
@@ -78,6 +86,12 @@ export default function BidForm({
             <span className="text-sm font-bold text-gray-900">{auction.highest_bidder_username}</span>
           </div>
         )}
+        <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+          <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Your Balance</span>
+          <span className="text-lg font-bold text-primary-green">
+            Rp {userBalance.toLocaleString('id-ID')}
+          </span>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">

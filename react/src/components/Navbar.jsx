@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import './Navbar.css';
+import { useFeatureEnabled, FEATURES } from '../hooks/useFeatureFlags';
 
 /**
  * Navbar component - exact translation from PHP navbar.php
@@ -14,6 +15,10 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
   const [topupLoading, setTopupLoading] = useState(false);
   const [topupError, setTopupError] = useState('');
   const dropdownRef = useRef(null);
+
+  // Feature flags
+  const { enabled: chatEnabled } = useFeatureEnabled(FEATURES.CHAT_ENABLED, user?.userId);
+  const { enabled: auctionEnabled } = useFeatureEnabled(FEATURES.AUCTION_ENABLED, user?.userId);
   
   // Determine navbar type based on user
   const navbarType = !user ? 'guest' : user.role === 'SELLER' ? 'seller' : 'buyer';
@@ -107,7 +112,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
     setTopupError('');
     
     try {
-      const response = await fetch('/api/balance/top-up', {
+      const response = await fetch('/balance/top-up', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,13 +153,16 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
     }
   };
 
-  // Seller navigation links
-  const sellerLinks = [
-    { href: '/seller/dashboard', label: 'Dashboard', key: 'dashboard' },
-    { href: '/seller/products', label: 'Produk', key: 'products' },
-    { href: '/seller/orders', label: 'Orders', key: 'orders' },
-    { href: '/manage-auctions', label: 'Auctions', key: 'auctions' },
+  // Base seller navigation links
+  const baseSellerLinks = [
+    { href: '/seller/dashboard', label: 'Dashboard', key: 'dashboard', flag: true },
+    { href: '/chat', label: 'Chat', key: 'chat', flag: chatEnabled },
+    { href: '/seller/products', label: 'Produk', key: 'products', flag: true },
+    { href: '/seller/orders', label: 'Orders', key: 'orders', flag: true },
+    { href: '/manage-auctions', label: 'Auctions', key: 'auctions', flag: auctionEnabled },
   ];
+
+  const sellerLinks = baseSellerLinks.filter(link => link.flag);
 
   return (
     <>
@@ -268,8 +276,8 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                   <div className="user-dropdown-menu" id="userDropdownMenu">
                     <a href="/buyer/profile" className="dropdown-item">Profile</a>
                     <a href="/buyer/order-history" className="dropdown-item">Order History</a>
-                    <a href="/chat" className="dropdown-item">Chat</a>
-                    <a href="/auctions" className="dropdown-item">Live Auctions</a>
+                    {chatEnabled && <a href="/chat" className="dropdown-item">Chat</a>}
+                    {auctionEnabled && <a href="/auctions" className="dropdown-item">Live Auctions</a>}
                     <button 
                       type="button" 
                       className="dropdown-item" 
@@ -282,15 +290,39 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
               </>
             )}
             
-            {/* Seller logout */}
+            {/* Seller dropdown and logout */}
             {isSeller && (
-              <button 
-                type="button" 
-                className="navbar-link logout-link"
-                onClick={openLogoutModal}
+              <div 
+                className={`user-dropdown ${dropdownOpen ? 'active' : ''}`}
+                ref={dropdownRef}
               >
-                Logout
-              </button>
+                <button 
+                  className="user-profile-btn" 
+                  id="userProfileBtn"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                >
+                  <div className="user-avatar" id="userAvatar">
+                    {(user?.name ?? 'S').charAt(0).toUpperCase()}
+                  </div>
+                  <span className="user-name" id="userName">
+                    {user?.name ?? 'Seller'}
+                  </span>
+                  <span className="dropdown-arrow">▼</span>
+                </button>
+                <div className="user-dropdown-menu" id="userDropdownMenu">
+                  <a href="/seller/dashboard" className="dropdown-item">Dashboard</a>
+                  {chatEnabled && <a href="/chat" className="dropdown-item">Chat</a>}
+                  <a href="/seller/orders" className="dropdown-item">Orders</a>
+                  {auctionEnabled && <a href="/manage-auctions" className="dropdown-item">Auctions</a>}
+                  <button 
+                    type="button" 
+                    className="dropdown-item" 
+                    onClick={openLogoutModal}
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

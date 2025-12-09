@@ -3,9 +3,60 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import BidForm from '../components/BidForm';
 import AuctionCountdown from '../components/AuctionCountdown';
-import AuctionChat from '../components/AuctionChat';
 import BidHistory from '../components/BidHistory';
 import { useAuction, useBid, useWebSocket } from '../hooks/useAuction';
+
+// Scheduled auction countdown component - uses local countdown like active auctions
+function ScheduledAuctionCountdown({ seconds }) {
+  const [displaySeconds, setDisplaySeconds] = useState(seconds);
+
+  useEffect(() => {
+    setDisplaySeconds(seconds);
+  }, [seconds]);
+
+  // Local countdown tick every second
+  useEffect(() => {
+    if (displaySeconds <= 0) return;
+
+    const interval = setInterval(() => {
+      setDisplaySeconds((prev) => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [displaySeconds]);
+
+  const formatCountdown = (secs) => {
+    if (!secs || secs <= 0) return 'Starting...';
+
+    if (secs < 60) {
+      return `${secs}s`;
+    }
+
+    const minutes = Math.floor(secs / 60);
+    const remainingSecs = secs % 60;
+
+    if (minutes < 60) {
+      return `${minutes}m ${remainingSecs}s`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  return (
+    <div className="bg-primary-green rounded-lg p-8 shadow-md border-2 border-green-700 text-center">
+      <div className="text-sm font-bold opacity-95 mb-3 uppercase tracking-wider text-green-50">Auction Starts In</div>
+      <div className="text-5xl font-bold tracking-tight mb-3 text-white">
+        {formatCountdown(displaySeconds)}
+      </div>
+      <p className="text-green-50 text-sm">Get ready! Bidding will start soon.</p>
+    </div>
+  );
+}
 
 export default function AuctionDetail() {
   const { id } = useParams();
@@ -28,10 +79,12 @@ export default function AuctionDetail() {
     isConnected,
     countdownSeconds,
     bidPlaced,
-    messages,
-    sendMessage,
-    setTyping,
   } = useWebSocket(id, userId);
+
+  const isAuctionActive = auction?.status === 'ACTIVE';
+  const isAuctionScheduled = auction?.status === 'SCHEDULED';
+  const isUserSeller = userId && userId === auction?.seller_id;
+  const canBid = isAuthenticated && !isUserSeller && isAuctionActive;
 
   // When a bid is placed via WebSocket, immediately refresh auction and bid history
   useEffect(() => {
@@ -106,10 +159,6 @@ export default function AuctionDetail() {
     );
   }
 
-  const isAuctionActive = auction.status === 'ACTIVE';
-  const isUserSeller = userId && userId === auction.seller_id;
-  const canBid = isAuthenticated && !isUserSeller && isAuctionActive;
-
   // Format product image path - PHP stores as /public/images/products/X.jpg
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
@@ -141,16 +190,24 @@ export default function AuctionDetail() {
             </div>
             <div className="p-6">
               <h2 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">{auction.product_name}</h2>
-              <p className="text-gray-700 mb-6 leading-relaxed text-base">{auction.product_description}</p>
+              <p className="text-gray-700 mb-6 leading-relaxed text-base">
+                {auction.product_description?.replace(/<[^>]*>/g, '') || 'No description available'}
+              </p>
               <div className="space-y-3 border-t border-gray-200 pt-6">
                 <div className="flex items-center justify-between">
                   <strong className="text-gray-700 font-semibold">Seller:</strong>
-                  <span className="text-gray-900 font-medium">{auction.seller_username}</span>
+                  <span className="text-gray-900 font-medium cursor-pointer hover:text-primary-green transition-colors">{auction.seller_username}</span>
                 </div>
                 {auction.seller_address && (
                   <div className="flex items-center justify-between">
                     <strong className="text-gray-700 font-semibold">Location:</strong>
                     <span className="text-gray-900 font-medium">{auction.seller_address}</span>
+                  </div>
+                )}
+                {auction.product_quantity && (
+                  <div className="flex items-center justify-between">
+                    <strong className="text-gray-700 font-semibold">Quantity Available:</strong>
+                    <span className="text-gray-900 font-medium">{auction.product_quantity} units</span>
                   </div>
                 )}
               </div>
@@ -162,11 +219,17 @@ export default function AuctionDetail() {
             <AuctionCountdown
               countdownSeconds={countdownSeconds}
               onExpired={handleAuctionExpired}
+              auctionId={id}
             />
           )}
 
+          {/* Scheduled Start Countdown */}
+          {isAuctionScheduled && (
+            <ScheduledAuctionCountdown seconds={auction.seconds_until_start} />
+          )}
+
           {/* Status Badge */}
-          {!isAuctionActive && (
+          {!isAuctionActive && !isAuctionScheduled && (
             <div className={`bg-white rounded-lg shadow-sm p-8 text-center border-l-4 ${
               auction.status === 'ENDED' ? 'border-primary-green' : 'border-red-500'
             }`}>
@@ -191,19 +254,26 @@ export default function AuctionDetail() {
           )}
 
           {/* Bid History */}
-          <BidHistory bids={bidHistory} />
+          <BidHistory bids={bidHistory} currentUserId={userId} />
         </div>
 
-        {/* Right Column: Bid Form & Chat */}
+        {/* Right Column: Bid Form & Seller Actions */}
         <div className="space-y-6">
           {/* Bid Form - only show for authenticated users who are not the seller */}
-          {canBid ? (
+          {isAuctionScheduled ? (
+            <div className="bg-green-50 rounded-lg shadow-sm p-6 text-center border-2 border-primary-green">
+              <h3 className="text-xl font-bold text-primary-green mb-3">Auction Not Started Yet</h3>
+              <p className="text-green-800 mb-4">This auction is scheduled to start in the near future. Bidding will be available once the auction starts.</p>
+              <p className="text-sm text-green-700">Auction Starts {new Date(auction.start_time).toLocaleString()}</p>
+            </div>
+          ) : canBid ? (
             <>
               <BidForm
                 auction={auction}
                 onBidSubmit={handleBidSubmit}
                 isLoading={isSubmitting}
                 error={bidError}
+                userBalance={parseFloat(user?.balance) || 0}
               />
 
               {bidSuccess && (
@@ -223,7 +293,7 @@ export default function AuctionDetail() {
           ) : isUserSeller ? (
             <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 mb-3">Your Auction</h3>
-              <p className="text-gray-600 mb-6">You cannot bid on your own auction.</p>
+              <p className="text-gray-600 mb-6">You are the seller of this auction.</p>
               <button onClick={() => navigate(`/manage-auctions/${id}`)} className="w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-bold">
                 Manage This Auction
               </button>
@@ -234,25 +304,6 @@ export default function AuctionDetail() {
               <p className="text-gray-600">This auction is no longer accepting bids.</p>
             </div>
           ) : null}
-
-          {/* Chat Section - only for authenticated users */}
-          {isAuthenticated ? (
-            <AuctionChat
-              auctionId={id}
-              userId={userId}
-              messages={messages}
-              onSendMessage={sendMessage}
-              onTyping={setTyping}
-              isConnected={isConnected}
-            />
-          ) : (
-            <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Auction Chat</h3>
-              <p className="text-gray-600">
-                <a href="/login" className="text-primary-green hover:underline font-semibold">Login</a> to join the conversation.
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>

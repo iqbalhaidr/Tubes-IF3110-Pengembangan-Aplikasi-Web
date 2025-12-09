@@ -110,10 +110,12 @@ CREATE TABLE IF NOT EXISTS auctions (
     min_bid_increment DECIMAL(15, 2) DEFAULT 10000,
     
     -- Status and timing
-    status VARCHAR(50) DEFAULT 'ACTIVE',
+    status VARCHAR(50) DEFAULT 'SCHEDULED',
+    start_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     countdown_end_time TIMESTAMP,
-    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP,
     ended_at TIMESTAMP,
+    deleted_at TIMESTAMP,
     
     -- Winner information
     winner_id INTEGER,
@@ -127,7 +129,7 @@ CREATE TABLE IF NOT EXISTS auctions (
     CONSTRAINT fk_seller FOREIGN KEY (seller_id) REFERENCES "user"(user_id) ON DELETE CASCADE,
     CONSTRAINT fk_highest_bidder FOREIGN KEY (highest_bidder_id) REFERENCES "user"(user_id) ON DELETE SET NULL,
     CONSTRAINT fk_winner FOREIGN KEY (winner_id) REFERENCES "user"(user_id) ON DELETE SET NULL,
-    CONSTRAINT valid_status CHECK (status IN ('ACTIVE', 'ENDED', 'CANCELLED')),
+    CONSTRAINT valid_status CHECK (status IN ('SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED')),
     CONSTRAINT bid_positive CHECK (current_bid >= 0),
     CONSTRAINT min_increment_positive CHECK (min_bid_increment > 0)
 );
@@ -138,6 +140,12 @@ CREATE INDEX IF NOT EXISTS idx_auctions_seller ON auctions(seller_id);
 CREATE INDEX IF NOT EXISTS idx_auctions_winner ON auctions(winner_id);
 CREATE INDEX IF NOT EXISTS idx_auctions_product ON auctions(product_id);
 CREATE INDEX IF NOT EXISTS idx_auctions_countdown ON auctions(countdown_end_time);
+CREATE INDEX IF NOT EXISTS idx_auctions_start_time ON auctions(start_time);
+CREATE INDEX IF NOT EXISTS idx_auctions_deleted ON auctions(deleted_at);
+
+-- Constraint: Only 1 ACTIVE or SCHEDULED auction per store at a time
+-- (This is enforced at the application level due to store_id needing product join)
+-- See application code in auctionRoutes.js for validation
 
 -- ============================================
 -- AUCTION BIDS TABLE

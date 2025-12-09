@@ -5,7 +5,7 @@ const TypingIndicator = ({ typingUsers = [] }) => {
         return null;
     }
 
-    const names = typingUsers.map(u => `User ${u.userId}`).join(', ');
+    const names = typingUsers.map(u => u.username || `User ${u.userId}`).join(', ');
     const verb = typingUsers.length > 1 ? 'are' : 'is';
 
     return (

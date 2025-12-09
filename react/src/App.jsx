@@ -118,7 +118,7 @@ export default function App() {
       <Route path="/*" element={
         <div className="app">
           {/* Use shared Navbar component matching PHP styling */}
-          <Navbar user={user} onLogout={handleLogout} onBalanceUpdate={handleBalanceUpdate} />
+          <Navbar key={user?.user_id || 'guest'} user={user} onLogout={handleLogout} onBalanceUpdate={handleBalanceUpdate} />
 
           <main className="app-main">
                   
@@ -195,7 +195,7 @@ export default function App() {
                     <Route path="*" element={<Navigate to="/auctions" replace />} />
                   </Routes>
                 </main>
-
+{/* 
           <footer className="app-footer">
             <div className="footer-content">
               <p>&copy; 2025 Nimonspedia - Auction Platform</p>
@@ -203,7 +203,7 @@ export default function App() {
                 Built with React 18 | Socket.io | Node.js Express
               </p>
             </div>
-          </footer>
+          </footer> */}
         </div>
       } />
     </Routes>

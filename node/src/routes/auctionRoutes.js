@@ -7,13 +7,13 @@ const router = express.Router();
 
 /**
  * Helper function to create an order when an auction ends with a winner
- * Creates an order with status 'APPROVED', deducts buyer balance, and adds order_item
+ * Creates an order with status 'APPROVED'
  * Returns { success, orderId, error } - does not throw on insufficient balance
  */
 async function createOrderFromAuction(client, auction) {
-  // Get buyer's address, balance, and product details
+  // Get buyer's address and product details
   const buyerResult = await client.query(
-    'SELECT address, balance FROM "user" WHERE user_id = $1',
+    'SELECT address FROM "user" WHERE user_id = $1',
     [auction.highest_bidder_id]
   );
 
@@ -28,29 +28,11 @@ async function createOrderFromAuction(client, auction) {
   }
 
   const buyerAddress = buyerResult.rows[0].address || 'Address not provided';
-  const buyerBalance = parseFloat(buyerResult.rows[0].balance) || 0;
   const storeId = productResult.rows[0].store_id;
   const finalPrice = Math.round(parseFloat(auction.current_bid));
 
-  // Check if buyer has enough balance - gracefully handle insufficient funds
-  if (buyerBalance < finalPrice) {
-    console.warn(`[Auction] Buyer #${auction.highest_bidder_id} has insufficient balance (${buyerBalance} < ${finalPrice}). Order will not be created.`);
-    return { 
-      success: false, 
-      orderId: null, 
-      error: 'Insufficient balance',
-      details: { buyerBalance, requiredAmount: finalPrice }
-    };
-  }
-
-  // Deduct balance from buyer
-  await client.query(
-    'UPDATE "user" SET balance = balance - $1 WHERE user_id = $2',
-    [finalPrice, auction.highest_bidder_id]
-  );
-  console.log(`[Auction] Deducted Rp ${finalPrice} from buyer #${auction.highest_bidder_id}`);
-
   // Create the order with status 'APPROVED'
+  // Balance has already been deducted when the bid was placed, so no need to check/deduct here
   const orderResult = await client.query(
     `INSERT INTO "order" (buyer_id, store_id, total_price, shipping_address, status, confirmed_at)
      VALUES ($1, $2, $3, $4, 'APPROVED', CURRENT_TIMESTAMP)
@@ -76,31 +58,48 @@ async function createOrderFromAuction(client, auction) {
 
 /**
  * GET /api/node/auctions
- * List auctions with pagination
- * Query params: page (default 1), limit (default 10), status (default 'ACTIVE')
+ * List auctions with pagination and search
+ * Query params: page (default 1), limit (default 10), status (default 'ACTIVE'), search (optional)
  */
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const status = req.query.status || 'ACTIVE';
+    const searchQuery = req.query.search || '';
     const offset = (page - 1) * limit;
 
     // Validate status
-    const validStatuses = ['ACTIVE', 'ENDED', 'CANCELLED'];
+    const validStatuses = ['SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ success: false, error: 'Invalid status filter' });
     }
 
-    // Get total count of auctions with given status
+    // Build search filter
+    let whereClause = 'a.status = $1 AND a.deleted_at IS NULL';
+    let countParams = [status];
+    let queryParams = [status];
+
+    if (searchQuery.trim()) {
+      whereClause += ` AND (LOWER(p.product_name) LIKE LOWER($${countParams.length + 1}) OR LOWER(u_seller.name) LIKE LOWER($${countParams.length + 1}))`;
+      const searchPattern = `%${searchQuery}%`;
+      countParams.push(searchPattern);
+      queryParams.push(searchPattern);
+    }
+
+    // Get total count of auctions with given status and search (exclude soft-deleted)
     const countResult = await pool.query(
-      'SELECT COUNT(*) FROM auctions WHERE status = $1',
-      [status]
+      `SELECT COUNT(*) FROM auctions a
+       LEFT JOIN "user" u_seller ON a.seller_id = u_seller.user_id
+       LEFT JOIN product p ON a.product_id = p.product_id
+       WHERE ${whereClause}`,
+      countParams
     );
     const totalCount = parseInt(countResult.rows[0].count);
     const totalPages = Math.ceil(totalCount / limit);
 
     // Get paginated auctions with seller info
+    queryParams.push(limit, offset);
     const result = await pool.query(
       `SELECT 
         a.id,
@@ -116,19 +115,21 @@ router.get('/', async (req, res) => {
         u_bidder.name as highest_bidder_username,
         a.min_bid_increment,
         a.status,
+        a.start_time,
         a.countdown_end_time,
         a.started_at,
         a.ended_at,
         EXTRACT(EPOCH FROM (a.countdown_end_time - CURRENT_TIMESTAMP))::INTEGER as seconds_remaining,
+        EXTRACT(EPOCH FROM (a.start_time - CURRENT_TIMESTAMP))::INTEGER as seconds_until_start,
         (SELECT COUNT(*) FROM auction_bids WHERE auction_id = a.id) as total_bids
       FROM auctions a
       LEFT JOIN "user" u_seller ON a.seller_id = u_seller.user_id
       LEFT JOIN "user" u_bidder ON a.highest_bidder_id = u_bidder.user_id
       LEFT JOIN product p ON a.product_id = p.product_id
-      WHERE a.status = $1
-      ORDER BY ${status === 'ACTIVE' ? 'a.countdown_end_time ASC' : 'a.ended_at DESC'}
-      LIMIT $2 OFFSET $3`,
-      [status, limit, offset]
+      WHERE ${whereClause}
+      ORDER BY ${status === 'SCHEDULED' ? 'a.start_time ASC' : status === 'ACTIVE' ? 'a.countdown_end_time ASC' : 'a.ended_at DESC'}
+      LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}`,
+      queryParams
     );
 
     res.json({
@@ -173,17 +174,19 @@ router.get('/:id', async (req, res) => {
         u_bidder.name as highest_bidder_username,
         a.min_bid_increment,
         a.status,
+        a.start_time,
         a.countdown_end_time,
         a.started_at,
         a.ended_at,
         a.highest_bidder_id as winner_id,
         u_bidder.name as winner_username,
-        EXTRACT(EPOCH FROM (a.countdown_end_time - CURRENT_TIMESTAMP))::INTEGER as seconds_remaining
+        EXTRACT(EPOCH FROM (a.countdown_end_time - CURRENT_TIMESTAMP))::INTEGER as seconds_remaining,
+        EXTRACT(EPOCH FROM (a.start_time - CURRENT_TIMESTAMP))::INTEGER as seconds_until_start
       FROM auctions a
       LEFT JOIN "user" u_seller ON a.seller_id = u_seller.user_id
       LEFT JOIN "user" u_bidder ON a.highest_bidder_id = u_bidder.user_id
       LEFT JOIN product p ON a.product_id = p.product_id
-      WHERE a.id = $1`,
+      WHERE a.id = $1 AND a.deleted_at IS NULL`,
       [id]
     );
 
@@ -281,13 +284,14 @@ router.get('/user/:userId/created', async (req, res) => {
 /**
  * POST /api/node/auctions
  * Create a new auction
- * Required: product_id, seller_id, initial_bid, min_bid_increment
+ * Required: product_id, initial_bid, min_bid_increment
+ * Optional: start_time (ISO 8601 timestamp, defaults to now for immediate start)
  * Auth: Required
  */
 router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), async (req, res) => {
   const client = await pool.connect();
   try {
-    const { product_id, initial_bid, min_bid_increment } = req.body;
+    const { product_id, initial_bid, min_bid_increment, start_time } = req.body;
     const seller_id = req.user.id; // From JWT token
 
     // Validate input
@@ -305,11 +309,30 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
       });
     }
 
+    // Parse start_time - default to now if not provided
+    let auctionStartTime = new Date();
+    if (start_time) {
+      auctionStartTime = new Date(start_time);
+      if (isNaN(auctionStartTime.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid start_time format. Use ISO 8601 (e.g., 2025-12-10T10:00:00Z)',
+        });
+      }
+    }
+
+    // Determine initial status based on start_time
+    const now = new Date();
+    const initialStatus = auctionStartTime > now ? 'SCHEDULED' : 'ACTIVE';
+
     await client.query('BEGIN');
 
-    // Verify product exists and belongs to user
+    // Verify product exists and belongs to seller
     const productCheck = await client.query(
-      'SELECT product_id FROM product WHERE product_id = $1',
+      `SELECT p.product_id, p.store_id, s.user_id 
+       FROM product p 
+       JOIN store s ON p.store_id = s.store_id
+       WHERE p.product_id = $1`,
       [product_id]
     );
 
@@ -318,14 +341,56 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
 
+    const { store_id, user_id } = productCheck.rows[0];
+    
+    // Verify seller owns the store
+    if (user_id !== seller_id) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ success: false, error: 'You do not own this product' });
+    }
+
+    // Check if seller already has an ACTIVE or SCHEDULED auction in the same store
+    const existingAuction = await client.query(
+      `SELECT a.id 
+       FROM auctions a
+       JOIN product p ON a.product_id = p.product_id
+       WHERE p.store_id = $1 
+       AND a.seller_id = $2 
+       AND a.status IN ('ACTIVE', 'SCHEDULED')
+       AND a.deleted_at IS NULL`,
+      [store_id, seller_id]
+    );
+
+    if (existingAuction.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        success: false,
+        error: 'You can only have 1 active or scheduled auction per store at a time',
+      });
+    }
+
+    // Calculate countdown end time (15 seconds from start if ACTIVE, or from start_time if SCHEDULED)
+    const countdownEndTime = initialStatus === 'ACTIVE' 
+      ? new Date(Date.now() + 15 * 1000)
+      : new Date(auctionStartTime.getTime() + 15 * 1000);
+
     // Create auction
     const result = await client.query(
       `INSERT INTO auctions (
         product_id, seller_id, initial_bid, current_bid, 
-        min_bid_increment, status, countdown_end_time
-      ) VALUES ($1, $2, $3, $3, $4, 'ACTIVE', CURRENT_TIMESTAMP + INTERVAL '15 seconds')
+        min_bid_increment, status, start_time, countdown_end_time, started_at
+      ) VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8)
       RETURNING *`,
-      [product_id, seller_id, initial_bid, min_bid_increment]
+      [
+        product_id, 
+        seller_id, 
+        initial_bid, 
+        min_bid_increment, 
+        initialStatus,
+        auctionStartTime.toISOString(),
+        countdownEndTime.toISOString(),
+        initialStatus === 'ACTIVE' ? new Date().toISOString() : null
+      ]
     );
 
     await client.query('COMMIT');
@@ -401,6 +466,45 @@ router.post('/:id/bid', authenticateToken, requireFeature(FEATURES.AUCTION_ENABL
       });
     }
 
+    // Check bidder's balance
+    const bidderResult = await client.query(
+      'SELECT balance FROM "user" WHERE user_id = $1',
+      [bidder_id]
+    );
+
+    if (bidderResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    const bidderBalance = parseFloat(bidderResult.rows[0].balance) || 0;
+    if (bid_amount > bidderBalance) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        error: `Insufficient balance. Your balance: ${bidderBalance}, Bid amount: ${bid_amount}`,
+      });
+    }
+
+    // Get the current highest bidder ID (will be refunded if there is one)
+    const previousHighestBidderId = auction.highest_bidder_id;
+    const previousBidAmount = auction.current_bid;
+
+    // ATOMIC BALANCE DEDUCTION & REFUND
+    await client.query(
+      'UPDATE "user" SET balance = balance - $1 WHERE user_id = $2',
+      [bid_amount, bidder_id]
+    );
+    console.log(`[Bid] Deducted Rp ${bid_amount} from bidder #${bidder_id}`);
+
+    if (previousHighestBidderId && previousHighestBidderId !== bidder_id) {
+      await client.query(
+        'UPDATE "user" SET balance = balance + $1 WHERE user_id = $2',
+        [previousBidAmount, previousHighestBidderId]
+      );
+      console.log(`[Bid] Refunded Rp ${previousBidAmount} to previous bidder #${previousHighestBidderId}`);
+    }
+
     // Record the bid
     await client.query(
       `INSERT INTO auction_bids (auction_id, bidder_id, bid_amount)
@@ -419,9 +523,20 @@ router.post('/:id/bid', authenticateToken, requireFeature(FEATURES.AUCTION_ENABL
 
     await client.query('COMMIT');
 
+    // Get updated balance for response
+    const updatedBalanceResult = await client.query(
+      'SELECT balance FROM "user" WHERE user_id = $1',
+      [bidder_id]
+    );
+    const newBalance = parseFloat(updatedBalanceResult.rows[0].balance) || 0;
+
     res.json({
       success: true,
-      data: updateResult.rows[0],
+      data: {
+        ...updateResult.rows[0],
+        new_balance: newBalance,
+        previous_refund: previousHighestBidderId && previousHighestBidderId !== bidder_id ? previousBidAmount : null,
+      },
       message: 'Bid placed successfully, countdown reset to 15 seconds',
     });
   } catch (error) {
@@ -716,6 +831,87 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error cancelling auction:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+/**
+ * DELETE /api/node/auctions/:id
+ * Soft-delete an auction (seller only)
+ * Can only delete SCHEDULED or ACTIVE auctions with no bids (total_bids = 0)
+ * Auth: Required (must be auction seller)
+ */
+router.delete('/:id', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const seller_id = req.user.id;
+
+    await client.query('BEGIN');
+
+    const auctionResult = await client.query(
+      'SELECT * FROM auctions WHERE id = $1 FOR UPDATE',
+      [id]
+    );
+
+    if (auctionResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, error: 'Auction not found' });
+    }
+
+    const auction = auctionResult.rows[0];
+
+    // Only seller can delete their own auction
+    if (auction.seller_id !== seller_id) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ success: false, error: 'Only auction seller can delete' });
+    }
+
+    // Check for bids
+    const bidCount = await client.query(
+      'SELECT COUNT(*) FROM auction_bids WHERE auction_id = $1',
+      [id]
+    );
+    const totalBids = parseInt(bidCount.rows[0].count);
+
+    if (totalBids > 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete auction with bids',
+      });
+    }
+
+    // Can only delete SCHEDULED or ACTIVE auctions
+    if (!['SCHEDULED', 'ACTIVE'].includes(auction.status)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        error: `Cannot delete ${auction.status} auctions`,
+      });
+    }
+
+    // Soft delete
+    const result = await client.query(
+      `UPDATE auctions 
+       SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: 'Auction deleted successfully',
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting auction:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {
     client.release();

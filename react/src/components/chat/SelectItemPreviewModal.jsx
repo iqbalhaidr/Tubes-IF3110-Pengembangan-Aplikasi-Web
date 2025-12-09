@@ -17,7 +17,7 @@ const SelectItemPreviewModal = ({ isOpen, onClose, onProductSelect, storeId }) =
                     store_id: storeId 
                 }
             });
-            setProducts(response.data.products || []);
+            setProducts(response.data.data.products || []);
         } catch (error) {
             console.error('Failed to fetch products:', error);
         } finally {
@@ -55,21 +55,29 @@ const SelectItemPreviewModal = ({ isOpen, onClose, onProductSelect, storeId }) =
                 </div>
                 <div className="p-4 h-80 overflow-y-auto">
                     {loading && <p className="text-center text-gray-500 py-8">Loading...</p>}
-                    {!loading && products.map(product => (
-                        <div key={product.product_id} onClick={() => onProductSelect(product)} className="flex items-center p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors mb-2">
-                            <div className="w-12 h-12 rounded-lg bg-gray-200 mr-4 flex-shrink-0 flex items-center justify-center text-gray-600 font-bold overflow-hidden">
-                                {product.main_image_path ? (
-                                    <img src={product.main_image_path} alt={product.product_name} className="w-full h-full object-cover" />
-                                ) : (
-                                    product.product_name.charAt(0)
-                                )}
+                    {!loading && products.map(product => {
+                        const productForChat = {
+                            ...product,
+                            product_id: product.id,
+                            product_name: product.name,
+                            main_image_path: product.image
+                        };
+                        return (
+                            <div key={product.id} onClick={() => onProductSelect(productForChat)} className="flex items-center p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors mb-2">
+                                <div className="w-12 h-12 rounded-lg bg-gray-200 mr-4 flex-shrink-0 flex items-center justify-center text-gray-600 font-bold overflow-hidden">
+                                    {product.image ? (
+                                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        product.name ? product.name.charAt(0) : 'P'
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-gray-900 font-medium">{product.name}</p>
+                                    <p className="text-sm text-primary-green font-bold">Rp {Number(product.price).toLocaleString('id-ID')}</p>
+                                </div>
                             </div>
-                            <div className="flex-1">
-                                <p className="text-gray-900 font-medium">{product.product_name}</p>
-                                <p className="text-sm text-primary-green font-bold">Rp {Number(product.price).toLocaleString('id-ID')}</p>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                     {!loading && products.length === 0 && <p className="text-center text-gray-500 py-8">No products found.</p>}
                 </div>
                 <div className="p-6 border-t border-gray-200 flex justify-end">

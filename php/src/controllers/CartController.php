@@ -12,6 +12,18 @@ class CartController {
         $current_user = AuthMiddleware::getCurrentUser();
         $buyer_id = $current_user['user_id'];
 
+        // ============================================
+        // FEATURE FLAG CHECK
+        // ============================================
+        $feature_check = FeatureFlag::checkAccess(FeatureFlag::CHECKOUT_ENABLED, $buyer_id);
+        if (!$feature_check['enabled']) {
+            $reason = $feature_check['reason'];
+            $is_global = $feature_check['is_global'];
+            http_response_code(403);
+            require_once __DIR__ . '/../views/feature-disabled.php';
+            exit;
+        }
+
         $data = $this->cart_model->fetchItems($buyer_id);
         if (!$data['success']) {
             Response::error($data['message'], null, 500);

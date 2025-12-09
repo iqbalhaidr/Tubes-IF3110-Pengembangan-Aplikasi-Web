@@ -1,14 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChatRoomCard from './ChatRoomCard';
 import NewChatModal from './NewChatModal';
 import { ChatListSkeleton } from './SkeletonLoader';
 
 const ChatSidebar = ({ rooms, activeRoom, onSelectRoom, loading, onStoreSelect, currentUser }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setSearchQuery(inputValue);
+    }, 300);
+    return () => clearTimeout(timerId);
+  }, [inputValue]);
 
   const handleStoreSelected = (storeId) => {
     onStoreSelect(storeId);
     setIsModalOpen(false);
+  };
+
+  const filteredRooms = rooms.filter(room => {
+    const isSeller = currentUser.role === 'SELLER';
+    const roomName = isSeller ? (room.buyer_name || '') : (room.store_name || '');
+    return roomName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const renderEmptyState = () => {
+    if (searchQuery) {
+      return <div className="p-6 text-center text-gray-500">No chats found.</div>;
+    }
+    if (currentUser.role === 'BUYER') {
+      return (
+        <div className="p-6 text-center text-gray-500">
+          <p className="mb-4">Belum ada percakapan.</p>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-primary-green hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+          >
+            Mulai Chat
+          </button>
+        </div>
+      );
+    }
+    return <div className="p-6 text-center text-gray-500">Belum ada percakapan.</div>;
   };
 
   return (
@@ -20,14 +55,14 @@ const ChatSidebar = ({ rooms, activeRoom, onSelectRoom, loading, onStoreSelect, 
             type="text"
             placeholder="Search chats..."
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
           />
         </div>
         <div className="flex-1 overflow-y-auto">
           {loading && <ChatListSkeleton />}
-          {!loading && rooms.length === 0 && (
-              <div className="p-6 text-center text-gray-500">No conversations yet.</div>
-          )}
-          {!loading && rooms.map(room => (
+          {!loading && filteredRooms.length === 0 && renderEmptyState()}
+          {!loading && filteredRooms.map(room => (
               <ChatRoomCard
                   key={`${room.store_id}-${room.buyer_id}`}
                   room={room}
@@ -56,5 +91,6 @@ const ChatSidebar = ({ rooms, activeRoom, onSelectRoom, loading, onStoreSelect, 
     </>
   );
 };
+
 
 export default ChatSidebar;

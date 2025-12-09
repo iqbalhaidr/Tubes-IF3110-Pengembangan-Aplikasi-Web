@@ -9,9 +9,7 @@ import fs from 'fs';
 const router = express.Router();
 
 // Setup for file uploads
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadDir = path.join(__dirname, '../../uploads/chat');
+const uploadDir = '/app/uploads/chat';
 
 // Create upload directory if it doesn't exist
 if (!fs.existsSync(uploadDir)) {
@@ -64,6 +62,7 @@ router.get('/rooms', authMiddleware, async (req, res) => {
                     cr.store_id, 
                     cr.buyer_id, 
                     cr.last_message_at,
+                    (SELECT sender_id FROM chat_messages cm WHERE cm.store_id = cr.store_id AND cm.buyer_id = cr.buyer_id ORDER BY cm.created_at DESC LIMIT 1) as last_message_sender_id,
                     cr.unread_count,
                     s.store_name,
                     s.store_logo_path as store_logo,
@@ -85,9 +84,10 @@ router.get('/rooms', authMiddleware, async (req, res) => {
                     cr.store_id, 
                     cr.buyer_id, 
                     cr.last_message_at,
+                    (SELECT sender_id FROM chat_messages cm WHERE cm.store_id = cr.store_id AND cm.buyer_id = cr.buyer_id ORDER BY cm.created_at DESC LIMIT 1) as last_message_sender_id,
                     cr.unread_count,
                     s.store_name,
-                    u.name as other_username,
+                    u.name as buyer_name,
                     NULL as buyer_avatar,
                     (SELECT content FROM chat_messages cm 
                      WHERE cm.store_id = cr.store_id AND cm.buyer_id = cr.buyer_id 

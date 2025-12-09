@@ -2,9 +2,60 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import AuctionCountdown from '../components/AuctionCountdown';
-import AuctionChat from '../components/AuctionChat';
 import BidHistory from '../components/BidHistory';
 import { useAuction, useWebSocket } from '../hooks/useAuction';
+
+// Scheduled auction countdown component - uses local countdown like active auctions
+function ScheduledAuctionCountdown({ seconds }) {
+  const [displaySeconds, setDisplaySeconds] = useState(seconds);
+
+  useEffect(() => {
+    setDisplaySeconds(seconds);
+  }, [seconds]);
+
+  // Local countdown tick every second
+  useEffect(() => {
+    if (displaySeconds <= 0) return;
+
+    const interval = setInterval(() => {
+      setDisplaySeconds((prev) => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [displaySeconds]);
+
+  const formatCountdown = (secs) => {
+    if (!secs || secs <= 0) return 'Starting...';
+
+    if (secs < 60) {
+      return `${secs}s`;
+    }
+
+    const minutes = Math.floor(secs / 60);
+    const remainingSecs = secs % 60;
+
+    if (minutes < 60) {
+      return `${minutes}m ${remainingSecs}s`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  return (
+    <div className="bg-primary-green rounded-lg p-8 shadow-md border-2 border-green-700 text-center">
+      <div className="text-sm font-bold opacity-95 mb-3 uppercase tracking-wider text-green-50">Auction Starts In</div>
+      <div className="text-5xl font-bold tracking-tight mb-3 text-white">
+        {formatCountdown(displaySeconds)}
+      </div>
+      <p className="text-green-50 text-sm">Get ready! Your auction will start soon.</p>
+    </div>
+  );
+}
 
 export default function SellerAuctionManage() {
   const { id } = useParams();
@@ -25,13 +76,15 @@ export default function SellerAuctionManage() {
     isConnected,
     countdownSeconds,
     bidPlaced,
-    messages,
-    sendMessage,
-    setTyping,
   } = useWebSocket(id, userId);
 
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
+
+  // Determine auction state
+  const isAuctionActive = auction?.status === 'ACTIVE';
+  const isAuctionScheduled = auction?.status === 'SCHEDULED';
+  const hasBids = auction?.highest_bidder_id !== null;
 
   // When a bid is placed via WebSocket, immediately refresh
   useEffect(() => {
@@ -135,9 +188,6 @@ export default function SellerAuctionManage() {
     );
   }
 
-  const isAuctionActive = auction.status === 'ACTIVE';
-  const hasBids = auction.highest_bidder_id !== null;
-
   // Format product image path
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
@@ -184,7 +234,9 @@ export default function SellerAuctionManage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <strong className="block text-text-dark mb-1">Current Bid:</strong>
-                  <span className="text-2xl font-bold text-primary-green">Rp {parseFloat(auction.current_bid).toLocaleString('id-ID')}</span>
+                  <span className="text-2xl font-bold text-primary-green">
+                    {bidHistory.length > 0 ? `Rp ${parseFloat(auction.current_bid).toLocaleString('id-ID')}` : '-'}
+                  </span>
                 </div>
                 {auction.highest_bidder_username && (
                   <div className="bg-gray-50 p-3 rounded-lg">
@@ -200,7 +252,7 @@ export default function SellerAuctionManage() {
             </div>
           </div>
 
-          {/* Countdown */}
+          {/* Countdown - Active Auction */}
           {isAuctionActive && (
             <AuctionCountdown
               countdownSeconds={countdownSeconds}
@@ -208,8 +260,13 @@ export default function SellerAuctionManage() {
             />
           )}
 
-          {/* Status Badge */}
-          {!isAuctionActive && (
+          {/* Scheduled Start Countdown */}
+          {isAuctionScheduled && (
+            <ScheduledAuctionCountdown seconds={auction.seconds_until_start} />
+          )}
+
+          {/* Status Badge - Ended/Cancelled */}
+          {!isAuctionActive && !isAuctionScheduled && (
             <div className={`bg-white rounded-xl shadow-md p-6 text-center ${
               auction.status === 'ENDED' ? 'border-l-4 border-primary-green' : 'border-l-4 border-error-red'
             }`}>
@@ -239,7 +296,32 @@ export default function SellerAuctionManage() {
 
         {/* Right Column: Seller Actions & Chat */}
         <div className="space-y-6">
-          {/* Seller Actions */}
+          {/* Seller Actions - Scheduled Auction */}
+          {isAuctionScheduled && (
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-xl font-bold text-text-dark mb-4">Seller Actions</h3>
+              
+              {actionError && (
+                <div className="bg-error-red/10 border border-error-red text-error-red px-4 py-3 rounded-lg mb-4">{actionError}</div>
+              )}
+              
+              <div className="space-y-3">
+                <button 
+                  onClick={handleCancelAuction}
+                  className="w-full px-6 py-3 bg-error-red text-white rounded-lg hover:bg-red-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? 'Processing...' : '✕ Cancel Auction'}
+                </button>
+              </div>
+              
+              <p className="text-sm text-text-muted mt-4">
+                You can cancel this scheduled auction anytime before it starts.
+              </p>
+            </div>
+          )}
+
+          {/* Seller Actions - Active Auction */}
           {isAuctionActive && (
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="text-xl font-bold text-text-dark mb-4">Seller Actions</h3>
@@ -252,33 +334,32 @@ export default function SellerAuctionManage() {
                 {hasBids && (
                   <button 
                     onClick={handleAcceptBid}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-success-green to-success-green text-white rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={actionLoading}
                   >
                     {actionLoading ? 'Processing...' : '✓ Accept Current Bid'}
                   </button>
                 )}
                 
-                {!hasBids && (
-                  <button 
-                    onClick={handleCancelAuction}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-error-red to-error-red text-white rounded-lg hover:shadow-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'Processing...' : '✕ Cancel Auction'}
-                  </button>
-                )}
+                <button 
+                  onClick={handleCancelAuction}
+                  className="w-full px-6 py-3 bg-error-red text-white rounded-lg hover:bg-red-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? 'Processing...' : '✕ Cancel Auction'}
+                </button>
               </div>
               
               <p className="text-sm text-text-muted mt-4">
                 {hasBids 
                   ? 'Accept the current bid to end the auction immediately and create an order.'
-                  : 'You can cancel the auction since there are no bids yet.'}
+                  : 'You can cancel the auction anytime.'}
               </p>
             </div>
           )}
 
-          {!isAuctionActive && (
+          {/* Seller Actions - Ended/Cancelled */}
+          {!isAuctionActive && !isAuctionScheduled && (
             <div className="bg-white rounded-xl shadow-md p-6 text-center">
               <h3 className="text-xl font-bold text-text-dark mb-3">Auction {auction.status === 'ENDED' ? 'Completed' : 'Cancelled'}</h3>
               {auction.status === 'ENDED' && auction.winner_id ? (
@@ -286,21 +367,11 @@ export default function SellerAuctionManage() {
               ) : (
                 <p className="text-text-muted mb-4">This auction has ended.</p>
               )}
-              <a href="/seller/orders" className="inline-block w-full px-6 py-3 bg-gradient-to-r from-primary-green to-primary-green-light text-white rounded-lg hover:shadow-lg transition-all font-medium text-center">
+              <a href="/seller/orders" className="inline-block w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-medium text-center">
                 View Orders
               </a>
             </div>
           )}
-
-          {/* Chat Section */}
-          <AuctionChat
-            auctionId={id}
-            userId={userId}
-            messages={messages}
-            onSendMessage={sendMessage}
-            onTyping={setTyping}
-            isConnected={isConnected}
-          />
         </div>
       </div>
     </div>
