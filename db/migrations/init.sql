@@ -120,6 +120,10 @@ CREATE TABLE IF NOT EXISTS auctions (
     -- Winner information
     winner_id INTEGER,
     
+    -- Quantity and cancellation
+    auction_quantity INTEGER DEFAULT 1 CHECK (auction_quantity > 0),
+    cancellation_reason VARCHAR(255),
+    
     -- Timestamps
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

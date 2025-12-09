@@ -286,12 +286,13 @@ router.get('/user/:userId/created', async (req, res) => {
  * Create a new auction
  * Required: product_id, initial_bid, min_bid_increment
  * Optional: start_time (ISO 8601 timestamp, defaults to now for immediate start)
+ *          auction_quantity (positive integer, defaults to 1)
  * Auth: Required
  */
 router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), async (req, res) => {
   const client = await pool.connect();
   try {
-    const { product_id, initial_bid, min_bid_increment, start_time } = req.body;
+    const { product_id, initial_bid, min_bid_increment, start_time, auction_quantity } = req.body;
     const seller_id = req.user.id; // From JWT token
 
     // Validate input
@@ -300,6 +301,18 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
         success: false,
         error: 'product_id, initial_bid, and min_bid_increment are required',
       });
+    }
+
+    // Validate and set auction_quantity (defaults to 1)
+    let auctionQuantity = 1;
+    if (auction_quantity !== undefined) {
+      auctionQuantity = parseInt(auction_quantity);
+      if (isNaN(auctionQuantity) || auctionQuantity <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'auction_quantity must be a positive integer',
+        });
+      }
     }
 
     if (initial_bid <= 0 || min_bid_increment <= 0) {
@@ -378,8 +391,8 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
     const result = await client.query(
       `INSERT INTO auctions (
         product_id, seller_id, initial_bid, current_bid, 
-        min_bid_increment, status, start_time, countdown_end_time, started_at
-      ) VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8)
+        min_bid_increment, status, start_time, countdown_end_time, started_at, auction_quantity
+      ) VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *`,
       [
         product_id, 
@@ -389,7 +402,8 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
         initialStatus,
         auctionStartTime.toISOString(),
         countdownEndTime.toISOString(),
-        initialStatus === 'ACTIVE' ? new Date().toISOString() : null
+        initialStatus === 'ACTIVE' ? new Date().toISOString() : null,
+        auctionQuantity
       ]
     );
 
@@ -780,10 +794,91 @@ router.put('/:id/end', async (req, res) => {
 
 /**
  * PUT /api/node/auctions/:id/cancel
- * Cancel an active auction (seller only)
+ * Cancel a SCHEDULED auction (seller only)
+ * Optional: cancellation_reason (max 255 characters)
  * Auth: Required (must be auction seller)
  */
 router.put('/:id/cancel', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const { cancellation_reason } = req.body;
+    const seller_id = req.user.id;
+
+    // Validate cancellation_reason if provided
+    if (cancellation_reason !== undefined && typeof cancellation_reason !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'cancellation_reason must be a string',
+      });
+    }
+
+    if (cancellation_reason && cancellation_reason.length > 255) {
+      return res.status(400).json({
+        success: false,
+        error: 'cancellation_reason must not exceed 255 characters',
+      });
+    }
+
+    await client.query('BEGIN');
+
+    const auctionResult = await client.query(
+      'SELECT * FROM auctions WHERE id = $1 FOR UPDATE',
+      [id]
+    );
+
+    if (auctionResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, error: 'Auction not found' });
+    }
+
+    const auction = auctionResult.rows[0];
+
+    if (auction.seller_id !== seller_id) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ success: false, error: 'Only auction seller can cancel' });
+    }
+
+    // Only SCHEDULED auctions can be cancelled
+    if (auction.status !== 'SCHEDULED') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Only scheduled auctions can be cancelled. Active auctions must be stopped instead.' 
+      });
+    }
+
+    const result = await client.query(
+      `UPDATE auctions 
+       SET status = 'CANCELLED', ended_at = CURRENT_TIMESTAMP, cancellation_reason = $2
+       WHERE id = $1
+       RETURNING *`,
+      [id, cancellation_reason || null]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: 'Auction cancelled successfully',
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error cancelling auction:', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+/**
+ * PUT /api/node/auctions/:id/stop
+ * Stop an ACTIVE auction immediately (seller only)
+ * Current highest bidder becomes the winner and an order is created
+ * Auth: Required (must be auction seller)
+ */
+router.put('/:id/stop', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
@@ -805,32 +900,64 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
 
     if (auction.seller_id !== seller_id) {
       await client.query('ROLLBACK');
-      return res.status(403).json({ success: false, error: 'Only auction seller can cancel' });
+      return res.status(403).json({ success: false, error: 'Only auction seller can stop' });
     }
 
+    // Only ACTIVE auctions can be stopped
     if (auction.status !== 'ACTIVE') {
       await client.query('ROLLBACK');
-      return res.status(400).json({ success: false, error: 'Only active auctions can be cancelled' });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Only active auctions can be stopped. Scheduled auctions must be cancelled instead.' 
+      });
     }
 
+    let orderId = null;
+    let orderError = null;
+    let winnerId = auction.highest_bidder_id;
+
+    // If there's a winner (has bids), try to create the order
+    if (winnerId) {
+      const orderResult = await createOrderFromAuction(client, auction);
+      if (orderResult.success) {
+        orderId = orderResult.orderId;
+      } else {
+        orderError = orderResult.error;
+        console.warn(`[Auction] Could not create order for stopped auction #${id}: ${orderError}`);
+      }
+    }
+
+    // End auction and set winner
     const result = await client.query(
       `UPDATE auctions 
-       SET status = 'CANCELLED', ended_at = CURRENT_TIMESTAMP
-       WHERE id = $1
+       SET status = 'ENDED', winner_id = $1, ended_at = CURRENT_TIMESTAMP
+       WHERE id = $2
        RETURNING *`,
-      [id]
+      [winnerId, id]
     );
 
     await client.query('COMMIT');
 
+    // Build response message
+    let message;
+    if (!winnerId) {
+      message = 'Auction stopped with no bids';
+    } else if (orderId) {
+      message = 'Auction stopped, winner determined, order created';
+    } else {
+      message = `Auction stopped with winner, but order could not be created: ${orderError}`;
+    }
+
     res.json({
       success: true,
       data: result.rows[0],
-      message: 'Auction cancelled successfully',
+      order_id: orderId,
+      order_error: orderError,
+      message,
     });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error cancelling auction:', error);
+    console.error('Error stopping auction:', error);
     res.status(500).json({ success: false, error: error.message });
   } finally {
     client.release();
@@ -915,6 +1042,41 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   } finally {
     client.release();
+  }
+});
+
+/**
+ * GET /api/node/products/:productId/auction-status
+ * Check if a product has an existing SCHEDULED or ACTIVE auction
+ * Returns: { hasAuction: boolean, auction: { id, status } | null }
+ */
+router.get('/products/:productId/auction-status', async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    const result = await pool.query(
+      `SELECT id, status FROM auctions 
+       WHERE product_id = $1 AND status IN ('SCHEDULED', 'ACTIVE') AND deleted_at IS NULL
+       LIMIT 1`,
+      [productId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({
+        success: true,
+        hasAuction: false,
+        auction: null,
+      });
+    }
+
+    res.json({
+      success: true,
+      hasAuction: true,
+      auction: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Error checking product auction status:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

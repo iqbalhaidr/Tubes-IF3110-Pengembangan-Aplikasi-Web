@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import AuctionList from './pages/AuctionList';
 import AuctionDetail from './pages/AuctionDetail';
 import SellerAuctionList from './pages/SellerAuctionList';
-import CreateAuction from './pages/CreateAuction';
+import CreateAuctionPage from './pages/CreateAuctionPage';
 import SellerAuctionManage from './pages/SellerAuctionManage';
 import ChatPage from './pages/ChatPage';
 import AdminLogin from './pages/AdminLogin';
@@ -150,12 +150,12 @@ export default function App() {
                       } 
                     />
                     <Route 
-                      path="/manage-auctions/create" 
+                      path="/seller/products/:productId/create-auction" 
                       element={
                         <FeatureGate feature={FEATURES.AUCTION_ENABLED}>
                           {
                             user && user.role === 'SELLER' 
-                            ? <CreateAuction /> 
+                            ? <CreateAuctionPage /> 
                             : <Navigate to="/auctions" replace />
                           }
                         </FeatureGate>

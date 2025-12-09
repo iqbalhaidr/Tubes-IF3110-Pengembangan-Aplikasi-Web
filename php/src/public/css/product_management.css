@@ -248,6 +248,27 @@ td:last-child {
     border-color: #d1d5db;
 }
 
+.btn-primary {
+    background-color: #03ac0e;
+    color: white;
+    border: 1px solid #03ac0e;
+    font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #029a0a;
+    border-color: #029a0a;
+    box-shadow: 0 2px 8px rgba(3, 172, 14, 0.25);
+}
+
+.btn-primary:disabled,
+.btn-primary.btn-disabled {
+    background-color: #9ca3af;
+    border-color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .btn-danger {
     background-color: #fee2e2;
     color: #b91c1c;

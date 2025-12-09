@@ -133,6 +133,10 @@ export default function AuctionCard({ auction, onAuctionStarted }) {
                 {formatTime(displaySecondsRemaining)}
               </span>
             </div>
+          ) : auction.status === 'CANCELLED' && auction.cancellation_reason ? (
+            <div className="text-xs text-gray-600 italic border-l-2 border-red-500 pl-2">
+              <span className="font-semibold">Cancellation Reason:</span> {auction.cancellation_reason}
+            </div>
           ) : null}
         </div>
 

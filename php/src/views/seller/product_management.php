@@ -93,6 +93,7 @@
     
     <div id="toast" class="toast"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="/public/js/api.js"></script>
     <script src="/public/js/main.js"></script>
     <script src="/public/js/product_management.js"></script> 

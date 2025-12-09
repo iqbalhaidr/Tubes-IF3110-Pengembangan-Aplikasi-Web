@@ -96,12 +96,6 @@ export default function SellerAuctionList() {
         {/* Header with Title and Tabs */}
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-3xl font-bold text-gray-900">Manage Auctions</h1>
-          <button 
-            onClick={() => navigate('/manage-auctions/create')} 
-            className="px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-colors font-bold shadow-md whitespace-nowrap"
-          >
-            + Create Auction
-          </button>
         </div>
 
         {/* Tabs for Status Filter */}
@@ -183,9 +177,6 @@ export default function SellerAuctionList() {
         <div className="flex flex-col items-center justify-center py-24 text-center bg-gray-50 rounded-lg">
           <h3 className="text-3xl font-bold text-gray-900 mb-3">No Auctions Found</h3>
           <div className="flex gap-4">
-            <button onClick={() => navigate('/manage-auctions/create')} className="bg-primary-green text-white font-bold px-8 py-3 rounded-lg hover:bg-green-700 transition-all duration-200 transform hover:-translate-y-1">
-              Create Auction
-            </button>
             <a href="/seller/products" className="bg-gray-300 text-gray-800 font-bold px-8 py-3 rounded-lg hover:bg-gray-400 transition-all duration-200">
               Manage Products
             </a>

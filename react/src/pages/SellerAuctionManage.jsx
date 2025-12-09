@@ -111,9 +111,9 @@ export default function SellerAuctionManage() {
     }
   }, [id, refetch]);
 
-  // Accept current highest bid
+  // Accept current highest bid (end active auction with current bidder as winner)
   const handleAcceptBid = async () => {
-    if (!window.confirm('Are you sure you want to accept this bid and end the auction?')) {
+    if (!window.confirm('Are you sure you want to stop this auction? The current highest bidder will win.')) {
       return;
     }
     
@@ -121,16 +121,16 @@ export default function SellerAuctionManage() {
     setActionError('');
     
     try {
-      await axios.post(`/api/node/auctions/${id}/accept`, {}, { withCredentials: true });
+      await axios.put(`/api/node/auctions/${id}/stop`, {}, { withCredentials: true });
       refetch();
     } catch (err) {
-      setActionError(err.response?.data?.error || 'Failed to accept bid');
+      setActionError(err.response?.data?.error || 'Failed to stop auction');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Cancel auction
+  // Cancel auction (only for scheduled)
   const handleCancelAuction = async () => {
     if (!window.confirm('Are you sure you want to cancel this auction? This action cannot be undone.')) {
       return;
@@ -337,7 +337,7 @@ export default function SellerAuctionManage() {
                     className="w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={actionLoading}
                   >
-                    {actionLoading ? 'Processing...' : '✓ Accept Current Bid'}
+                    {actionLoading ? 'Processing...' : '⏹ Stop Auction'}
                   </button>
                 )}
                 
@@ -352,7 +352,7 @@ export default function SellerAuctionManage() {
               
               <p className="text-sm text-text-muted mt-4">
                 {hasBids 
-                  ? 'Accept the current bid to end the auction immediately and create an order.'
+                  ? 'Stop the auction to make the current highest bidder the winner and create an order immediately.'
                   : 'You can cancel the auction anytime.'}
               </p>
             </div>
