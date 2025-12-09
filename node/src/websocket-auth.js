@@ -97,6 +97,7 @@ export const socketAuthMiddleware = async (socket, next) => {
     
     socket.userId = user.user_id;
     socket.userRole = user.role;
+    socket.username = user.name;
     next();
   } catch (err) {
     next(new Error('Authentication error: ' + err.message));

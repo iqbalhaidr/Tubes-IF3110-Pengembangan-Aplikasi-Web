@@ -6,7 +6,7 @@ const ItemPreviewCard = ({ product }) => {
     }
 
     return (
-        <a href={`/product/${product.product_id}`} target="_blank" rel="noopener noreferrer" className="block w-56 no-underline">
+        <a href={`/product/${product.product_id}`} className="block w-56 no-underline">
             <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-md">
                 <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400">
                     {product.main_image_path ? (

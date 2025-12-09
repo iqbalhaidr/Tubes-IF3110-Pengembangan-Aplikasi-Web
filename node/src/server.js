@@ -287,6 +287,7 @@ chatNamespace.on('connection', (socket) => {
     // Broadcast to other user in the room
     socket.to(roomName).emit('user_typing', {
       userId: socket.userId,
+      username: socket.username,
       isTyping: isTyping
     });
   });
