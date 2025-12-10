@@ -322,7 +322,7 @@ export default function SellerAuctionManage() {
           )}
 
           {/* Seller Actions - Active Auction */}
-          {isAuctionActive && (
+          {isAuctionActive && hasBids && (
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="text-xl font-bold text-text-dark mb-4">Seller Actions</h3>
               
@@ -331,29 +331,17 @@ export default function SellerAuctionManage() {
               )}
               
               <div className="space-y-3">
-                {hasBids && (
-                  <button 
-                    onClick={handleAcceptBid}
-                    className="w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'Processing...' : '⏹ Stop Auction'}
-                  </button>
-                )}
-                
                 <button 
-                  onClick={handleCancelAuction}
-                  className="w-full px-6 py-3 bg-error-red text-white rounded-lg hover:bg-red-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleAcceptBid}
+                  className="w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={actionLoading}
                 >
-                  {actionLoading ? 'Processing...' : '✕ Cancel Auction'}
+                  {actionLoading ? 'Processing...' : '⏹ Stop Auction & Accept Bid'}
                 </button>
               </div>
               
               <p className="text-sm text-text-muted mt-4">
-                {hasBids 
-                  ? 'Stop the auction to make the current highest bidder the winner and create an order immediately.'
-                  : 'You can cancel the auction anytime.'}
+                Stop the auction to make the current highest bidder the winner and create an order immediately.
               </p>
             </div>
           )}
