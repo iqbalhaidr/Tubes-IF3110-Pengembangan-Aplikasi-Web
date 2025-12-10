@@ -382,17 +382,17 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
       });
     }
 
-    // Calculate countdown end time (15 seconds from start if ACTIVE, or from start_time if SCHEDULED)
+    // Calculate countdown end time (30 seconds from start if ACTIVE, or from start_time for SCHEDULED)
     const countdownEndTime = initialStatus === 'ACTIVE' 
-      ? new Date(Date.now() + 15 * 1000)
-      : new Date(auctionStartTime.getTime() + 15 * 1000);
+      ? new Date(Date.now() + 30 * 1000)
+      : new Date(auctionStartTime.getTime()); // For scheduled, the countdown starts when the job runs
 
     // Create auction
     const result = await client.query(
       `INSERT INTO auctions (
         product_id, seller_id, initial_bid, current_bid, 
-        min_bid_increment, status, start_time, countdown_end_time, started_at, auction_quantity
-      ) VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8, $9)
+        min_bid_increment, status, start_time, countdown_end_time, started_at
+      ) VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8)
       RETURNING *`,
       [
         product_id, 
@@ -403,7 +403,6 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
         auctionStartTime.toISOString(),
         countdownEndTime.toISOString(),
         initialStatus === 'ACTIVE' ? new Date().toISOString() : null,
-        auctionQuantity
       ]
     );
 
