@@ -28,7 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
         page: 1
     };
     
-    let deleteProductId = null; 
+    let deleteProductId = null;
+    let selectedProductForAuction = null; 
 
     async function fetchProducts() {
         showLoading(true);
@@ -62,19 +63,49 @@ document.addEventListener('DOMContentLoaded', () => {
         products.forEach(product => {
             const stockStatus = product.stock > 0 ? `${product.stock} Pcs` : '<span class="stock-out">Habis</span>';
             const imageUrl = product.main_image_path || '/public/images/default.png';
+            const isAuctioned = product.auction_status === 'ACTIVE' || product.auction_status === 'SCHEDULED';
+
+            const auctionBadge = isAuctioned ? '<span class="badge auction-badge">Dalam Lelang</span>' : '';
+            
+            // Check if product has active/scheduled auction
+            const hasAuction = product.auction_status && (product.auction_status === 'ACTIVE' || product.auction_status === 'SCHEDULED');
+            
+            let actionsHtml = '';
+            if (hasAuction) {
+                // Show badge instead of edit/delete buttons
+                actionsHtml = `
+                    <div class="auction-status">
+                        <span class="badge-dalam-lelang">DALAM LELANG</span>
+                        <a href="/seller/products/${product.product_id}/manage-auctions" class="btn btn-info btn-sm">Lihat Lelang</a>
+                    </div>
+                `;
+            } else {
+                // Show Lelang, Edit, Delete buttons
+                actionsHtml = `
+                    <a href="/seller/products/${product.product_id}/create-auction" class="btn btn-secondary btn-sm">Jadikan Lelang</a>
+                    <a href="/seller/products/edit/${product.product_id}" class="btn btn-secondary btn-sm">Edit</a>
+                    <button class="btn btn-danger btn-sm btn-delete" 
+                            data-id="${product.product_id}" 
+                            data-name="${product.product_name}">
+                        Delete
+                    </button>
+                `;
+            }
             
             const row = `
                 <tr data-id="${product.product_id}">
                     <td><img src="${imageUrl}" alt="${product.product_name}" class="table-thumbnail"></td>
-                    <td data-label="Nama Produk">${product.product_name}</td>
+                    <td data-label="Nama Produk">${product.product_name} ${auctionBadge}</td>
                     <td data-label="Kategori">${product.categories || '-'}</td>
                     <td data-label="Harga">Rp. ${Number(product.price).toLocaleString('id-ID')}</td>
                     <td data-label="Stok">${stockStatus}</td>
                     <td data-label="Aksi">
-                        <a href="/seller/products/edit/${product.product_id}" class="btn btn-secondary btn-sm">Edit</a>
+                        <a href="/seller/products/${product.product_id}/create-auction" class="btn btn-primary btn-sm" ${isAuctioned ? 'disabled' : ''}>Jadikan Lelang</a>
+                        <a href="/seller/products/edit/${product.product_id}" class="btn btn-secondary btn-sm" ${isAuctioned ? 'disabled' : ''}>Edit</a>
                         <button class="btn btn-danger btn-sm btn-delete" 
                                 data-id="${product.product_id}" 
-                                data-name="${product.product_name}">
+                                data-name="${product.product_name}"
+                                ${isAuctioned ? 'disabled' : ''}>
                             Delete
                         </button>
                     </td>

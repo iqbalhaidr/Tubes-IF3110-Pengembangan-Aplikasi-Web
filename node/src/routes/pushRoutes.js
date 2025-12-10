@@ -40,16 +40,14 @@ router.post('/subscribe', authenticateUser, async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    await client.query('DELETE FROM push_subscriptions WHERE endpoint = $1', [subscription.endpoint]);
 
-    const upsertQuery = `
+    // insert the new subscription
+    const insertQuery = `
         INSERT INTO push_subscriptions (user_id, endpoint, p256dh_key, auth_key)
         VALUES ($1, $2, $3, $4)
-        ON CONFLICT (endpoint) DO UPDATE SET
-            p256dh_key = EXCLUDED.p256dh_key,
-            auth_key = EXCLUDED.auth_key,
-            user_id = EXCLUDED.user_id;
     `;
-    await client.query(upsertQuery, [
+    await client.query(insertQuery, [
         userId, 
         subscription.endpoint, 
         subscription.keys.p256dh, 

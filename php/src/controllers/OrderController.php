@@ -209,6 +209,14 @@ class OrderController {
             // Approve order
             $result = $this->orderModel->approve($order_id);
 
+            // Send push notification to buyer
+            $payload = [
+                'title' => 'Pesanan Diterima',
+                'body' => 'Kabar baik! Pesanan Anda #' . $order_id . ' telah diterima oleh penjual.',
+                'data' => ['url' => '/buyer/order-history']
+            ];
+            Helper::triggerPushNotification($order['buyer_id'], 'order_enabled', $payload);
+
             http_response_code(200);
             echo json_encode([
                 'success' => true,
@@ -293,6 +301,14 @@ class OrderController {
 
             // Reject order (automatic refund included)
             $this->orderModel->reject($order_id, $reject_reason);
+
+            // Send push notification to buyer
+            $payload = [
+                'title' => 'Pesanan Ditolak',
+                'body' => 'Maaf, pesanan Anda #' . $order_id . ' ditolak. Alasan: ' . $reject_reason,
+                'data' => ['url' => '/buyer/order-history']
+            ];
+            Helper::triggerPushNotification($order['buyer_id'], 'order_enabled', $payload);
 
             http_response_code(200);
             echo json_encode([
@@ -379,6 +395,14 @@ class OrderController {
 
             // Set delivery time
             $result = $this->orderModel->setDeliveryTime($order_id, $delivery_time);
+
+            // Send push notification to buyer
+            $payload = [
+                'title' => 'Pesanan Dikirim',
+                'body' => 'Pesanan Anda #' . $order_id . ' sedang dalam pengiriman!',
+                'data' => ['url' => '/buyer/order-history']
+            ];
+            Helper::triggerPushNotification($order['buyer_id'], 'order_enabled', $payload);
 
             http_response_code(200);
             echo json_encode([

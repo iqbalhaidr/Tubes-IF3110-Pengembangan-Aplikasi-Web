@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../utils/FeatureFlag.php';
+
 $navbarType = $navbarType ?? 'guest';
 $activeLink = $activeLink ?? '';
 
@@ -41,6 +43,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                         ['href' => '/seller/products', 'label' => 'Produk', 'key' => 'products'],
                         ['href' => '/seller/orders', 'label' => 'Orders', 'key' => 'orders'],
                         ['href' => '/manage-auctions', 'label' => 'Auctions', 'key' => 'auctions'],
+                        ['href' => '/seller/settings', 'label' => 'Settings', 'key' => 'settings'],
                     ];
                     ?>
                     <?php foreach ($sellerLinks as $link): ?>
@@ -60,14 +63,16 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                     <a href="/auth/register" class="navbar-link">Daftar</a>
                 </div>
             <?php elseif ($navbarType === 'buyer'): ?>
-                <a href="/cart" class="cart-icon" title="Shopping Cart">
-                    <span class="cart-badge" id="cartBadge">0</span>
-                    <svg class="cart-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                    </svg>
-                </a>
+                <?php if (FeatureFlag::isEnabled(FeatureFlag::CHECKOUT_ENABLED, $current_user['user_id'] ?? null)): ?>
+                    <a href="/cart" class="cart-icon" title="Shopping Cart">
+                        <span class="cart-badge" id="cartBadge">0</span>
+                        <svg class="cart-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                    </a>
+                <?php endif; ?>
                 <div class="user-dropdown">
                     <button class="user-profile-btn" id="userProfileBtn">
                         <div class="user-avatar" id="userAvatar"><?= substr($current_user['name'] ?? 'U', 0, 1) ?></div>

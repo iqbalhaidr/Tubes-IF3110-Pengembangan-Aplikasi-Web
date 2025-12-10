@@ -20,20 +20,20 @@ class FeatureFlag {
      * Check if a feature is enabled for a specific user
      * Checks both global flags and user-specific flags
      * 
-     * @param string $feature_flag - Feature flag name (e.g., 'checkout_enabled')
+     * @param string $feature_name - Feature flag name (e.g., 'checkout_enabled')
      * @param int|null $user_id - Optional user ID for user-specific checks
      * @return array ['enabled' => bool, 'reason' => string|null, 'is_global' => bool]
      */
-    public static function checkAccess($feature_flag, $user_id = null) {
+    public static function checkAccess($feature_name, $user_id = null) {
         $db = Database::getInstance();
         
-        // 1. Check global feature flag first
-        $global_query = "SELECT is_enabled, disable_reason 
-                         FROM global_feature_flags 
-                         WHERE feature_flag = :feature_flag";
+        // 1. Check global feature flag first (user_id IS NULL = global)
+        $global_query = "SELECT is_enabled, reason 
+                         FROM user_feature_access 
+                         WHERE user_id IS NULL AND feature_name = :feature_name";
         
         $stmt = $db->prepare($global_query);
-        $stmt->execute([':feature_flag' => $feature_flag]);
+        $stmt->execute([':feature_name' => $feature_name]);
         $global_result = $stmt->fetch();
         
         // If global flag exists and is disabled, return immediately
@@ -47,22 +47,22 @@ class FeatureFlag {
         
         // 2. If user_id provided, check user-specific flag
         if ($user_id !== null) {
-            $user_query = "SELECT access_enabled, disable_reason 
+            $user_query = "SELECT is_enabled, reason 
                            FROM user_feature_access 
-                           WHERE user_id = :user_id AND feature_flag = :feature_flag";
+                           WHERE user_id = :user_id AND feature_name = :feature_name";
             
             $stmt = $db->prepare($user_query);
             $stmt->execute([
                 ':user_id' => $user_id,
-                ':feature_flag' => $feature_flag
+                ':feature_name' => $feature_name
             ]);
             $user_result = $stmt->fetch();
             
             // If user has specific restriction
-            if ($user_result && !$user_result['access_enabled']) {
+            if ($user_result && !$user_result['is_enabled']) {
                 return [
                     'enabled' => false,
-                    'reason' => $user_result['disable_reason'] ?: 'This feature has been disabled for your account.',
+                    'reason' => $user_result['reason'] ?: 'This feature has been disabled for your account.',
                     'is_global' => false
                 ];
             }
@@ -79,12 +79,12 @@ class FeatureFlag {
     /**
      * Check if feature is enabled - simple boolean version
      * 
-     * @param string $feature_flag - Feature flag name
+     * @param string $feature_name - Feature flag name
      * @param int|null $user_id - Optional user ID
      * @return bool
      */
-    public static function isEnabled($feature_flag, $user_id = null) {
-        $result = self::checkAccess($feature_flag, $user_id);
+    public static function isEnabled($feature_name, $user_id = null) {
+        $result = self::checkAccess($feature_name, $user_id);
         return $result['enabled'];
     }
     
@@ -92,31 +92,31 @@ class FeatureFlag {
      * Require a feature to be enabled - throws error response if disabled
      * Use this in controllers before performing feature operations
      * 
-     * @param string $feature_flag - Feature flag name
+     * @param string $feature_name - Feature flag name
      * @param int|null $user_id - Optional user ID
      * @return void - Returns nothing if enabled, sends error response if disabled
      */
-    public static function requireFeature($feature_flag, $user_id = null) {
-        $result = self::checkAccess($feature_flag, $user_id);
+    public static function requireFeature($feature_name, $user_id = null) {
+        $result = self::checkAccess($feature_name, $user_id);
         
         if (!$result['enabled']) {
             // Map feature flags to user-friendly names
-            $feature_names = [
+            $feature_display_names = [
                 'checkout_enabled' => 'Checkout',
                 'chat_enabled' => 'Chat',
                 'auction_enabled' => 'Auction'
             ];
             
-            $feature_name = $feature_names[$feature_flag] ?? $feature_flag;
+            $display_name = $feature_display_names[$feature_name] ?? $feature_name;
             
             // Build error message
             $message = $result['is_global'] 
-                ? "{$feature_name} is currently unavailable due to maintenance. Please try again later."
-                : "{$feature_name} is not available for your account. Reason: {$result['reason']}";
+                ? "{$display_name} is currently unavailable due to maintenance. Please try again later."
+                : "{$display_name} is not available for your account. Reason: {$result['reason']}";
             
             Response::error($message, [
                 'feature_disabled' => true,
-                'feature' => $feature_flag,
+                'feature' => $feature_name,
                 'is_global' => $result['is_global']
             ], 403);
             exit;

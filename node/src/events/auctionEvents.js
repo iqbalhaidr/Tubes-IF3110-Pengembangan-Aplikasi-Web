@@ -1,5 +1,6 @@
 import { pool } from '../db.js';
 import { checkFeatureForSocket, FEATURES } from '../middleware/featureFlagMiddleware.js';
+import { sendPushNotification } from '../services/pushService.js';
 
 /**
  * Helper function to create an order when an auction ends with a winner
@@ -70,8 +71,8 @@ async function createOrderFromAuction(client, auction) {
 
 export function registerAuctionEvents(io) {
   // Track active auction countdowns
-  const activeCountdowns = new Map();
   const auctionTimers = new Map();
+  const notifiedForEndingSoon = new Set();
 
   io.on('connection', (socket) => {
     socket.on('join_auction', (data) => {
@@ -113,117 +114,82 @@ export function registerAuctionEvents(io) {
         const { auctionId, userId, bidAmount } = data;
         const room = `auction_${auctionId}`;
 
-        // Validate bid data
         if (!auctionId || !userId || !bidAmount) {
-          socket.emit('auction_error', {
-            code: 'INVALID_BID',
-            message: 'Missing required bid data',
-          });
-          return;
+          return socket.emit('auction_error', { code: 'INVALID_BID', message: 'Missing required bid data' });
         }
 
-        // Jika auction disable maka tidak boleh bidding
         const featureError = await checkFeatureForSocket(FEATURES.AUCTION_ENABLED, userId);
         if (featureError) {
-          socket.emit('auction_error', featureError);
-          return;
+          return socket.emit('auction_error', featureError);
         }
 
         const client = await pool.connect();
         try {
-          // Acquire advisory lock for this specific auction (blocks until lock is available)
           await client.query('SELECT pg_advisory_lock($1)', [auctionId]);
           
           await client.query('BEGIN');
           const auctionResult = await client.query(
-            `SELECT id, current_bid, min_bid_increment, status, countdown_end_time 
-             FROM auctions WHERE id = $1`,
+            `SELECT a.id, a.current_bid, a.min_bid_increment, a.status, a.countdown_end_time, a.highest_bidder_id, p.product_name
+             FROM auctions a
+             JOIN product p ON a.product_id = p.product_id
+             WHERE a.id = $1`,
             [auctionId]
           );
 
           if (auctionResult.rows.length === 0) {
             await client.query('ROLLBACK');
-            socket.emit('auction_error', {
-              code: 'AUCTION_NOT_FOUND',
-              message: 'Auction not found',
-            });
-            return;
+            return socket.emit('auction_error', { code: 'AUCTION_NOT_FOUND', message: 'Auction not found' });
           }
 
           const auction = auctionResult.rows[0];
+          const previousHighestBidderId = auction.highest_bidder_id;
 
-          // Validate auction is active
           if (auction.status !== 'ACTIVE') {
             await client.query('ROLLBACK');
-            socket.emit('auction_error', {
-              code: 'AUCTION_NOT_ACTIVE',
-              message: 'Auction is no longer active',
-            });
-            return;
+            return socket.emit('auction_error', { code: 'AUCTION_NOT_ACTIVE', message: 'Auction is no longer active' });
           }
 
-          // Validate bid amount
-          const minBid = auction.current_bid + auction.min_bid_increment;
+          const minBid = parseFloat(auction.current_bid) + parseFloat(auction.min_bid_increment);
           if (bidAmount < minBid) {
             await client.query('ROLLBACK');
-            socket.emit('auction_error', {
-              code: 'BID_TOO_LOW',
-              message: `Bid must be at least ${minBid}`,
-            });
-            return;
+            return socket.emit('auction_error', { code: 'BID_TOO_LOW', message: `Bid must be at least ${minBid}` });
           }
 
-          // Insert bid record
           await client.query(
-            `INSERT INTO auction_bids (auction_id, bidder_id, bid_amount) 
-             VALUES ($1, $2, $3)`,
+            `INSERT INTO auction_bids (auction_id, bidder_id, bid_amount) VALUES ($1, $2, $3)`,
             [auctionId, userId, bidAmount]
           );
 
-          // Update auction with new highest bid and reset countdown
-          const newEndTime = new Date(Date.now() + 15000); // 15 seconds from now
+          const newEndTime = new Date(Date.now() + 15000);
           await client.query(
-            `UPDATE auctions 
-             SET current_bid = $1, highest_bidder_id = $2, countdown_end_time = $3, updated_at = CURRENT_TIMESTAMP
-             WHERE id = $4`,
+            `UPDATE auctions SET current_bid = $1, highest_bidder_id = $2, countdown_end_time = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4`,
             [bidAmount, userId, newEndTime, auctionId]
           );
 
           await client.query('COMMIT');
 
-          console.log(
-            `[Auction] Bid placed and saved: $${bidAmount} by user ${userId} in auction ${auctionId}`
-          );
+          // --- Notifications ---
+          if (previousHighestBidderId && previousHighestBidderId !== userId) {
+            const outbidPayload = {
+              title: `You've been outbid on "${auction.product_name}"!`,
+              body: `A new bid of Rp ${Number(bidAmount).toLocaleString('id-ID')} has been placed.`,
+              data: { url: `/auction/${auctionId}` }
+            };
+            sendPushNotification(previousHighestBidderId, outbidPayload, 'auction_enabled');
+          }
 
           if (auctionTimers.has(auctionId)) {
             auctionTimers.get(auctionId).lastBidTime = Date.now();
           }
 
-          // Broadcast bid to all users in auction room
-          io.to(room).emit('bid_placed', {
-            userId,
-            bidAmount,
-            auctionId,
-            timestamp: new Date(),
-            countdownReset: true,
-            newEndTime: newEndTime.toISOString(),
-          });
+          io.to(room).emit('bid_placed', { userId, bidAmount, auctionId, timestamp: new Date(), countdownReset: true, newEndTime: newEndTime.toISOString() });
+          socket.emit('bid_success', { bidAmount, message: 'Your bid has been placed successfully' });
 
-          // Notify only this socket of successful bid
-          socket.emit('bid_success', {
-            bidAmount,
-            message: 'Your bid has been placed successfully',
-          });
         } catch (dbError) {
           await client.query('ROLLBACK');
           console.error('[Auction] Database error in place_bid:', dbError);
-          
-          socket.emit('auction_error', {
-            code: 'DB_ERROR',
-            message: 'Failed to save bid',
-          });
+          socket.emit('auction_error', { code: 'DB_ERROR', message: 'Failed to save bid' });
         } finally {
-          // Always release the advisory lock
           try {
             await client.query('SELECT pg_advisory_unlock($1)', [auctionId]);
           } catch (unlockErr) {
@@ -233,13 +199,11 @@ export function registerAuctionEvents(io) {
         }
       } catch (error) {
         console.error('[Auction] Error in place_bid:', error);
-        socket.emit('auction_error', {
-          code: 'BID_FAILED',
-          message: error.message,
-        });
+        socket.emit('auction_error', { code: 'BID_FAILED', message: error.message });
       }
     });
 
+    // ... (rest of the file is the same until startAuctionCountdown)
     socket.on('leave_auction', (data) => {
       try {
         const { auctionId, userId } = data;
@@ -343,135 +307,104 @@ export function registerAuctionEvents(io) {
 
   function startAuctionCountdown(io, auctionId, room) {
     try {
-      if (auctionTimers.has(auctionId)) {
-        return; // Already running
-      }
+      if (auctionTimers.has(auctionId)) return;
 
       console.log(`[Auction] Starting countdown for auction ${auctionId}`);
-
-      const timerData = {
-        lastBidTime: Date.now(),
-        countdownInterval: null,
-      };
+      const timerData = { countdownInterval: null };
 
       timerData.countdownInterval = setInterval(async () => {
         try {
           const result = await pool.query(
-            `SELECT countdown_end_time, status FROM auctions WHERE id = $1`,
+            `SELECT a.countdown_end_time, a.status, a.highest_bidder_id, p.product_name 
+             FROM auctions a
+             JOIN product p ON a.product_id = p.product_id
+             WHERE a.id = $1`,
             [auctionId]
           );
 
           if (result.rows.length === 0) {
-            clearInterval(timerData.countdownInterval);
-            auctionTimers.delete(auctionId);
-            return;
+            return cleanupAuctionRoom(auctionId);
           }
 
           const auction = result.rows[0];
 
-          // If auction ended, cleanup
           if (auction.status !== 'ACTIVE') {
-            io.to(room).emit('auction_ended', {
-              auctionId,
-              status: auction.status,
-              endReason: 'auction_completed',
-              timestamp: new Date(),
-            });
-            clearInterval(timerData.countdownInterval);
-            auctionTimers.delete(auctionId);
-            return;
+            io.to(room).emit('auction_ended', { auctionId, status: auction.status, endReason: 'auction_completed' });
+            return cleanupAuctionRoom(auctionId);
           }
 
-          // Calculate remaining seconds
           const endTime = new Date(auction.countdown_end_time);
           const now = new Date();
           const secondsRemaining = Math.max(0, Math.floor((endTime - now) / 1000));
+          
+          // --- Ending Soon Notification ---
+          if (secondsRemaining > 8 && secondsRemaining <= 10 && !notifiedForEndingSoon.has(auctionId) && auction.highest_bidder_id) {
+            notifiedForEndingSoon.add(auctionId);
+            const payload = {
+                title: `Auction for "${auction.product_name}" is ending soon!`,
+                body: 'You are the highest bidder. Place a bid to extend the time.',
+                data: { url: `/auction/${auctionId}` }
+            };
+            sendPushNotification(auction.highest_bidder_id, payload, 'auction_enabled');
+          }
 
-          // Broadcast countdown tick
-          io.to(room).emit('countdown_update', {
-            auctionId,
-            secondsRemaining,
-            timestamp: new Date(),
-          });
+          io.to(room).emit('countdown_update', { auctionId, secondsRemaining });
 
-          // If countdown expires
           if (secondsRemaining <= 0) {
             console.log(`[Auction] Countdown expired for auction ${auctionId}`);
+            cleanupAuctionRoom(auctionId);
 
-            // Use a transaction to end auction and create order
             const client = await pool.connect();
             try {
               await client.query('BEGIN');
-
-              // Get full auction details for order creation
               const auctionDetails = await client.query(
-                `SELECT id, product_id, seller_id, highest_bidder_id, current_bid 
-                 FROM auctions WHERE id = $1 AND status = 'ACTIVE' FOR UPDATE`,
+                `SELECT a.id, a.product_id, a.seller_id, a.highest_bidder_id, a.current_bid, p.product_name 
+                 FROM auctions a
+                 JOIN product p ON a.product_id = p.product_id
+                 WHERE a.id = $1 AND a.status = 'ACTIVE' FOR UPDATE`,
                 [auctionId]
               );
 
               if (auctionDetails.rows.length > 0) {
                 const auctionData = auctionDetails.rows[0];
+                await client.query(`UPDATE auctions SET status = 'ENDED', ended_at = CURRENT_TIMESTAMP WHERE id = $1`, [auctionId]);
 
-                // End auction in database
-                await client.query(
-                  `UPDATE auctions 
-                   SET status = 'ENDED', ended_at = CURRENT_TIMESTAMP
-                   WHERE id = $1`,
-                  [auctionId]
-                );
-
-                // Try to create order if there's a winner
                 let orderId = null;
                 let orderError = null;
                 if (auctionData.highest_bidder_id) {
+                  // --- Win Notification ---
+                  const winPayload = {
+                      title: `You won the auction for "${auctionData.product_name}"!`,
+                      body: `Your winning bid was Rp ${Number(auctionData.current_bid).toLocaleString('id-ID')}. Check your orders.`,
+                      data: { url: `/buyer/order-history` }
+                  };
+                  sendPushNotification(auctionData.highest_bidder_id, winPayload, 'auction_enabled');
+
                   const orderResult = await createOrderFromAuction(client, auctionData);
                   if (orderResult.success) {
                     orderId = orderResult.orderId;
-                    console.log(`[Auction] Order #${orderId} created for winner of auction #${auctionId}`);
                   } else {
                     orderError = orderResult.error;
-                    console.warn(`[Auction] Could not create order for auction #${auctionId}: ${orderError}`);
                   }
                 }
-
+                
                 await client.query('COMMIT');
-
-                io.to(room).emit('auction_ended', {
-                  auctionId,
-                  status: 'ENDED',
-                  endReason: 'countdown_expired',
-                  winnerId: auctionData.highest_bidder_id,
-                  orderId: orderId,
-                  orderError: orderError,
-                  timestamp: new Date(),
-                });
+                io.to(room).emit('auction_ended', { auctionId, status: 'ENDED', endReason: 'countdown_expired', winnerId: auctionData.highest_bidder_id, orderId, orderError });
               } else {
                 await client.query('ROLLBACK');
               }
             } catch (dbError) {
               await client.query('ROLLBACK');
               console.error(`[Auction] Database error ending auction ${auctionId}:`, dbError);
-              
-              // Still emit auction ended even if there was an error
-              io.to(room).emit('auction_ended', {
-                auctionId,
-                status: 'ENDED',
-                endReason: 'countdown_expired',
-                error: 'Database error',
-                timestamp: new Date(),
-              });
+              io.to(room).emit('auction_ended', { auctionId, status: 'ENDED', endReason: 'countdown_expired', error: 'Database error' });
             } finally {
               client.release();
             }
-
-            clearInterval(timerData.countdownInterval);
-            auctionTimers.delete(auctionId);
           }
         } catch (error) {
           console.error(`[Auction] Error in countdown loop for ${auctionId}:`, error);
         }
-      }, 1000); // Update every second
+      }, 1000);
 
       auctionTimers.set(auctionId, timerData);
     } catch (error) {
@@ -486,17 +419,18 @@ export function registerAuctionEvents(io) {
         clearInterval(timerData.countdownInterval);
       }
       auctionTimers.delete(auctionId);
+      notifiedForEndingSoon.delete(auctionId); // Clean up ending soon notification flag
     }
   }
 
   return () => {
-    // Cleanup countdown timers
-    auctionTimers.forEach((timerData) => {
+    auctionTimers.forEach((timerData, auctionId) => {
       if (timerData.countdownInterval) {
         clearInterval(timerData.countdownInterval);
       }
+      auctionTimers.delete(auctionId);
+      notifiedForEndingSoon.delete(auctionId);
     });
-    auctionTimers.clear();
   };
 }
 
@@ -531,7 +465,7 @@ function startScheduledAuctionCheckJob(io) {
             `UPDATE auctions 
              SET status = 'ACTIVE', 
                  started_at = CURRENT_TIMESTAMP,
-                 countdown_end_time = CURRENT_TIMESTAMP + INTERVAL '15 seconds'
+                 countdown_end_time = CURRENT_TIMESTAMP + INTERVAL '30 seconds'
              WHERE id = $1
              RETURNING *`,
             [auction.id]

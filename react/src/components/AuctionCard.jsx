@@ -1,4 +1,54 @@
-export default function AuctionCard({ auction }) {
+import { useState, useEffect } from 'react';
+
+export default function AuctionCard({ auction, onAuctionStarted }) {
+  const [displaySecondsRemaining, setDisplaySecondsRemaining] = useState(auction.seconds_remaining || 0);
+  const [displaySecondsUntilStart, setDisplaySecondsUntilStart] = useState(auction.seconds_until_start || 0);
+
+  // Update display seconds when auction prop changes
+  useEffect(() => {
+    setDisplaySecondsRemaining(auction.seconds_remaining || 0);
+  }, [auction.seconds_remaining]);
+
+  useEffect(() => {
+    setDisplaySecondsUntilStart(auction.seconds_until_start || 0);
+  }, [auction.seconds_until_start]);
+
+  // Client-side countdown for active auctions ( just logical decrement every 1 second)
+  useEffect(() => {
+    if (displaySecondsRemaining <= 0 || auction.status !== 'ACTIVE') return;
+    
+    const interval = setInterval(() => {
+      setDisplaySecondsRemaining((prev) => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [displaySecondsRemaining, auction.status]);
+
+  // logical decrement every 1 second
+  // Signal when auction is about to start (5 seconds before)
+  useEffect(() => {
+    if (displaySecondsUntilStart <= 0 || auction.status !== 'SCHEDULED') return;
+    
+    const interval = setInterval(() => {
+      setDisplaySecondsUntilStart((prev) => {
+        const newValue = prev - 1;
+        
+        // Signal when auction starts (countdown reaches 0)
+        if (newValue <= 0 && onAuctionStarted) {
+          onAuctionStarted(auction.id);
+        }
+        
+        if (newValue < 0) return 0;
+        return newValue;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [displaySecondsUntilStart, auction.status, auction.id, onAuctionStarted]);
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'ACTIVE':
@@ -20,8 +70,6 @@ export default function AuctionCard({ auction }) {
     return `${Math.floor(seconds / 86400)}d`;
   };
 
-  // Format product image path - PHP stores as /public/images/products/X.jpg
-  // These are served by PHP backend, so we need the correct URL
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     // If path already starts with http, return as-is
@@ -71,19 +119,23 @@ export default function AuctionCard({ auction }) {
         </div>
 
         <div className="mb-3">
-          {auction.status === 'SCHEDULED' && auction.seconds_until_start !== undefined ? (
+          {auction.status === 'SCHEDULED' && displaySecondsUntilStart !== undefined ? (
             <div className="flex justify-between items-center">
               <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Starts In</span>
               <span className="text-sm font-bold text-blue-600">
-                {formatTime(auction.seconds_until_start)}
+                {formatTime(displaySecondsUntilStart)}
               </span>
             </div>
-          ) : auction.seconds_remaining !== undefined ? (
+          ) : auction.status === 'ACTIVE' && displaySecondsRemaining !== undefined ? (
             <div className="flex justify-between items-center">
               <span className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Time Left</span>
-              <span className={`text-sm font-bold ${auction.seconds_remaining < 3600 ? 'text-orange-600' : 'text-gray-700'}`}>
-                {formatTime(auction.seconds_remaining)}
+              <span className={`text-sm font-bold ${displaySecondsRemaining < 3600 ? 'text-orange-600' : 'text-gray-700'}`}>
+                {formatTime(displaySecondsRemaining)}
               </span>
+            </div>
+          ) : auction.status === 'CANCELLED' && auction.cancellation_reason ? (
+            <div className="text-xs text-gray-600 italic border-l-2 border-red-500 pl-2">
+              <span className="font-semibold">Cancellation Reason:</span> {auction.cancellation_reason}
             </div>
           ) : null}
         </div>

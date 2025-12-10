@@ -5,6 +5,58 @@ import AuctionCountdown from '../components/AuctionCountdown';
 import BidHistory from '../components/BidHistory';
 import { useAuction, useWebSocket } from '../hooks/useAuction';
 
+// Scheduled auction countdown component - uses local countdown like active auctions
+function ScheduledAuctionCountdown({ seconds }) {
+  const [displaySeconds, setDisplaySeconds] = useState(seconds);
+
+  useEffect(() => {
+    setDisplaySeconds(seconds);
+  }, [seconds]);
+
+  // Local countdown tick every second
+  useEffect(() => {
+    if (displaySeconds <= 0) return;
+
+    const interval = setInterval(() => {
+      setDisplaySeconds((prev) => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [displaySeconds]);
+
+  const formatCountdown = (secs) => {
+    if (!secs || secs <= 0) return 'Starting...';
+
+    if (secs < 60) {
+      return `${secs}s`;
+    }
+
+    const minutes = Math.floor(secs / 60);
+    const remainingSecs = secs % 60;
+
+    if (minutes < 60) {
+      return `${minutes}m ${remainingSecs}s`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  return (
+    <div className="bg-primary-green rounded-lg p-8 shadow-md border-2 border-green-700 text-center">
+      <div className="text-sm font-bold opacity-95 mb-3 uppercase tracking-wider text-green-50">Auction Starts In</div>
+      <div className="text-5xl font-bold tracking-tight mb-3 text-white">
+        {formatCountdown(displaySeconds)}
+      </div>
+      <p className="text-green-50 text-sm">Get ready! Your auction will start soon.</p>
+    </div>
+  );
+}
+
 export default function SellerAuctionManage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -34,17 +86,6 @@ export default function SellerAuctionManage() {
   const isAuctionScheduled = auction?.status === 'SCHEDULED';
   const hasBids = auction?.highest_bidder_id !== null;
 
-  // Auto-refetch for scheduled auctions every 1 second
-  useEffect(() => {
-    if (!isAuctionScheduled) return;
-    
-    const interval = setInterval(() => {
-      refetch();
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [isAuctionScheduled, refetch]);
-
   // When a bid is placed via WebSocket, immediately refresh
   useEffect(() => {
     if (bidPlaced) {
@@ -70,9 +111,9 @@ export default function SellerAuctionManage() {
     }
   }, [id, refetch]);
 
-  // Accept current highest bid
+  // Accept current highest bid (end active auction with current bidder as winner)
   const handleAcceptBid = async () => {
-    if (!window.confirm('Are you sure you want to accept this bid and end the auction?')) {
+    if (!window.confirm('Are you sure you want to stop this auction? The current highest bidder will win.')) {
       return;
     }
     
@@ -80,16 +121,16 @@ export default function SellerAuctionManage() {
     setActionError('');
     
     try {
-      await axios.post(`/api/node/auctions/${id}/accept`, {}, { withCredentials: true });
+      await axios.put(`/api/node/auctions/${id}/stop`, {}, { withCredentials: true });
       refetch();
     } catch (err) {
-      setActionError(err.response?.data?.error || 'Failed to accept bid');
+      setActionError(err.response?.data?.error || 'Failed to stop auction');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Cancel auction
+  // Cancel auction (only for scheduled)
   const handleCancelAuction = async () => {
     if (!window.confirm('Are you sure you want to cancel this auction? This action cannot be undone.')) {
       return;
@@ -221,21 +262,7 @@ export default function SellerAuctionManage() {
 
           {/* Scheduled Start Countdown */}
           {isAuctionScheduled && (
-            <div className="bg-primary-green rounded-lg p-8 shadow-md border-2 border-green-700 text-center">
-              <div className="text-sm font-bold opacity-95 mb-3 uppercase tracking-wider text-green-50">Auction Starts In</div>
-              <div className="text-5xl font-bold tracking-tight mb-3 text-white">
-                {auction.seconds_until_start !== undefined ? (
-                  auction.seconds_until_start > 0 ? (
-                    auction.seconds_until_start < 60
-                      ? `${auction.seconds_until_start}s`
-                      : auction.seconds_until_start < 3600
-                      ? `${Math.floor(auction.seconds_until_start / 60)}m ${(auction.seconds_until_start % 60)}s`
-                      : `${Math.floor(auction.seconds_until_start / 3600)}h ${Math.floor((auction.seconds_until_start % 3600) / 60)}m`
-                  ) : 'Starting...'
-                ) : 'Loading...'}
-              </div>
-              <p className="text-green-50 text-sm">Get ready! Your auction will start soon.</p>
-            </div>
+            <ScheduledAuctionCountdown seconds={auction.seconds_until_start} />
           )}
 
           {/* Status Badge - Ended/Cancelled */}
@@ -295,7 +322,7 @@ export default function SellerAuctionManage() {
           )}
 
           {/* Seller Actions - Active Auction */}
-          {isAuctionActive && (
+          {isAuctionActive && hasBids && (
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="text-xl font-bold text-text-dark mb-4">Seller Actions</h3>
               
@@ -304,29 +331,17 @@ export default function SellerAuctionManage() {
               )}
               
               <div className="space-y-3">
-                {hasBids && (
-                  <button 
-                    onClick={handleAcceptBid}
-                    className="w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'Processing...' : '✓ Accept Current Bid'}
-                  </button>
-                )}
-                
                 <button 
-                  onClick={handleCancelAuction}
-                  className="w-full px-6 py-3 bg-error-red text-white rounded-lg hover:bg-red-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleAcceptBid}
+                  className="w-full px-6 py-3 bg-primary-green text-white rounded-lg hover:bg-green-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={actionLoading}
                 >
-                  {actionLoading ? 'Processing...' : '✕ Cancel Auction'}
+                  {actionLoading ? 'Processing...' : '⏹ Stop Auction & Accept Bid'}
                 </button>
               </div>
               
               <p className="text-sm text-text-muted mt-4">
-                {hasBids 
-                  ? 'Accept the current bid to end the auction immediately and create an order.'
-                  : 'You can cancel the auction anytime.'}
+                Stop the auction to make the current highest bidder the winner and create an order immediately.
               </p>
             </div>
           )}

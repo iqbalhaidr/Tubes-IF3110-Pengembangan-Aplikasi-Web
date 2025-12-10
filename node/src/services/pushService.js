@@ -1,18 +1,14 @@
 import webPush from 'web-push';
 import pool from '../db.js';
 
-// Check if VAPID is properly configured
+// --- VAPID Configuration ---
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@nimonspedia.com';
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
 
 let isPushConfigured = false;
 
-// Only configure web-push if VAPID keys are properly set (not placeholder values)
-if (VAPID_PUBLIC_KEY &&
-  VAPID_PRIVATE_KEY &&
-  !VAPID_PUBLIC_KEY.includes('your_vapid') &&
-  !VAPID_PRIVATE_KEY.includes('your_vapid')) {
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY && !VAPID_PUBLIC_KEY.includes('your_vapid')) {
   try {
     webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
     isPushConfigured = true;
@@ -24,27 +20,41 @@ if (VAPID_PUBLIC_KEY &&
   console.warn('[Push Service] VAPID not configured. Push notifications disabled.');
 }
 
-// Sends a push notification to a specific user after checking their preferences.
+// A safelist of valid feature flags and their corresponding column names
+const validFeatureFlags = {
+    'chat_enabled': 'chat_enabled',
+    'auction_enabled': 'auction_enabled',
+    'order_enabled': 'order_enabled'
+};
 
-async function sendChatPushNotification(recipientUserId, payload) {
-  // Skip if push notifications are not configured
+
+// Sends a push notification to a specific user after checking their preferences for a given feature.
+
+async function sendPushNotification(recipientUserId, payload, featureFlag) {
   if (!isPushConfigured) {
-    console.log('[Push Service] Push not configured, skipping notification.');
-    return { notConfigured: true };
+    return { status: 'skipped', reason: 'Push service not configured' };
   }
 
-  // Check user's notification preferences
+  const preferenceColumn = validFeatureFlags[featureFlag];
+  if (!preferenceColumn) {
+    console.error(`[Push Service] Invalid feature flag "${featureFlag}" provided.`);
+    return { status: 'error', reason: `Invalid feature flag: ${featureFlag}` };
+  }
+
+  // Check user's notification preferences for the specific feature
   try {
-    const { rows: prefs } = await pool.query(
-      'SELECT chat_enabled FROM push_preferences WHERE user_id = $1',
-      [recipientUserId]
-    );
-    if (prefs.length > 0 && !prefs[0].chat_enabled) {
-      console.log(`Push notification skipped for user ${recipientUserId} due to their preferences.`);
-      return { skipped: true };
+    // build the query to check the preference column
+    const preferenceQuery = `SELECT ${preferenceColumn} FROM push_preferences WHERE user_id = $1`;
+    const { rows: prefs } = await pool.query(preferenceQuery, [recipientUserId]);
+    
+    // If user has a preference entry and the specific flag is false, skip sending
+    if (prefs.length > 0 && !prefs[0][preferenceColumn]) {
+      console.log(`[Push Service] Skipped for user ${recipientUserId}: "${featureFlag}" disabled in preferences.`);
+      return { status: 'skipped', reason: 'User preference disabled' };
     }
   } catch (prefError) {
-    console.error(`Error fetching push preferences for user ${recipientUserId}:`, prefError);
+    console.error(`[Push Service] Error fetching preferences for user ${recipientUserId}:`, prefError);
+    // Continue, assuming default is enabled if preference check fails
   }
 
   // Get all valid subscriptions for the user
@@ -56,41 +66,42 @@ async function sendChatPushNotification(recipientUserId, payload) {
     );
     subs = rows;
   } catch (subError) {
-    console.error(`Error fetching push subscriptions for user ${recipientUserId}:`, subError);
-    return { error: 'Failed to fetch subscriptions.' };
+    console.error(`[Push Service] Error fetching subscriptions for user ${recipientUserId}:`, subError);
+    return { status: 'error', reason: 'Failed to fetch subscriptions.' };
   }
 
-  if (!subs.length) {
-    console.log(`No push subscriptions found for user ${recipientUserId}.`);
-    return { noSubscriptions: true };
+  if (subs.length === 0) {
+    return { status: 'skipped', reason: 'No subscriptions found' };
   }
 
   // Send notifications to all subscriptions
-  let success = 0, failed = 0;
-  await Promise.allSettled(subs.map(async (sub) => {
+  const results = await Promise.allSettled(subs.map(async (sub) => {
     try {
       await webPush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh_key, auth: sub.auth_key } },
         JSON.stringify(payload)
       );
-      success++;
+      return { success: true };
     } catch (err) {
-      failed++;
-      console.error(`Failed to send push notification to endpoint for user ${recipientUserId}. Status: ${err.statusCode}`);
+      console.error(`[Push Service] Failed to send notification to user ${recipientUserId}. Status: ${err.statusCode}`);
       // If subscription is expired or invalid (410 or 404), remove it from the database.
       if (err.statusCode === 410 || err.statusCode === 404) {
-        console.log(`Subscription expired for user ${recipientUserId}. Deleting from DB.`);
-        try {
-          await pool.query('DELETE FROM push_subscriptions WHERE subscription_id = $1', [sub.subscription_id]);
-        } catch (deleteError) {
-          console.error(`Failed to delete expired subscription ${sub.subscription_id}:`, deleteError);
-        }
+        console.log(`[Push Service] Deleting expired subscription for user ${recipientUserId}.`);
+        await pool.query('DELETE FROM push_subscriptions WHERE subscription_id = $1', [sub.subscription_id]);
       }
+      return { success: false, error: err };
     }
   }));
+  
+  const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+  const failedCount = results.length - successCount;
 
-  console.log(`Push notification summary for user ${recipientUserId}: ${success} sent, ${failed} failed.`);
-  return { success, failed };
+  console.log(`[Push Service] Summary for user ${recipientUserId}: ${successCount} sent, ${failedCount} failed.`);
+  return { status: 'completed', success: successCount, failed: failedCount };
 }
 
-export { sendChatPushNotification, isPushConfigured };
+async function sendChatPushNotification(recipientUserId, payload) {
+    return sendPushNotification(recipientUserId, payload, 'chat_enabled');
+}
+
+export { sendPushNotification, sendChatPushNotification, isPushConfigured };

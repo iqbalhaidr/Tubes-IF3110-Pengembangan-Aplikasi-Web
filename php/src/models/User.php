@@ -279,5 +279,83 @@ class User {
             return false;
         }
     }
+
+    public function getPushPreferences($user_id) {
+        $query = 'SELECT chat_enabled, auction_enabled, order_enabled FROM push_preferences WHERE user_id = :user_id';
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([':user_id' => $user_id]);
+            $prefs = $statement->fetch(PDO::FETCH_ASSOC);
+
+            // Return defaults if no preferences are set yet
+            if (!$prefs) {
+                return [
+                    'chat_enabled' => true,
+                    'auction_enabled' => true,
+                    'order_enabled' => true
+                ];
+            }
+            // Cast to boolean
+            return [
+                'chat_enabled' => (bool)$prefs['chat_enabled'],
+                'auction_enabled' => (bool)$prefs['auction_enabled'],
+                'order_enabled' => (bool)$prefs['order_enabled']
+            ];
+        } catch (PDOException $exception) {
+            // On error, return default enabled state
+            return [
+                'chat_enabled' => true,
+                'auction_enabled' => true,
+                'order_enabled' => true
+            ];
+        }
+    }
+
+    /**
+     * Update user's push notification preferences
+     */
+    public function updatePushPreferences($user_id, $prefs) {
+        $chat_enabled = (bool)($prefs['chat_enabled'] ?? false);
+        $auction_enabled = (bool)($prefs['auction_enabled'] ?? false);
+        $order_enabled = (bool)($prefs['order_enabled'] ?? false);
+
+        try {
+            $this->db->beginTransaction();
+
+            // Check if a preference row already exists for the user
+            $select_stmt = $this->db->prepare('SELECT user_id FROM push_preferences WHERE user_id = :user_id');
+            $select_stmt->execute([':user_id' => $user_id]);
+            $exists = $select_stmt->fetchColumn();
+
+            if ($exists) {
+                // If it exists, UPDATE it
+                $query = 'UPDATE push_preferences SET
+                              chat_enabled = :chat_enabled,
+                              auction_enabled = :auction_enabled,
+                              order_enabled = :order_enabled,
+                              updated_at = CURRENT_TIMESTAMP
+                          WHERE user_id = :user_id';
+            } else {
+                // If it does not exist, INSERT a new row
+                $query = 'INSERT INTO push_preferences (user_id, chat_enabled, auction_enabled, order_enabled)
+                          VALUES (:user_id, :chat_enabled, :auction_enabled, :order_enabled)';
+            }
+            
+            $statement = $this->db->prepare($query);
+            $statement->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+            $statement->bindValue(':chat_enabled', $chat_enabled, PDO::PARAM_BOOL);
+            $statement->bindValue(':auction_enabled', $auction_enabled, PDO::PARAM_BOOL);
+            $statement->bindValue(':order_enabled', $order_enabled, PDO::PARAM_BOOL);
+            $statement->execute();
+            
+            $this->db->commit();
+            return ['success' => true, 'message' => 'Preferences updated successfully'];
+        } catch (PDOException $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return ['success' => false, 'message' => 'Failed to update preferences: ' . $exception->getMessage()];
+        }
+    }
 }
 ?>
