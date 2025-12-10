@@ -114,7 +114,8 @@ class Product {
         
         $baseSql = 'FROM product p 
                     LEFT JOIN category_item ci ON p.product_id = ci.product_id 
-                    LEFT JOIN category c ON ci.category_id = c.category_id';
+                    LEFT JOIN category c ON ci.category_id = c.category_id
+                    LEFT JOIN auctions a ON p.product_id = a.product_id AND a.status IN (\'ACTIVE\', \'SCHEDULED\')';
         
         $whereConditions = ['p.store_id = :store_id', 'p.deleted_at IS NULL'];
         $params = [':store_id' => $store_id];
@@ -147,10 +148,11 @@ class Product {
         $orderBy = "ORDER BY $sortBy $sortOrder";
 
         $productSql = "SELECT p.product_id, p.product_name, p.price, p.stock, p.main_image_path,
+                       a.status as auction_status,
                        STRING_AGG(c.category_name, ', ') AS categories
                        $baseSql 
                        $whereSql 
-                       GROUP BY p.product_id 
+                       GROUP BY p.product_id, a.status
                        $orderBy 
                        LIMIT :limit OFFSET :offset";
                        
@@ -337,6 +339,18 @@ class Product {
             if (!empty($category_id)) {
                 $stmt->execute([$product_id, (int)$category_id]);
             }
+        }
+    }
+
+    public function isProductInActiveAuction($product_id) {
+        $query = 'SELECT 1 FROM auctions WHERE product_id = :product_id AND status IN (\'ACTIVE\', \'SCHEDULED\')';
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([':product_id' => $product_id]);
+            return (bool) $statement->fetchColumn();
+        } catch (PDOException $exception) {
+            // On error, assume it's not in auction to prevent accidental blocking
+            return false;
         }
     }
 }
