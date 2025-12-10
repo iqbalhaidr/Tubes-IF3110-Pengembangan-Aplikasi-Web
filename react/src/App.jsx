@@ -8,6 +8,9 @@ import SellerAuctionManage from './pages/SellerAuctionManage';
 import ChatPage from './pages/ChatPage';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard'
+import ReviewPage from './pages/ReviewPage';
+import AdminModerationPanel from './pages/AdminModerationPanel';
+import SellerReviewPanel from './pages/SellerReviewPanel';
 import FeatureGate, { FEATURES } from './components/admin/FeatureGate';
 import Navbar from './components/Navbar';
 import './App.css';
@@ -113,6 +116,7 @@ export default function App() {
     <Routes>
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/moderation" element={<AdminModerationPanel />} />
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
 
       <Route path="/*" element={
@@ -174,7 +178,7 @@ export default function App() {
                       } 
                     />
                     
-                    {/* Chat route - requires authentication */}
+    {/* Chat route - requires authentication */}
                     <Route 
                       path="/chat" 
                       element={
@@ -185,6 +189,26 @@ export default function App() {
                               : <Navigate to="/auth/login" replace />
                           }
                         </FeatureGate>
+                      } 
+                    />
+
+                    {/* Review route - buyer writes review for an order */}
+                    <Route 
+                      path="/review/:orderId" 
+                      element={
+                        isAuthenticated 
+                          ? <ReviewPage /> 
+                          : <Navigate to="/auth/login" replace />
+                      } 
+                    />
+
+                    {/* Seller review panel - sellers manage reviews */}
+                    <Route 
+                      path="/seller/reviews" 
+                      element={
+                        isAuthenticated && user?.role === 'SELLER'
+                          ? <SellerReviewPanel /> 
+                          : <Navigate to="/auctions" replace />
                       } 
                     />
                     

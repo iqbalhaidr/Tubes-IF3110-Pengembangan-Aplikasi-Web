@@ -399,6 +399,129 @@ VALUES (
 ON CONFLICT (email) DO NOTHING;
 
 -- ============================================
+-- REVIEWS & RATINGS SYSTEM
+-- ============================================
+
+DO $$ BEGIN
+    CREATE TYPE review_status AS ENUM ('APPROVED', 'FLAGGED', 'HIDDEN');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE reviews (
+    review_id SERIAL PRIMARY KEY,
+    order_id INT NOT NULL,
+    buyer_id INT NOT NULL,
+    store_id INT NOT NULL,
+    product_id INT NOT NULL,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    text TEXT CHECK (char_length(text) <= 500),
+    status review_status NOT NULL DEFAULT 'APPROVED',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_review_order FOREIGN KEY (order_id) REFERENCES "order"(order_id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_buyer FOREIGN KEY (buyer_id) REFERENCES "user"(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_store FOREIGN KEY (store_id) REFERENCES store(store_id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_product FOREIGN KEY (product_id) REFERENCES product(product_id) ON DELETE CASCADE,
+    CONSTRAINT unique_review_per_order_product UNIQUE (order_id, product_id)
+);
+
+CREATE TABLE review_images (
+    image_id SERIAL PRIMARY KEY,
+    review_id INT NOT NULL,
+    image_path VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_review_image FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE
+);
+
+CREATE TABLE seller_responses (
+    response_id SERIAL PRIMARY KEY,
+    review_id INT NOT NULL,
+    store_id INT NOT NULL,
+    response_text TEXT NOT NULL CHECK (char_length(response_text) <= 500),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_response_review FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
+    CONSTRAINT fk_response_store FOREIGN KEY (store_id) REFERENCES store(store_id) ON DELETE CASCADE,
+    CONSTRAINT unique_response_per_review UNIQUE (review_id)
+);
+
+CREATE TABLE review_moderation_queue (
+    queue_id SERIAL PRIMARY KEY,
+    review_id INT NOT NULL,
+    flagged_reason VARCHAR(255),
+    flagged_by INT,
+    admin_notes TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_queue_review FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
+    CONSTRAINT fk_queue_admin FOREIGN KEY (flagged_by) REFERENCES admin(admin_id) ON DELETE SET NULL
+);
+
+CREATE TABLE seller_review_notifications (
+    notification_id SERIAL PRIMARY KEY,
+    store_id INT NOT NULL,
+    new_review_enabled BOOLEAN DEFAULT TRUE,
+    response_reply_enabled BOOLEAN DEFAULT TRUE,
+    flagged_review_enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_notif_store FOREIGN KEY (store_id) REFERENCES store(store_id) ON DELETE CASCADE,
+    CONSTRAINT unique_store_notifications UNIQUE (store_id)
+);
+
+-- Indexes for performance
+CREATE INDEX idx_reviews_product ON reviews(product_id);
+CREATE INDEX idx_reviews_store ON reviews(store_id);
+CREATE INDEX idx_reviews_status ON reviews(status);
+CREATE INDEX idx_reviews_rating ON reviews(rating);
+CREATE INDEX idx_reviews_created ON reviews(created_at DESC);
+CREATE INDEX idx_reviews_order ON reviews(order_id);
+CREATE INDEX idx_review_images_review ON review_images(review_id);
+CREATE INDEX idx_seller_responses_review ON seller_responses(review_id);
+CREATE INDEX idx_seller_responses_store ON seller_responses(store_id);
+CREATE INDEX idx_moderation_queue_status ON review_moderation_queue(status);
+CREATE INDEX idx_moderation_queue_created ON review_moderation_queue(created_at DESC);
+
+-- View for product rating statistics
+CREATE OR REPLACE VIEW product_rating_stats AS
+SELECT 
+    p.product_id,
+    COUNT(r.review_id) as total_reviews,
+    ROUND(AVG(r.rating)::numeric, 2) as average_rating,
+    SUM(CASE WHEN r.rating = 1 THEN 1 ELSE 0 END) as stars_1,
+    SUM(CASE WHEN r.rating = 2 THEN 1 ELSE 0 END) as stars_2,
+    SUM(CASE WHEN r.rating = 3 THEN 1 ELSE 0 END) as stars_3,
+    SUM(CASE WHEN r.rating = 4 THEN 1 ELSE 0 END) as stars_4,
+    SUM(CASE WHEN r.rating = 5 THEN 1 ELSE 0 END) as stars_5
+FROM product p
+LEFT JOIN reviews r ON p.product_id = r.product_id AND r.status = 'APPROVED'
+GROUP BY p.product_id;
+
+CREATE TABLE IF NOT EXISTS review_helpfulness_votes (
+    vote_id SERIAL PRIMARY KEY,
+    review_id INT NOT NULL,
+    voter_id INT NOT NULL,
+    helpful BOOLEAN NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_vote_review FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
+    CONSTRAINT fk_vote_voter FOREIGN KEY (voter_id) REFERENCES "user"(user_id) ON DELETE CASCADE,
+    CONSTRAINT unique_vote_per_user_per_review UNIQUE (review_id, voter_id)
+);
+
+-- 2. Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_review_helpfulness_votes_review_id ON review_helpfulness_votes(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_helpfulness_votes_voter_id ON review_helpfulness_votes(voter_id);
+
+-- ============================================
 -- VIEW FOR ADMIN DASHBOARD
 -- ============================================
 -- Combined view for users with their feature flags

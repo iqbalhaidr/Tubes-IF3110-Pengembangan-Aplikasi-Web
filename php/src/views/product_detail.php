@@ -105,6 +105,16 @@
                 <?php endif; ?>
             </div>
 
+            <!-- Reviews Section -->
+            <div class="reviews-section">
+                <h3>Customer Reviews</h3>
+                <div id="reviewsContainer" class="reviews-container">
+                    <div style="text-align: center; padding: 2rem;">
+                        <p>Loading reviews...</p>
+                    </div>
+                </div>
+                <div id="reviewsPagination" class="reviews-pagination"></div>
+            </div>
         </div>
     </main>
     
@@ -113,6 +123,7 @@
     <script src="/public/js/api.js"></script>
     <script src="/public/js/balance.js"></script>
     <script src="/public/js/main.js"></script>
-    <script src="/public/js/product_detail.js"></script> 
+    <script src="/public/js/product_detail.js"></script>
+    <script src="/public/js/product_reviews.js"></script> 
 </body>
 </html>

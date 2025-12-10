@@ -43,6 +43,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                         ['href' => '/seller/products', 'label' => 'Produk', 'key' => 'products'],
                         ['href' => '/seller/orders', 'label' => 'Orders', 'key' => 'orders'],
                         ['href' => '/manage-auctions', 'label' => 'Auctions', 'key' => 'auctions'],
+                        ['href' => '/seller/reviews', 'label' => 'Reviews', 'key' => 'reviews'],
                         ['href' => '/seller/settings', 'label' => 'Settings', 'key' => 'settings'],
                     ];
                     ?>
@@ -82,8 +83,12 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                     <div class="user-dropdown-menu" id="userDropdownMenu">
                         <a href="/buyer/profile" class="dropdown-item">Profile</a>
                         <a href="/buyer/order-history" class="dropdown-item">Order History</a>
-                        <a href="/chat" class="dropdown-item">Chat</a>
-                        <a href="/auctions" class="dropdown-item">Live Auctions</a>
+                        <?php if (FeatureFlag::isEnabled(FeatureFlag::CHAT_ENABLED, $current_user['user_id'] ?? null)): ?>
+                            <a href="/chat" class="dropdown-item">Chat</a>
+                        <?php endif; ?>
+                        <?php if (FeatureFlag::isEnabled(FeatureFlag::AUCTION_ENABLED, $current_user['user_id'] ?? null)): ?>
+                            <a href="/auctions" class="dropdown-item">Live Auctions</a>
+                        <?php endif; ?>
                         <button type="button" class="dropdown-item" onclick="openLogoutModal();">Logout</button>
                     </div>
                 </div>
