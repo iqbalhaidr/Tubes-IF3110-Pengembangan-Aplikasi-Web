@@ -115,7 +115,7 @@ class Product {
         $baseSql = 'FROM product p 
                     LEFT JOIN category_item ci ON p.product_id = ci.product_id 
                     LEFT JOIN category c ON ci.category_id = c.category_id
-                    LEFT JOIN auctions a ON p.product_id = a.product_id AND a.status IN (\'ACTIVE\', \'SCHEDULED\')';
+                    LEFT JOIN auctions a ON p.product_id = a.product_id AND a.status IN (\'ACTIVE\', \'SCHEDULED\') AND a.deleted_at IS NULL';
         
         $whereConditions = ['p.store_id = :store_id', 'p.deleted_at IS NULL'];
         $params = [':store_id' => $store_id];
@@ -134,7 +134,8 @@ class Product {
         $countSql = "SELECT COUNT(DISTINCT p.product_id) 
                      FROM product p 
                      LEFT JOIN category_item ci ON p.product_id = ci.product_id 
-                     LEFT JOIN category c ON ci.category_id = c.category_id 
+                     LEFT JOIN category c ON ci.category_id = c.category_id
+                     LEFT JOIN auctions a ON p.product_id = a.product_id AND a.status IN ('ACTIVE', 'SCHEDULED') AND a.deleted_at IS NULL
                      $whereSql";
         
         $countStmt = $this->db->prepare($countSql);
@@ -148,11 +149,12 @@ class Product {
         $orderBy = "ORDER BY $sortBy $sortOrder";
 
         $productSql = "SELECT p.product_id, p.product_name, p.price, p.stock, p.main_image_path,
-                       a.status as auction_status,
-                       STRING_AGG(c.category_name, ', ') AS categories
+                       STRING_AGG(c.category_name, ', ') AS categories,
+                       a.id as auction_id,
+                       a.status as auction_status
                        $baseSql 
                        $whereSql 
-                       GROUP BY p.product_id, a.status
+                       GROUP BY p.product_id, a.id, a.status
                        $orderBy 
                        LIMIT :limit OFFSET :offset";
                        

@@ -156,7 +156,17 @@ if ($route_parts[0] === 'auth') {
             $id = (int)$route_parts[3];
             (new ProductController())->getSellerProductById($id);
         } elseif ($route_parts[2] === 'products' && $method === 'GET') {
-            (new ProductController())->getProductBySeller();
+            // Check if it's a list or single product
+            if (!isset($route_parts[3])) {
+                // List all products
+                (new ProductController())->getProductBySeller();
+            } elseif (is_numeric($route_parts[3])) {
+                // Get single product by ID
+                $id = (int)$route_parts[3];
+                (new ProductController())->getProductById($id);
+            } else {
+                Response::error('Invalid product ID', null, 400);
+            }
         } elseif ($route_parts[2] === 'products' && ($route_parts[3] ?? '') === 'create' && $method === 'POST') {
             (new ProductController())->createProduct();
         } elseif ($route_parts[2] === 'product' && ($route_parts[3] ?? '') === 'delete' && $method === 'POST') {
