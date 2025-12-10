@@ -196,6 +196,11 @@ class ProductController {
             exit;
         }
 
+        // Check if product is in an active auction
+        if ($this->productModel->isProductInActiveAuction($product_id)) {
+            Response::error('This product cannot be deleted because it is currently in an active or scheduled auction.', null, 403);
+        }
+
         $rowCount = $this->productModel->softDeleteProduct($product_id, $store_id);
 
         if ($rowCount > 0) {
@@ -204,6 +209,36 @@ class ProductController {
             echo json_encode(['success' => false, 'message' => 'Gagal menghapus produk atau produk tidak ditemukan']);
         }
         exit;
+    }
+
+    public function getSellerProductById($id) {
+        header('Content-Type: application/json');
+        AuthMiddleware::requireRole('SELLER');
+        
+        $store_id = $this->getStoreIdForCurrentUser();
+        if (!$store_id) {
+            Response::error('Aksi tidak diizinkan', null, 403);
+        }
+
+        $productData = $this->productModel->findProductById($id);
+
+        if (!$productData || $productData['store_id'] !== $store_id) {
+            Response::error('Produk tidak ditemukan atau bukan milik Anda', null, 404);
+        }
+        
+        // Remap fields to be consistent with other parts of the app
+        $responseProduct = [
+            "product_id" => $productData['id'],
+            "product_name" => $productData['name'],
+            "description" => $productData['description'],
+            "price" => $productData['price'],
+            "stock" => $productData['stock'],
+            "main_image_path" => $productData['image'],
+            "store_id" => $productData['store_id'],
+            "store_name" => $productData['store']
+        ];
+
+        Response::success('Product retrieved', $responseProduct);
     }
 
     public function showAddProductPage() {
@@ -364,6 +399,11 @@ class ProductController {
             $product = $this->productModel->findProductById($id);
             if (!$product || $product['store_id'] !== $store_id) {
                 throw new Exception("Aksi tidak diizinkan.");
+            }
+
+            // Check if product is in an active auction
+            if ($this->productModel->isProductInActiveAuction($id)) {
+                throw new Exception("This product cannot be edited because it is currently in an active or scheduled auction.");
             }
 
             $name = trim($_POST['product_name'] ?? '');

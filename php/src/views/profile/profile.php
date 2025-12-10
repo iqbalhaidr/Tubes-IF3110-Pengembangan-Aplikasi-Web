@@ -50,6 +50,51 @@ $activeLink = 'profile';
                             </dl>
                         </article>
                     <?php endforeach; ?>
+
+                    <article class="profile-card">
+                        <div class="profile-card-header">
+                            <h2>Browser Notifications</h2>
+                        </div>
+                        <div class="profile-details">
+                                <dd>
+                                    <p>You must first allow notifications for this browser before you can manage categories below.</p>
+                                    <button type="button" class="btn btn-secondary" id="masterNotificationBtn" disabled>Loading...</button>
+                                    <p id="notificationStatusText" class="form-text"></p>
+                                </dd>
+                        </div>
+                    </article>
+
+                    <article class="profile-card">
+                        <div class="profile-card-header">
+                            <h2>Notification Preferences</h2>
+                        </div>
+                        <form action="/buyer/preferences" method="POST" class="profile-details">
+                            <div class="profile-detail-row checkbox-row">
+                                <span for="chat_enabled">Chat Notifications</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="chat_enabled" name="chat_enabled" <?php echo ($pushPreferences['chat_enabled'] ?? true) ? 'checked' : ''; ?>>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="profile-detail-row checkbox-row">
+                                <span for="auction_enabled">Auction Notifications</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="auction_enabled" name="auction_enabled" <?php echo ($pushPreferences['auction_enabled'] ?? true) ? 'checked' : ''; ?>>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="profile-detail-row checkbox-row">
+                                <span for="order_enabled">Order Status Notifications</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="order_enabled" name="order_enabled" <?php echo ($pushPreferences['order_enabled'] ?? true) ? 'checked' : ''; ?>>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="profile-actions">
+                                <button type="submit" class="btn btn-primary">Save Preferences</button>
+                            </div>
+                        </form>
+                    </article>
                 </div>
                 <aside class="profile-sidebar">
                     <div class="profile-card summary-card">
@@ -194,5 +239,6 @@ $activeLink = 'profile';
     <script src="/public/js/balance.js"></script>
     <script src="/public/js/main.js"></script>
     <script src="/public/js/profile-edit.js"></script>
+    <script src="/public/js/notification-manager.js"></script>
 </body>
 </html>

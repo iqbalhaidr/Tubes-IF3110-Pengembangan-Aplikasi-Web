@@ -43,6 +43,7 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                         ['href' => '/seller/products', 'label' => 'Produk', 'key' => 'products'],
                         ['href' => '/seller/orders', 'label' => 'Orders', 'key' => 'orders'],
                         ['href' => '/manage-auctions', 'label' => 'Auctions', 'key' => 'auctions'],
+                        ['href' => '/seller/settings', 'label' => 'Settings', 'key' => 'settings'],
                     ];
                     ?>
                     <?php foreach ($sellerLinks as $link): ?>

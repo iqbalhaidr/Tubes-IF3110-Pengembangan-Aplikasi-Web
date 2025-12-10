@@ -93,6 +93,46 @@
     
     <div id="toast" class="toast"></div>
 
+    <!-- Create Auction Modal -->
+    <div id="createAuctionModal" class="modal-overlay hidden">
+        <div class="modal-content create-auction-modal">
+            <div class="modal-header">
+                <h4>Create Auction</h4>
+                <button class="modal-close-btn" id="auctionModalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="product-preview" id="auctionProductPreview">
+                    <!-- Product info will be injected here by JS -->
+                </div>
+                <form id="createAuctionForm">
+                    <input type="hidden" name="product_id" id="auctionProductId">
+                    <div class="form-group">
+                        <label for="initialBid">Initial Bid</label>
+                        <input type="number" id="initialBid" name="initial_bid" class="form-control" required min="0" step="1000" placeholder="e.g., 100000">
+                    </div>
+                    <div class="form-group">
+                        <label for="minBidIncrement">Min. Bid Increment</label>
+                        <input type="number" id="minBidIncrement" name="min_bid_increment" class="form-control" required min="1000" step="1000" value="10000">
+                    </div>
+                    <div class="form-group">
+                        <label for="auctionQuantity">Quantity</label>
+                        <input type="number" id="auctionQuantity" name="auction_quantity" class="form-control" required min="1" value="1">
+                        <small id="quantityHelp" class="form-text"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="startTime">Start Time (Optional)</label>
+                        <input type="datetime-local" id="startTime" name="start_time" class="form-control">
+                        <small class="form-text">Leave blank to start immediately.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="auctionModalCancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="auctionModalSubmitBtn">Create Auction</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="/public/js/api.js"></script>
     <script src="/public/js/main.js"></script>

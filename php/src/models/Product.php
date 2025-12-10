@@ -343,5 +343,17 @@ class Product {
             }
         }
     }
+
+    public function isProductInActiveAuction($product_id) {
+        $query = 'SELECT 1 FROM auctions WHERE product_id = :product_id AND status IN (\'ACTIVE\', \'SCHEDULED\')';
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([':product_id' => $product_id]);
+            return (bool) $statement->fetchColumn();
+        } catch (PDOException $exception) {
+            // On error, assume it's not in auction to prevent accidental blocking
+            return false;
+        }
+    }
 }
 ?>

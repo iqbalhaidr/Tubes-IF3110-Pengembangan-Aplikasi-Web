@@ -5,28 +5,18 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-// import webpush from 'web-push';
 import auctionRoutes from './routes/auctionRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import pushRoutes from './routes/pushRoutes.js';
+import internalRoutes from './routes/internalRoutes.js';
 import { registerAuctionEvents, initializeAuctionJobs } from './events/auctionEvents.js';
 import { sendChatPushNotification } from './services/pushService.js';
 import { socketAuthMiddleware } from './websocket-auth.js';
 import pool from './db.js';
-import pushRoutes from './routes/pushRoutes.js';
 
 // Load environment variables
 dotenv.config();
-
-/*
-// Configure web-push
-const vapidDetails = {
-    publicKey: process.env.VAPID_PUBLIC_KEY,
-    privateKey: process.env.VAPID_PRIVATE_KEY,
-    subject: 'mailto:admin@example.com'
-};
-webpush.setVapidDetails(vapidDetails.subject, vapidDetails.publicKey, vapidDetails.privateKey);
-*/
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -64,13 +54,7 @@ app.use('/api/node/auctions', auctionRoutes);
 app.use('/api/node/chat', chatRoutes);
 app.use('/api/node/admin', adminRoutes);
 app.use('/api/node/push', pushRoutes);
-// TODO (uncomment): Add other route modules here
-// import authRoutes from './routes/auth.js';
-// import pushRoutes from './routes/push.js';
-// 
-// app.use('/api/node/auth', authRoutes);
-// app.use('/api/node/push', pushRoutes);
-
+app.use('/api/node/internal', internalRoutes);
 
 // ============== WEBSOCKET EVENTS ==============
 

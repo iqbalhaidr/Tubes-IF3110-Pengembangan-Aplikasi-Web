@@ -152,7 +152,10 @@ if ($route_parts[0] === 'auth') {
         $controller = new CategoryController();
         $controller->getAllCategories();
     } elseif ($route_parts[1] === 'seller' && isset($route_parts[2])) {
-        if ($route_parts[2] === 'products' && $method === 'GET') {
+        if ($route_parts[2] === 'products' && isset($route_parts[3]) && is_numeric($route_parts[3]) && $method === 'GET') {
+            $id = (int)$route_parts[3];
+            (new ProductController())->getSellerProductById($id);
+        } elseif ($route_parts[2] === 'products' && $method === 'GET') {
             // Check if it's a list or single product
             if (!isset($route_parts[3])) {
                 // List all products
@@ -306,53 +309,64 @@ if ($route_parts[0] === 'auth') {
     }
 } elseif ($route_parts[0] === 'buyer') {
     $controller = new HomeController();
+    $action = $route_parts[1] ?? 'home';
 
-    if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'home') {
+    if ($action === 'home' || $action === '') {
         header('Location: /home');
         exit;
-    } elseif ($route_parts[1] === 'profile') {
-        $controller->buyerProfile();
-    } elseif ($route_parts[1] === 'order-history') {
+    } elseif ($action === 'profile') {
+        if ($method === 'GET') {
+            $controller->buyerProfile();
+        } else {
+            Response::error('Method not allowed', null, 405);
+        }
+    } elseif ($action === 'order-history') {
         if ($method === 'GET') {
             $controller->buyerOrderHistory();
         } else {
             Response::error('Method not allowed', null, 405);
         }
+    } elseif ($action === 'preferences' && $method === 'POST') {
+        $controller->updateBuyerPreferences();
     } else {
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';
     }
 } elseif ($route_parts[0] === 'seller') {
     $controller = new HomeController();
+    $action = $route_parts[1] ?? 'dashboard';
 
-    if (!isset($route_parts[1]) || $route_parts[1] === '' || $route_parts[1] === 'dashboard') {
+    if ($action === 'dashboard' || $action === '') {
         $controller->sellerDashboard();
-    } elseif ($route_parts[1] === 'profile') {
+    } elseif ($action === 'profile') { // Redirects to settings
         $controller->sellerProfile();
-    } elseif ($route_parts[1] === 'export-performance' && $method === 'GET') {
-        $controller->exportPerformanceReport();
-    } elseif ($route_parts[1] === 'products' && $method === 'GET') {
-        $productController = new ProductController();
-        if (!isset($route_parts[2]) && $method === 'GET') {
-            $productController->showProductManagement();
-        } elseif (($route_parts[2] ?? '') === 'add' && $method === 'GET') {
-            $productController->showAddProductPage();
-        } elseif (($route_parts[2] ?? '') === 'edit' && isset($route_parts[3]) && is_numeric($route_parts[3]) && $method === 'GET') {
-            $id = (int)$route_parts[3];
-            $productController->showEditProductPage($id);
-            
-        } else {
-            Response::error('Page not found', null, 404);
-        }
-    } elseif ($route_parts[1] === 'update-store' && $method === 'POST') {
-        $controller->updateStore();
-    } elseif ($route_parts[1] === 'orders') {
-        $orderController = new OrderController();
+    } elseif ($action === 'settings') {
         if ($method === 'GET') {
-            $orderController->index();
+            $controller->sellerSettings();
         } else {
             Response::error('Method not allowed', null, 405);
         }
+    } elseif ($action === 'preferences' && $method === 'POST') {
+        $controller->updateSellerPreferences();
+    } elseif ($action === 'export-performance' && $method === 'GET') {
+        $controller->exportPerformanceReport();
+    } elseif ($action === 'products' && $method === 'GET') {
+        $productController = new ProductController();
+        if (!isset($route_parts[2])) {
+            $productController->showProductManagement();
+        } elseif (($route_parts[2] ?? '') === 'add') {
+            $productController->showAddProductPage();
+        } elseif (($route_parts[2] ?? '') === 'edit' && isset($route_parts[3]) && is_numeric($route_parts[3])) {
+            $id = (int)$route_parts[3];
+            $productController->showEditProductPage($id);
+        } else {
+            Response::error('Page not found', null, 404);
+        }
+    } elseif ($action === 'update-store' && $method === 'POST') {
+        $controller->updateStore();
+    } elseif ($action === 'orders' && $method === 'GET') {
+        $orderController = new OrderController();
+        $orderController->index();
     } else {
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';

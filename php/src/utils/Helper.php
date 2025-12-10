@@ -2,6 +2,32 @@
 
 class Helper {
 
+    public static function triggerPushNotification($userId, $featureFlag, $payload) {
+        $node_url = 'http://node:3000/api/node/internal/send-notification';
+        
+        $postData = json_encode([
+            'userId' => $userId,
+            'featureFlag' => $featureFlag,
+            'payload' => $payload
+        ]);
+
+        $ch = curl_init($node_url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($postData)
+        ]);
+        
+        // Set a very short timeout to make it "fire and forget"
+        curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);
+
+        curl_exec($ch);
+        curl_close($ch);
+    }
+
     public static function generatePaginLinks($currentPage, $totalPages, $window = 2) {
         $links = [];
         $showEllipsis = false;
