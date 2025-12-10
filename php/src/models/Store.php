@@ -63,6 +63,23 @@ class Store {
     }
 
     /**
+     * Find store by store id
+     */
+    public function findById($storeId) {
+        $query = 'SELECT store_id, user_id, store_name, store_description, store_logo_path, balance, created_at, updated_at
+                  FROM store
+                  WHERE store_id = :store_id';
+
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([':store_id' => $storeId]);
+            return $statement->fetch() ?: null;
+        } catch (PDOException $exception) {
+            return null;
+        }
+    }
+
+    /**
      * Update store information
      */
     public function update($storeId, $storeName, $storeDescription = '', $storeLogoPath = null) {

@@ -144,6 +144,7 @@ class HomeController {
         $userModel = new User();
         $currentSessionUser = AuthMiddleware::getCurrentUser();
         $user = $userModel->getUserById($currentSessionUser['user_id']);
+        $pushPreferences = $userModel->getPushPreferences($currentSessionUser['user_id']);
 
         $profileTitle = 'Your Account';
         $profileSubtitle = 'Keep your personal details accurate so orders reach you without delay.';
@@ -176,9 +177,67 @@ class HomeController {
         require_once __DIR__ . '/../views/profile/profile.php';
     }
 
+    public function updateBuyerPreferences() {
+        AuthMiddleware::requireRole('BUYER');
+        $currentUser = AuthMiddleware::getCurrentUser();
+        $userId = $currentUser['user_id'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /buyer/profile');
+            exit;
+        }
+
+        $prefs = [
+            'chat_enabled' => isset($_POST['chat_enabled']),
+            'auction_enabled' => isset($_POST['auction_enabled']),
+            'order_enabled' => isset($_POST['order_enabled'])
+        ];
+
+        $userModel = new User();
+        $userModel->updatePushPreferences($userId, $prefs);
+
+        header('Location: /buyer/profile?update=success');
+        exit;
+    }
+
     public function sellerProfile() {
-        AuthMiddleware::requireRole('BUYER', '/auth/login');
-        header('Location: /seller/dashboard');
+        AuthMiddleware::requireRole('SELLER', '/auth/login');
+        header('Location: /seller/settings');
+        exit;
+    }
+
+    public function sellerSettings() {
+        AuthMiddleware::requireRole('SELLER', '/auth/login');
+        $userModel = new User();
+        $currentSessionUser = AuthMiddleware::getCurrentUser();
+        $pushPreferences = $userModel->getPushPreferences($currentSessionUser['user_id']);
+
+        $pageTitle = 'Settings';
+        $navbarType = 'seller';
+        
+        require_once __DIR__ . '/../views/seller/settings.php';
+    }
+
+    public function updateSellerPreferences() {
+        AuthMiddleware::requireRole('SELLER');
+        $currentUser = AuthMiddleware::getCurrentUser();
+        $userId = $currentUser['user_id'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /seller/settings');
+            exit;
+        }
+
+        $prefs = [
+            'chat_enabled' => isset($_POST['chat_enabled']),
+            'auction_enabled' => isset($_POST['auction_enabled']),
+            'order_enabled' => isset($_POST['order_enabled'])
+        ];
+
+        $userModel = new User();
+        $userModel->updatePushPreferences($userId, $prefs);
+
+        header('Location: /seller/settings?update=success');
         exit;
     }
 
@@ -186,6 +245,7 @@ class HomeController {
         if (empty($dateValue)) {
             return '-';
         }
+
 
         try {
             $date = new DateTime($dateValue);
@@ -548,6 +608,23 @@ class HomeController {
 
             // Mark order as received
             $result = $orderModel->markReceived($order_id, $order['store_id'], $order['total_price']);
+
+            // Send push notification to seller
+            try {
+                $storeModel = new Store();
+                $store = $storeModel->findById($order['store_id']);
+                if ($store && $store['user_id']) {
+                    $payload = [
+                        'title' => 'Pesanan Telah Diterima',
+                        'body' => 'Pembeli telah mengonfirmasi penerimaan untuk pesanan #' . $order_id . '.',
+                        'data' => ['url' => '/seller/orders']
+                    ];
+                    Helper::triggerPushNotification($store['user_id'], 'order_enabled', $payload);
+                }
+            } catch (Exception $e) {
+                // Log error but don't fail the main request
+                error_log("Failed to send push notification for order received: " . $e->getMessage());
+            }
 
             http_response_code(200);
             echo json_encode([
