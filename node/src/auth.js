@@ -54,13 +54,18 @@ const verifyPHPSession = async (cookies) => {
 
     const data = await response.json();
     if (data.success && data.data) {
-      return {
+      const user = {
         id: data.data.user_id,
         userId: data.data.user_id,
         email: data.data.email,
         name: data.data.name,
         role: data.data.role,
       };
+      // Include store_id if user is a seller
+      if (data.data.store_id) {
+        user.store_id = data.data.store_id;
+      }
+      return user;
     }
     return null;
   } catch (error) {

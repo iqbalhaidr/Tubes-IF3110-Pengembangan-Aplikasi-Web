@@ -72,8 +72,18 @@ export const verifyPHPSession = async (rawCookieHeader) => {
         return null;
     }
 
-    console.log(`[WebSocket Auth] Successfully verified user: ID ${rows[0].user_id}`);
-    return rows[0];
+    const user = rows[0];
+
+    // If user is a seller, fetch store_id
+    if (user.role === 'SELLER') {
+        const storeResult = await pool.query('SELECT store_id FROM store WHERE seller_id = $1 LIMIT 1', [userId]);
+        if (storeResult.rows.length > 0) {
+            user.store_id = storeResult.rows[0].store_id;
+        }
+    }
+
+    console.log(`[WebSocket Auth] Successfully verified user: ID ${user.user_id}`);
+    return user;
 
   } catch (error) {
     console.error('[WebSocket Auth Error]', error);

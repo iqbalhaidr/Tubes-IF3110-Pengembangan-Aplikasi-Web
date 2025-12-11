@@ -57,6 +57,14 @@
                         ?>
                     </div>
                 </div>
+
+                <!-- Auction Section -->
+                <div id="auctionSection" class="auction-section" style="display: none;">
+                    <h3>Penawaran Lelang</h3>
+                    <a href="" id="goToAuctionBtn" class="btn btn-primary" style="width: 100%;">
+                        Lihat Lelang
+                    </a>
+                </div>
             </div>
 
             <div class="action-card">
@@ -124,6 +132,7 @@
     <script src="/public/js/balance.js"></script>
     <script src="/public/js/main.js"></script>
     <script src="/public/js/product_detail.js"></script>
-    <script src="/public/js/product_reviews.js"></script> 
+    <script src="/public/js/product_reviews.js"></script>
+    <script src="/public/js/product_auction.js"></script> 
 </body>
 </html>

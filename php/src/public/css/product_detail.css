@@ -197,6 +197,27 @@
     white-space: nowrap;
 }
 
+.auction-section {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    background: var(--white);
+    margin-bottom: 20px;
+}
+
+.auction-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+}
+
+.auction-section .btn-primary {
+    padding: 10px 16px;
+    font-size: 14px;
+    text-align: center;
+}
+
 .action-card {
     border: 1px solid var(--border-color);
     border-radius: 8px;

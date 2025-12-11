@@ -265,6 +265,58 @@ export const getProductReviews = async (req, res) => {
 };
 
 /**
+ * Get rating statistics for a product
+ * GET /api/node/reviews/product/:product_id/stats
+ */
+export const getProductRatingStats = async (req, res) => {
+    try {
+        const { product_id } = req.params;
+
+        // Get rating statistics
+        const statsResult = await pool.query(
+            `SELECT 
+                COUNT(*) as total_reviews,
+                COALESCE(AVG(rating), 0) as average_rating,
+                SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as stars_5,
+                SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as stars_4,
+                SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as stars_3,
+                SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as stars_2,
+                SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as stars_1
+             FROM reviews 
+             WHERE product_id = $1 AND status = 'APPROVED'`,
+            [product_id]
+        );
+
+        const stats = statsResult.rows[0] || {
+            total_reviews: 0,
+            average_rating: 0,
+            stars_5: 0,
+            stars_4: 0,
+            stars_3: 0,
+            stars_2: 0,
+            stars_1: 0
+        };
+
+        res.json({
+            success: true,
+            product_id,
+            average_rating: parseFloat(stats.average_rating) || 0,
+            total_reviews: parseInt(stats.total_reviews) || 0,
+            distribution: {
+                5: parseInt(stats.stars_5) || 0,
+                4: parseInt(stats.stars_4) || 0,
+                3: parseInt(stats.stars_3) || 0,
+                2: parseInt(stats.stars_2) || 0,
+                1: parseInt(stats.stars_1) || 0
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching rating stats:', error);
+        res.status(500).json({ error: 'Failed to fetch rating stats' });
+    }
+};
+
+/**
  * Get reviews for a seller's products
  * GET /api/node/reviews/seller?page=1&limit=10
  */

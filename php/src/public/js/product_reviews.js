@@ -3,10 +3,12 @@ const productId = new URLSearchParams(window.location.search).get('id');
 let currentPage = 1;
 let currentSort = 'recent';
 let currentRatingFilter = 'all';
+let ratingStats = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     if (productId) {
         loadProductReviews(1);
+        loadRatingStats();
         initializeEventListeners();
     }
 });
@@ -15,11 +17,60 @@ function initializeEventListeners() {
     // Add filter and sort listeners here if needed
 }
 
+function loadRatingStats() {
+    // Fetch rating statistics for this product
+    api.get(`/api/node/reviews/product/${productId}/stats`)
+        .then(data => {
+            if (data.success || data.average_rating !== undefined) {
+                ratingStats = data;
+                displayRatingStats(data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading rating stats:', error);
+        });
+}
+
+function displayRatingStats(stats) {
+    const container = document.getElementById('reviewsContainer');
+    if (!container) return;
+    
+    const statsDiv = document.createElement('div');
+    statsDiv.className = 'rating-stats-header';
+    
+    if (stats.total_reviews === 0) {
+        statsDiv.innerHTML = '<p style="color: #999;">Belum ada rating</p>';
+    } else {
+        const avgRating = parseFloat(stats.average_rating).toFixed(1);
+        const stars = '⭐'.repeat(Math.round(stats.average_rating)) + '☆'.repeat(5 - Math.round(stats.average_rating));
+        statsDiv.innerHTML = `
+            <div style="margin-bottom: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 8px;">
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">
+                    ${stars} <span style="font-size: 16px;">${avgRating}/5</span>
+                </div>
+                <p style="color: #666; margin: 0;">Berdasarkan ${stats.total_reviews} rating</p>
+            </div>
+        `;
+    }
+    
+    const existingStats = container.querySelector('.rating-stats-header');
+    if (existingStats) {
+        existingStats.replaceWith(statsDiv);
+    } else {
+        container.insertBefore(statsDiv, container.firstChild);
+    }
+}
+
 function loadProductReviews(page = 1) {
     const container = document.getElementById('reviewsContainer');
     const paginationContainer = document.getElementById('reviewsPagination');
     
-    container.innerHTML = '<div style="text-align: center; padding: 2rem;"><p>Loading reviews...</p></div>';
+    if (!container) return;
+    
+    const existingStats = container.querySelector('.rating-stats-header');
+    if (!existingStats) {
+        container.innerHTML = '<div style="text-align: center; padding: 2rem;"><p>Loading reviews...</p></div>';
+    }
 
     const params = new URLSearchParams({
         page: page,
@@ -35,17 +86,26 @@ function loadProductReviews(page = 1) {
                 const pagination = data.data || data;
                 
                 if (reviews.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;"><p>No reviews yet</p></div>';
+                    if (!existingStats) {
+                        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;"><p>No reviews yet</p></div>';
+                    }
                     paginationContainer.innerHTML = '';
                 } else {
-                    container.innerHTML = reviews.map(review => createReviewCard(review)).join('');
+                    let reviewsHtml = '';
+                    if (existingStats) {
+                        reviewsHtml = existingStats.outerHTML;
+                    }
+                    reviewsHtml += reviews.map(review => createReviewCard(review)).join('');
+                    container.innerHTML = reviewsHtml;
                     renderReviewsPagination(pagination.page, pagination.total_pages);
                 }
             }
         })
         .catch(error => {
             console.error('Error loading reviews:', error);
-            container.innerHTML = '<div style="text-align: center; padding: 2rem; color: red;"><p>Failed to load reviews</p></div>';
+            if (!existingStats) {
+                container.innerHTML = '<div style="text-align: center; padding: 2rem; color: red;"><p>Failed to load reviews</p></div>';
+            }
         });
 }
 

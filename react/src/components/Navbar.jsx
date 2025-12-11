@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import './Navbar.css';
 import { useFeatureEnabled, FEATURES } from '../hooks/useFeatureFlags';
 
@@ -7,6 +8,7 @@ import { useFeatureEnabled, FEATURES } from '../hooks/useFeatureFlags';
  * Provides consistent navigation between PHP and React sections
  */
 export default function Navbar({ user, onLogout, onBalanceUpdate }) {
+  const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
@@ -220,7 +222,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                     <a 
                       key={link.key}
                       href={link.href} 
-                      className={`navbar-link ${link.key === 'auctions' ? 'active' : ''}`}
+                      className={`navbar-link ${location.pathname === link.href ? 'active' : ''}`}
                     >
                       {link.label}
                     </a>

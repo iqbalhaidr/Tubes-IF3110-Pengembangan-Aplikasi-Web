@@ -14,7 +14,8 @@ import {
     updateNotificationPreferences,
     voteReviewHelpfulness,
     getReviewHelpfulness,
-    checkOrderReviewStatus
+    checkOrderReviewStatus,
+    getProductRatingStats
 } from '../controllers/reviewController.js';
 
 const router = express.Router();
@@ -29,6 +30,12 @@ const router = express.Router();
  * Query: page, limit, sort, rating_filter
  */
 router.get('/product/:product_id', getProductReviews);
+
+/**
+ * GET /api/node/reviews/product/:product_id/stats
+ * Get rating statistics for a product
+ */
+router.get('/product/:product_id/stats', getProductRatingStats);
 
 /**
  * GET /api/node/reviews/order/:order_id/status

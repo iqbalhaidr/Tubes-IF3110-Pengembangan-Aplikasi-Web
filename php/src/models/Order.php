@@ -356,10 +356,6 @@ class Order {
             if ($order['delivery_time'] !== null) {
                 $deliveryTime = new DateTime($order['delivery_time']);
                 $now = new DateTime();
-
-                if ($now < $deliveryTime) {
-                    throw new Exception('Cannot confirm receipt. The estimated delivery time has not passed yet.');
-                }
             } else {
                 throw new Exception('Order does not have a valid delivery time.');
             }

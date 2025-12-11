@@ -92,6 +92,20 @@ function renderProducts(productsGrid, products) {
         
         const allCategories = product.categories;
         const storeUrl = `/store/${product.store_id}`;
+        
+        // Build rating display
+        let ratingHtml = '';
+        if (product.average_rating && product.total_reviews > 0) {
+            const stars = '⭐'.repeat(Math.round(product.average_rating)) + '☆'.repeat(5 - Math.round(product.average_rating));
+            const avgRating = parseFloat(product.average_rating).toFixed(1);
+            ratingHtml = `<div class="product-rating">
+                <span class="rating-stars">${stars}</span>
+                <span class="rating-value">${avgRating}</span>
+                <span class="rating-count">(${product.total_reviews})</span>
+            </div>`;
+        } else {
+            ratingHtml = '<div class="product-rating no-rating">Belum ada rating</div>';
+        }
 
         productHTML += `
             <a class="product-card ${stockClass}" 
@@ -108,6 +122,7 @@ function renderProducts(productsGrid, products) {
                 <div class="product-info">
                     <div class="product-name">${product.name}</div>
                     <div class="product-price">Rp. ${formattedPrice}</div>
+                    ${ratingHtml}
                     
                     <div class="product-extra-info">
                         <div class="product-category">
