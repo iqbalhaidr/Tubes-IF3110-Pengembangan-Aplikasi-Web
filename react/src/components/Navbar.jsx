@@ -160,6 +160,8 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
     { href: '/seller/products', label: 'Produk', key: 'products', flag: true },
     { href: '/seller/orders', label: 'Orders', key: 'orders', flag: true },
     { href: '/manage-auctions', label: 'Auctions', key: 'auctions', flag: auctionEnabled },
+    { href: '/seller/reviews', label: 'Reviews', key: 'reviews', flag: true },
+    { href: '/seller/settings', label: 'Settings', key: 'settings', flag: true },
   ];
 
   const sellerLinks = baseSellerLinks.filter(link => link.flag);
@@ -290,39 +292,15 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
               </>
             )}
             
-            {/* Seller dropdown and logout */}
+            {/* Seller logout */}
             {isSeller && (
-              <div 
-                className={`user-dropdown ${dropdownOpen ? 'active' : ''}`}
-                ref={dropdownRef}
+              <button 
+                type="button" 
+                className="navbar-link logout-link" 
+                onClick={openLogoutModal}
               >
-                <button 
-                  className="user-profile-btn" 
-                  id="userProfileBtn"
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                >
-                  <div className="user-avatar" id="userAvatar">
-                    {(user?.name ?? 'S').charAt(0).toUpperCase()}
-                  </div>
-                  <span className="user-name" id="userName">
-                    {user?.name ?? 'Seller'}
-                  </span>
-                  <span className="dropdown-arrow">▼</span>
-                </button>
-                <div className="user-dropdown-menu" id="userDropdownMenu">
-                  <a href="/seller/dashboard" className="dropdown-item">Dashboard</a>
-                  {chatEnabled && <a href="/chat" className="dropdown-item">Chat</a>}
-                  <a href="/seller/orders" className="dropdown-item">Orders</a>
-                  {auctionEnabled && <a href="/manage-auctions" className="dropdown-item">Auctions</a>}
-                  <button 
-                    type="button" 
-                    className="dropdown-item" 
-                    onClick={openLogoutModal}
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
+                Logout
+              </button>
             )}
           </div>
         </div>

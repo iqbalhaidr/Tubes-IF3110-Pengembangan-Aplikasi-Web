@@ -189,12 +189,42 @@ function loadOrders(status, page) {
                     ordersList.querySelectorAll('.btn-confirm').forEach(btn => {
                         btn.addEventListener('click', () => openConfirmModal(btn.dataset.orderId));
                     });
+
+                    // Check review status for RECEIVED orders
+                    ordersList.querySelectorAll('.btn-review-container').forEach(container => {
+                        const orderId = container.dataset.orderId;
+                        updateReviewButton(orderId, container);
+                    });
                 }
             }
         })
         .catch(error => {
             console.error('Error loading orders:', error);
             ordersList.innerHTML = '<div class="error-state" style="text-align: center; padding: 2rem; color: red;"><p>Failed to load orders. Please try again.</p></div>';
+        });
+}
+
+/**
+ * Update the review button based on review status
+ */
+function updateReviewButton(orderId, container) {
+    api.get(`/api/node/reviews/order/${orderId}/status`)
+        .then(data => {
+            if (data.order_id) {
+                const { is_fully_reviewed } = data;
+                if (is_fully_reviewed) {
+                    // All products reviewed - show a "View Reviews" button or message
+                    container.innerHTML = '<div class="btn btn-secondary" disabled style="cursor: not-allowed;">All Products Reviewed</div>';
+                } else {
+                    // Not all reviewed - show write review button
+                    container.innerHTML = `<a href="/review/${orderId}" class="btn btn-primary btn-review">Write Review</a>`;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking review status:', error);
+            // Fallback - show write review button on error
+            container.innerHTML = `<a href="/review/${orderId}" class="btn btn-primary btn-review">Write Review</a>`;
         });
 }
 
@@ -223,6 +253,9 @@ function createOrderCard(order) {
     let actionButton = '';
     if (order.status === 'ON_DELIVERY') {
         actionButton = `<button type="button" class="btn btn-primary btn-confirm" data-order-id="${order.order_id}">Confirm Received</button>`;
+    } else if (order.status === 'RECEIVED') {
+        // Use a placeholder that will be filled after checking review status
+        actionButton = `<div class="btn-review-container" data-order-id="${order.order_id}"><div class="loading-spinner"></div> Checking...</div>`;
     }
 
     // Build refund info for rejected orders
