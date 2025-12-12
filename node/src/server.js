@@ -13,8 +13,9 @@ import internalRoutes from './routes/internalRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
 import { registerAuctionEvents, initializeAuctionJobs } from './events/auctionEvents.js';
-import { sendChatPushNotification } from './services/pushService.js';
 import { socketAuthMiddleware } from './websocket-auth.js';
+import { checkFeatureForSocket, FEATURES } from './middleware/featureFlagMiddleware.js';
+import { sendChatPushNotification } from './services/pushService.js';
 import pool from './db.js';
 
 // Load environment variables
@@ -107,6 +108,11 @@ chatNamespace.on('connection', (socket) => {
     }
 
     try {
+      const featureError = await checkFeatureForSocket(FEATURES.CHAT_ENABLED, socket.userId);
+      if (featureError) {
+        return socket.emit('error', featureError);
+      }
+
       // Authorize: Check if the user is the buyer or the owner of the store
       let canAccess = false;
       if (socket.userRole === 'BUYER' && socket.userId === buyerId) {
@@ -155,6 +161,11 @@ chatNamespace.on('connection', (socket) => {
 
     const dbClient = await pool.connect();
     try {
+      const featureError = await checkFeatureForSocket(FEATURES.CHAT_ENABLED, socket.userId);
+      if (featureError) {
+        return socket.emit('error', featureError);
+      }
+      
       // If it's an item preview, fetch product details and set as content
       if (messageType === 'item_preview' && productId) {
         const productQuery = 'SELECT product_id, product_name, price, main_image_path FROM product WHERE product_id = $1';
@@ -292,6 +303,11 @@ chatNamespace.on('connection', (socket) => {
 
     const dbClient = await pool.connect();
     try {
+      const featureError = await checkFeatureForSocket(FEATURES.CHAT_ENABLED, socket.userId);
+      if (featureError) {
+        return socket.emit('error', featureError);
+      }
+
       await dbClient.query('BEGIN');
 
       // First, find the sender of the last message in this room.

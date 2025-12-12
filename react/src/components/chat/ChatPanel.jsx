@@ -5,7 +5,7 @@ import SelectItemPreviewModal from './SelectItemPreviewModal';
 import { MessageListSkeleton } from './SkeletonLoader';
 
 const ChatPanel = ({ 
-  currentUser, activeRoom, messages, loading, onSendMessage, 
+  currentUser, activeRoom, messages, loading, onSendMessage, onBack,
   onUploadImage, typingUsers, onTyping, loadingMore, hasMore, onFetchMoreMessages
 }) => {
   const [inputValue, setInputValue] = useState('');
@@ -79,7 +79,12 @@ const ChatPanel = ({
     <>
       <div className="h-full flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden">
         {/* Chat Header */}
-        <div className="p-5 border-b border-gray-200 flex items-center bg-white shadow-sm">
+        <div className="p-4 border-b border-gray-200 flex items-center bg-white shadow-sm">
+          <button onClick={onBack} className="mr-2 p-2 rounded-full hover:bg-gray-100 md:hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
           <div className="w-12 h-12 rounded-full bg-primary-green mr-4 flex-shrink-0 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
             {displayImage ? (
               <img src={displayImage} alt={displayName} className="w-full h-full object-cover" />
@@ -107,7 +112,7 @@ const ChatPanel = ({
         <TypingIndicator typingUsers={typingUsers} />
 
         {/* Chat Input */}
-        <div className="p-5 border-t border-gray-200 bg-white">
+        <div className="p-3 sm:p-5 border-t border-gray-200 bg-white">
           <div className="relative flex items-center gap-3">
             <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
             <button onClick={handleAttachClick} className="p-2.5 text-gray-600 hover:text-primary-green hover:bg-gray-100 rounded-lg transition-all duration-200 font-medium" title="Upload Image">
@@ -125,7 +130,7 @@ const ChatPanel = ({
               onKeyPress={handleKeyPress}
             />
             <button 
-              className="bg-primary-green hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 hover:shadow-md active:scale-95"
+              className="bg-primary-green hover:bg-green-700 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg transition-all duration-200 hover:shadow-md active:scale-95"
               onClick={handleSendMessage}
             >
               Send

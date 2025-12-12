@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../db.js';
 import { requireAuth } from '../auth.js';
+import { requireFeature, FEATURES } from '../middleware/featureFlagMiddleware.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -47,7 +48,7 @@ const authMiddleware = requireAuth;
  * GET /api/node/chat/rooms
  * Get all chat rooms for the current user
  */
-router.get('/rooms', authMiddleware, async (req, res) => {
+router.get('/rooms', authMiddleware, requireFeature(FEATURES.CHAT_ENABLED), async (req, res) => {
     const userId = req.user.userId;
     const userRole = req.user.role;
 
@@ -120,7 +121,7 @@ router.get('/rooms', authMiddleware, async (req, res) => {
  * POST /api/node/chat/rooms
  * Create a new chat room or get existing one
  */
-router.post('/rooms', authMiddleware, async (req, res) => {
+router.post('/rooms', authMiddleware, requireFeature(FEATURES.CHAT_ENABLED), async (req, res) => {
     const userId = req.user.userId;
     const userRole = req.user.role;
     const { store_id } = req.body;
@@ -218,7 +219,7 @@ router.post('/rooms', authMiddleware, async (req, res) => {
  * GET /api/node/chat/rooms/:storeId/:buyerId/messages
  * Get messages for a specific chat room
  */
-router.get('/rooms/:storeId/:buyerId/messages', authMiddleware, async (req, res) => {
+router.get('/rooms/:storeId/:buyerId/messages', authMiddleware, requireFeature(FEATURES.CHAT_ENABLED), async (req, res) => {
     const userId = req.user.userId;
     const userRole = req.user.role;
     const { storeId, buyerId } = req.params;
@@ -290,7 +291,7 @@ router.get('/rooms/:storeId/:buyerId/messages', authMiddleware, async (req, res)
  * POST /api/node/chat/upload-image
  * Upload an image for chat
  */
-router.post('/upload-image', authMiddleware, upload.single('image'), async (req, res) => {
+router.post('/upload-image', authMiddleware, requireFeature(FEATURES.CHAT_ENABLED), upload.single('image'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({
             status: 'error',
