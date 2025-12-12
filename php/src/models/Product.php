@@ -355,5 +355,17 @@ class Product {
             return false;
         }
     }
+
+    public function findActiveAuctionForProduct($product_id) {
+        $query = 'SELECT id, status FROM auctions WHERE product_id = :product_id AND status IN (\'ACTIVE\', \'SCHEDULED\') AND end_time > NOW() AND deleted_at IS NULL LIMIT 1';
+        try {
+            $statement = $this->db->prepare($query);
+            $statement->execute([':product_id' => $product_id]);
+            return $statement->fetch(PDO::FETCH_ASSOC); // Returns the auction row or false
+        } catch (PDOException $exception) {
+            error_log("Error finding active auction: " . $exception->getMessage());
+            return false;
+        }
+    }
 }
 ?>

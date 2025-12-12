@@ -64,6 +64,9 @@ class ProductController {
             }
     
             $store = $this->productModel->findStoreById($product['store_id']);
+
+            // Find active auction for this product
+            $activeAuction = $this->productModel->findActiveAuctionForProduct($id);
             
             $categoryArray = $this->productModel->findCategoriesByProductId($id);
             $categoryNames = array_column($categoryArray, 'name');
