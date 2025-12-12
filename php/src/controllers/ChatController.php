@@ -4,6 +4,7 @@ require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Chat.php';
 require_once __DIR__ . '/../utils/Response.php';
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+require_once __DIR__ . '/../utils/FeatureFlag.php';
 
 class ChatController {
     public function getChatRooms() {
@@ -15,7 +16,7 @@ class ChatController {
         $userId = $userData['user_id'];
         $userRole = $userData['role'];
 
-        // TODO: Check feature flag for 'chat_enabled' based on spec
+        FeatureFlag::requireFeature(FeatureFlag::CHAT_ENABLED, $userId);
 
         $chatModel = new Chat();
         $rooms = $chatModel->findRoomsByUserId($userId, $userRole);
@@ -29,6 +30,8 @@ class ChatController {
     public function createChatRoom() {
         $userData = AuthMiddleware::getCurrentUser();
         if (!$userData) return;
+
+        FeatureFlag::requireFeature(FeatureFlag::CHAT_ENABLED, $userData['user_id']);
 
         // Only buyers can create rooms
         if ($userData['role'] !== 'BUYER') {
@@ -67,6 +70,8 @@ class ChatController {
         $userData = AuthMiddleware::getCurrentUser();
         if (!$userData) return;
 
+        FeatureFlag::requireFeature(FeatureFlag::CHAT_ENABLED, $userData['user_id']);
+
         $chatModel = new Chat();
         $canAccess = $chatModel->canAccessRoom($userData['user_id'], $userData['role'], $storeId, $buyerId);
         if (!$canAccess) {
@@ -88,6 +93,8 @@ class ChatController {
     public function uploadImage() {
         $userData = AuthMiddleware::getCurrentUser();
         if (!$userData) return;
+
+        FeatureFlag::requireFeature(FeatureFlag::CHAT_ENABLED, $userData['user_id']);
 
         if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
             Response::error('Bad Request: No image uploaded or upload error occurred.', null, 400);
