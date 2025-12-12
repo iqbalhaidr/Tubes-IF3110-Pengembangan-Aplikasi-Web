@@ -63,7 +63,7 @@ export default function AuctionDetail() {
   const navigate = useNavigate();
   
   // Get user from localStorage (set by App.jsx auth check)
-  const [user] = useState(() => {
+  const [user, setUser] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('user'));
     } catch {
@@ -79,6 +79,9 @@ export default function AuctionDetail() {
     isConnected,
     countdownSeconds,
     bidPlaced,
+    auctionEnded,
+    auctionActivated,
+    auctionCancelled,
   } = useWebSocket(id, userId);
 
   const isAuctionActive = auction?.status === 'ACTIVE';
@@ -93,6 +96,33 @@ export default function AuctionDetail() {
       refetchBids();
     }
   }, [bidPlaced, refetch, refetchBids]);
+
+  // Listen for auction ended event from WebSocket for instant re-render
+  useEffect(() => {
+    if (auctionEnded) {
+      console.log('[AuctionDetail] Auction ended via WebSocket:', auctionEnded);
+      refetch();
+      refetchBids();
+    }
+  }, [auctionEnded, refetch, refetchBids]);
+
+  // Listen for auction activation (SCHEDULED → ACTIVE) for instant re-render
+  useEffect(() => {
+    if (auctionActivated) {
+      console.log('[AuctionDetail] Auction activated via WebSocket:', auctionActivated);
+      refetch();
+      refetchBids();
+    }
+  }, [auctionActivated, refetch, refetchBids]);
+
+  // Listen for auction cancellation for instant re-render
+  useEffect(() => {
+    if (auctionCancelled) {
+      console.log('[AuctionDetail] Auction cancelled via WebSocket:', auctionCancelled);
+      refetch();
+      refetchBids();
+    }
+  }, [auctionCancelled, refetch, refetchBids]);
 
   // Handle auction expiration - call the end auction API
   const handleAuctionExpired = useCallback(async () => {
@@ -126,7 +156,16 @@ export default function AuctionDetail() {
     }
 
     try {
-      await placeBid(amount);
+      const bidResult = await placeBid(amount);
+      // Update user balance from bid response
+      if (bidResult && bidResult.new_balance !== undefined) {
+        const updatedUser = {
+          ...user,
+          balance: bidResult.new_balance
+        };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
       refetch();
     } catch (err) {
       console.error('Bid submission failed:', err);
@@ -196,7 +235,7 @@ export default function AuctionDetail() {
               <div className="space-y-3 border-t border-gray-200 pt-6">
                 <div className="flex items-center justify-between">
                   <strong className="text-gray-700 font-semibold">Seller:</strong>
-                  <span className="text-gray-900 font-medium cursor-pointer hover:text-primary-green transition-colors">{auction.seller_username}</span>
+                  <a href={`/store/${auction.store_id}`} className="text-primary-green font-medium hover:underline transition-colors cursor-pointer">{auction.seller_username}</a>
                 </div>
                 {auction.seller_address && (
                   <div className="flex items-center justify-between">
@@ -204,10 +243,10 @@ export default function AuctionDetail() {
                     <span className="text-gray-900 font-medium">{auction.seller_address}</span>
                   </div>
                 )}
-                {auction.product_quantity && (
+                {auction.auction_quantity && (
                   <div className="flex items-center justify-between">
                     <strong className="text-gray-700 font-semibold">Quantity Available:</strong>
-                    <span className="text-gray-900 font-medium">{auction.product_quantity} units</span>
+                    <span className="text-gray-900 font-medium">{auction.auction_quantity} units</span>
                   </div>
                 )}
               </div>

@@ -20,7 +20,7 @@ export default function BidForm({
     if (auction) {
       setBidAmount(minimumBid.toString());
     }
-  }, [currentBid, minIncrement]);
+  }, [auction?.current_bid, auction?.min_bid_increment, minimumBid]);
 
   if (!auction) {
     return <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 flex items-center justify-center min-h-[200px] text-gray-500 font-medium">Loading auction data...</div>;
