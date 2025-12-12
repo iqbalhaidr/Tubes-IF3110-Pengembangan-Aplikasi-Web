@@ -101,7 +101,19 @@
                         </span>
                     </div>
 
-                    <div class="balance-warning" id="balanceWarning" style="<?= $is_sufficient ? 'display: none;' : '' ?>">
+                    <div class="payment-method-selection">
+                        <h2>Payment Method</h2>
+                        <div class="payment-option">
+                            <input type="radio" id="payWithBalance" name="paymentMethod" value="balance" checked>
+                            <label for="payWithBalance">Pay with Balance</label>
+                        </div>
+                        <div class="payment-option">
+                            <input type="radio" id="payWithMidtrans" name="paymentMethod" value="midtrans">
+                            <label for="payWithMidtrans">Pay with Midtrans</label>
+                        </div>
+                    </div>
+
+                    <div class="balance-warning" id="balanceWarning" style="display: none;">
                         Balance is not sufficient. 
                         <a href="#" data-action="open-topup">Top Up Balance</a>
                     </div>
@@ -109,9 +121,13 @@
                         Please add a delivery address.
                     </div>
 
-                    <button class="checkout-button" id="createOrderBtn">
+                    <button class="checkout-button" id="createOrderBtn" style="display: none;">
                         Create Order
                     </button>
+                    <button class="checkout-button" id="midtransPayBtn" style="display: none;">
+                        Proceed to Payment
+                    </button>
+                    <div id="snap-container"></div>
                 </div>
             </aside>
         </div>
