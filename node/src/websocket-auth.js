@@ -76,7 +76,7 @@ export const verifyPHPSession = async (rawCookieHeader) => {
 
     // If user is a seller, fetch store_id
     if (user.role === 'SELLER') {
-        const storeResult = await pool.query('SELECT store_id FROM store WHERE seller_id = $1 LIMIT 1', [userId]);
+        const storeResult = await pool.query('SELECT store_id FROM store WHERE user_id = $1 LIMIT 1', [userId]);
         if (storeResult.rows.length > 0) {
             user.store_id = storeResult.rows[0].store_id;
         }

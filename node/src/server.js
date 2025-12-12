@@ -11,6 +11,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import pushRoutes from './routes/pushRoutes.js';
 import internalRoutes from './routes/internalRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
+import webhookRoutes from './routes/webhookRoutes.js';
 import { registerAuctionEvents, initializeAuctionJobs } from './events/auctionEvents.js';
 import { sendChatPushNotification } from './services/pushService.js';
 import { socketAuthMiddleware } from './websocket-auth.js';
@@ -57,6 +58,7 @@ app.use('/api/node/admin', adminRoutes);
 app.use('/api/node/push', pushRoutes);
 app.use('/api/node/internal', internalRoutes);
 app.use('/api/node/reviews', reviewRoutes);
+app.use('/api/node/webhook', webhookRoutes);
 
 // ============== WEBSOCKET EVENTS ==============
 
