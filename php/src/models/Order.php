@@ -223,6 +223,70 @@ class Order {
         ]);
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
+    
+    public function findByMidtransOrderId($midtransOrderId) {
+        error_log("ORDER_MODEL: findByMidtransOrderId - Searching for order with Midtrans Order ID: $midtransOrderId");
+        $stmt = $this->db->prepare("SELECT * FROM \"order\" WHERE midtrans_order_id = :midtrans_order_id");
+        $stmt->execute([':midtrans_order_id' => $midtransOrderId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        error_log("ORDER_MODEL: findByMidtransOrderId - Result for $midtransOrderId: " . json_encode($result));
+        return $result;
+    }
+
+    public function updateStatusByMidtransOrderId($midtransOrderId, $status) {
+        error_log("ORDER_MODEL: updateStatusByMidtransOrderId - Updating order with Midtrans Order ID: $midtransOrderId to status: $status");
+        $query = '
+            UPDATE "order" 
+            SET status = :status
+            WHERE midtrans_order_id = :midtrans_order_id
+            RETURNING *
+        ';
+        $statement = $this->db->prepare($query);
+        $statement->execute([
+            ':midtrans_order_id' => $midtransOrderId,
+            ':status' => $status
+        ]);
+        $updatedOrder = $statement->fetch(PDO::FETCH_ASSOC);
+        error_log("ORDER_MODEL: updateStatusByMidtransOrderId - Update result for $midtransOrderId: " . json_encode($updatedOrder));
+        return $updatedOrder;
+    }
+
+    public function updateOrderStatusByBuyerAndTimestamp($midtransOrderId, $newStatus) {
+        error_log("ORDER_MODEL: updateOrderStatusByBuyerAndTimestamp - Initiated for Midtrans Order ID: $midtransOrderId");
+
+        // First, get the parent order to find the buyer_id and created_at
+        $parentOrder = $this->findByMidtransOrderId($midtransOrderId);
+        if (!$parentOrder) {
+            error_log("ORDER_MODEL: updateOrderStatusByBuyerAndTimestamp - Parent order with Midtrans ID $midtransOrderId not found.");
+            return false;
+        }
+
+        $buyer_id = $parentOrder['buyer_id'];
+        $created_at = $parentOrder['created_at'];
+
+        // Now, update all orders for this buyer created around the same time
+        $query = '
+            UPDATE "order"
+            SET status = :status
+            WHERE buyer_id = :buyer_id
+            AND status = :old_status
+            AND created_at BETWEEN CAST(:created_at AS TIMESTAMP) - INTERVAL \'10 seconds\' AND CAST(:created_at AS TIMESTAMP) + INTERVAL \'10 seconds\'
+            RETURNING order_id, status
+        ';
+        
+        $statement = $this->db->prepare($query);
+        $statement->execute([
+            ':status' => $newStatus,
+            ':buyer_id' => $buyer_id,
+            ':old_status' => 'PENDING_PAYMENT',
+            ':created_at' => $created_at
+        ]);
+
+        $updatedOrders = $statement->fetchAll(PDO::FETCH_ASSOC);
+        error_log("ORDER_MODEL: updateOrderStatusByBuyerAndTimestamp - Update result for buyer $buyer_id: " . json_encode($updatedOrders));
+        return $updatedOrders;
+    }
+
 
     // Approve an order (WAITING_APPROVAL → APPROVED)
     public function approve($order_id) {
@@ -539,6 +603,156 @@ class Order {
 
         return $counts;
     }
+    public function checkoutWithMidtrans($buyer_id, $shipping_address, $cartItems) {
+        $product_ids = array_map(function($item) {
+            return $item['product_id'];
+        }, $cartItems);
+
+        if (empty($product_ids)) {
+            return ['success' => false, 'message' => 'Cart is empty.'];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
+
+        try {
+            $this->db->beginTransaction();
+
+            $product_sql = "SELECT product_id, stock, price, deleted_at, product_name 
+                            FROM product 
+                            WHERE product_id IN ($placeholders) 
+                            FOR UPDATE";
+            $product_stmt = $this->db->prepare($product_sql);
+            $product_stmt->execute($product_ids);
+            $locked_products_raw = $product_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $locked_products = [];
+            foreach ($locked_products_raw as $product) {
+                $locked_products[$product['product_id']] = $product;
+            }
+
+            $grand_total = 0;
+            $store_orders = [];
+            $validation_errors = [];
+
+            foreach ($cartItems as $item) {
+                $product_id = $item['product_id'];
+                $quantity = (int)$item['quantity'];
+
+                if (!isset($locked_products[$product_id])) {
+                    $validation_errors[] = "Product '{$item['product_name']}' is no longer available.";
+                    continue;
+                }
+
+                $product = $locked_products[$product_id];
+                if ($product['deleted_at'] !== null) {
+                    $validation_errors[] = "Product '{$product['product_name']}' has been removed by the seller.";
+                }
+
+                if ($product['stock'] < $quantity) {
+                    $validation_errors[] = "Insufficient stock for '{$product['product_name']}'. Only {$product['stock']} left, but you requested {$quantity}.";
+                }
+
+                $price_at_purchase = (int)$product['price'];
+                $subtotal = $price_at_purchase * $quantity;
+                $grand_total += $subtotal;
+                $store_id = (int)$item['store_id'];
+
+                if (!isset($store_orders[$store_id])) {
+                    $store_orders[$store_id] = [
+                        'total_price' => 0,
+                        'items' => []
+                    ];
+                }
+                
+                $store_orders[$store_id]['total_price'] += $subtotal;
+                $store_orders[$store_id]['items'][] = [
+                    'product_id' => $product_id,
+                    'quantity' => $quantity,
+                    'price_at_purchase' => $price_at_purchase,
+                    'subtotal' => $subtotal
+                ];
+            }
+
+            if (!empty($validation_errors)) {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => implode(' ', $validation_errors)];
+            }
+            
+            $insert_order_sql = "INSERT INTO \"order\" (buyer_id, store_id, total_price, shipping_address, status, payment_method, midtrans_order_id) 
+                                 VALUES (:buyer_id, :store_id, :total_price, :shipping_address, 'WAITING_APPROVAL', 'midtrans', :midtrans_order_id) 
+                                 RETURNING order_id";
+            $insert_order_stmt = $this->db->prepare($insert_order_sql);
+
+            $insert_item_sql = "INSERT INTO order_item (order_id, product_id, quantity, price_at_purchase, subtotal) 
+                                VALUES (:order_id, :product_id, :quantity, :price_at_purchase, :subtotal)";
+            $insert_item_stmt = $this->db->prepare($insert_item_sql);
+
+            $update_stock_sql = "UPDATE product SET stock = stock - :quantity, updated_at = CURRENT_TIMESTAMP WHERE product_id = :product_id";
+            $update_stock_stmt = $this->db->prepare($update_stock_sql);
+
+            $midtrans_transaction_details = [];
+            $all_midtrans_order_ids = [];
+
+            foreach ($store_orders as $store_id => $order_data) {
+                // Generate a unique Midtrans Order ID for EACH order
+                $midtrans_order_id_for_store = 'ORDER-' . $buyer_id . '-' . $store_id . '-' . time() . '-' . uniqid();
+                $all_midtrans_order_ids[] = $midtrans_order_id_for_store;
+
+                $insert_order_stmt->execute([
+                    ':buyer_id' => $buyer_id,
+                    ':store_id' => $store_id,
+                    ':total_price' => $order_data['total_price'],
+                    ':shipping_address' => $shipping_address,
+                    ':midtrans_order_id' => $midtrans_order_id_for_store // Use the unique ID here
+                ]);
+                $order_id = $insert_order_stmt->fetchColumn();
+
+                foreach ($order_data['items'] as $item) {
+                    $insert_item_stmt->execute([
+                        ':order_id' => $order_id,
+                        ':product_id' => $item['product_id'],
+                        ':quantity' => $item['quantity'],
+                        ':price_at_purchase' => $item['price_at_purchase'],
+                        ':subtotal' => $item['subtotal']
+                    ]);
+                    
+                    $update_stock_stmt->execute([
+                        ':quantity' => $item['quantity'],
+                        ':product_id' => $item['product_id']
+                    ]);
+
+                    // Find the product name from the locked products
+                    $product_name = 'Product'; // Default name
+                    if (isset($locked_products[$item['product_id']])) {
+                        $product_name = $locked_products[$item['product_id']]['product_name'];
+                    }
+
+                    // Add to Midtrans transaction details
+                    $midtrans_transaction_details[] = [
+                        'id' => $item['product_id'],
+                        'price' => $item['price_at_purchase'],
+                        'quantity' => $item['quantity'],
+                        'name' => $product_name
+                    ];
+                }
+            }
+
+            $clear_cart_sql = "DELETE FROM cart_item WHERE buyer_id = :buyer_id";
+            $clear_cart_stmt = $this->db->prepare($clear_cart_sql);
+            $clear_cart_stmt->execute([':buyer_id' => $buyer_id]);
+
+            $this->db->commit();
+            
+            return ['success' => true, 'message' => 'Midtrans order created.', 'data' => ['grand_total' => $grand_total, 'midtrans_order_ids' => $all_midtrans_order_ids, 'midtrans_transaction_details' => $midtrans_transaction_details]];
+
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return ['success' => false, 'message' => 'An error occurred during Midtrans checkout: ' . $e->getMessage()];
+        }
+    }
+
     /**
      * Checkout logic
      */
