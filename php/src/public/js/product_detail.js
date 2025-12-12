@@ -80,3 +80,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+async function startChatWithStore(storeId) {
+    // Show some loading feedback if you have a mechanism for it
+    // e.g., document.body.classList.add('loading');
+
+    try {
+        // This uses the api helper from api.js, available as `window.api`
+        const response = await api.post('/api/node/chat/rooms', { store_id: storeId });
+
+        // The vanilla JS api helper returns the parsed JSON data directly
+        if (response && response.status === 'success') {
+            // Redirect to the main chat page. The React app will handle opening the correct room.
+            window.location.href = '/chat';
+        } else {
+            // Use a toast or alert to show failure
+            showToast(response.message || 'Gagal memulai obrolan.', 'error');
+        }
+    } catch (error) {
+        console.error('Failed to start chat:', error);
+        const errorMessage = error.message || 'Terjadi kesalahan saat memulai obrolan. Silakan coba lagi.';
+        showToast(errorMessage, 'error');
+    } finally {
+        // Hide loading feedback
+        // e.g., document.body.classList.remove('loading');
+    }
+}

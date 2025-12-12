@@ -8,6 +8,13 @@
     <link rel="stylesheet" href="/public/css/main.css?v=<?= $mainCssVersion ?>">
     <link rel="stylesheet" href="/public/css/product_detail.css">
     <link rel="stylesheet" href="/public/css/logout-modal.css">
+    <style>
+        .store-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
 </head>
 <body class="product-detail-page">
 
@@ -46,9 +53,14 @@
                         <a href="/store/<?php echo htmlspecialchars($product['store_id']); ?>" style="text-decoration: none; color: inherit;">
                             <h4><?php echo htmlspecialchars($store['name']); ?></h4>
                         </a>
-                        <a href="/store/<?php echo htmlspecialchars($product['store_id']); ?>" class="btn btn-secondary">
-                            Kunjungi Toko
-                        </a>
+                        <div class="store-buttons">
+                            <?php if ($isUserLoggedIn && $current_user['role'] === 'BUYER'): ?>
+                                <button onclick="startChatWithStore(<?php echo htmlspecialchars($product['store_id']); ?>)" class="btn btn-secondary">Mulai Chat</button>
+                            <?php endif; ?>
+                            <a href="/store/<?php echo htmlspecialchars($product['store_id']); ?>" class="btn btn-secondary">
+                                Kunjungi Toko
+                            </a>
+                        </div>
                     </div>
                     <div class="store-desc">
                         <?php 
@@ -59,12 +71,14 @@
                 </div>
 
                 <!-- Auction Section -->
-                <div id="auctionSection" class="auction-section" style="display: none;">
-                    <h3>Penawaran Lelang</h3>
-                    <a href="" id="goToAuctionBtn" class="btn btn-primary" style="width: 100%;">
-                        Lihat Lelang
+                <?php if ($activeAuction): ?>
+                <div class="auction-section" style="margin-top: 20px;">
+                    <h3>Produk ini ada di lelang!</h3>
+                    <a href="/auctions/<?php echo htmlspecialchars($activeAuction['id']); ?>" class="btn btn-primary" style="width: 100%;">
+                        Pergi ke Halaman Lelang
                     </a>
                 </div>
+                <?php endif; ?>
             </div>
 
             <div class="action-card">
