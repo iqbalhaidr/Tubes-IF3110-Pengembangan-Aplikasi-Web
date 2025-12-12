@@ -98,6 +98,10 @@ class ProductController {
 
         $current_user = AuthMiddleware::getCurrentUser();
         
+        // Get store info for navbar balance display
+        $storeModel = new Store();
+        $store = $storeModel->findBySeller($current_user['user_id']);
+        
         $categoryController = new CategoryController();
         $categories = $categoryController->getCategoryData();
 
@@ -245,6 +249,10 @@ class ProductController {
         AuthMiddleware::requireRole('SELLER', '/auth/login');
         $current_user = AuthMiddleware::getCurrentUser();
 
+        // Get store info for navbar balance display
+        $storeModel = new Store();
+        $store = $storeModel->findBySeller($current_user['user_id']);
+
         $categoryController = new CategoryController();
         $categories = $categoryController->getCategoryData(); 
 
@@ -365,6 +373,10 @@ class ProductController {
         AuthMiddleware::requireRole('SELLER', '/auth/login');
         $current_user = AuthMiddleware::getCurrentUser();
         $store_id = $this->getStoreIdForCurrentUser();
+
+        // Get store info for navbar balance display
+        $storeModel = new Store();
+        $store = $storeModel->findBySeller($current_user['user_id']);
 
         $product = $this->productModel->findProductById($id);
 

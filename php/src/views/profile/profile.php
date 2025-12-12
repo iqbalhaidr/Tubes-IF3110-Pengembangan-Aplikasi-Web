@@ -56,11 +56,11 @@ $activeLink = 'profile';
                             <h2>Browser Notifications</h2>
                         </div>
                         <div class="profile-details">
-                                <dd>
+                                <div>
                                     <p>You must first allow notifications for this browser before you can manage categories below.</p>
                                     <button type="button" class="btn btn-secondary" id="masterNotificationBtn" disabled>Loading...</button>
                                     <p id="notificationStatusText" class="form-text"></p>
-                                </dd>
+                                </div>
                         </div>
                     </article>
 
@@ -70,21 +70,21 @@ $activeLink = 'profile';
                         </div>
                         <form action="/buyer/preferences" method="POST" class="profile-details">
                             <div class="profile-detail-row checkbox-row">
-                                <span for="chat_enabled">Chat Notifications</span>
+                                <label for="chat_enabled">Chat Notifications</label>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="chat_enabled" name="chat_enabled" <?php echo ($pushPreferences['chat_enabled'] ?? true) ? 'checked' : ''; ?>>
                                     <span class="slider"></span>
                                 </label>
                             </div>
                             <div class="profile-detail-row checkbox-row">
-                                <span for="auction_enabled">Auction Notifications</span>
+                                <label for="auction_enabled">Auction Notifications</label>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="auction_enabled" name="auction_enabled" <?php echo ($pushPreferences['auction_enabled'] ?? true) ? 'checked' : ''; ?>>
                                     <span class="slider"></span>
                                 </label>
                             </div>
                             <div class="profile-detail-row checkbox-row">
-                                <span for="order_enabled">Order Status Notifications</span>
+                                <label for="order_enabled">Order Status Notifications</label>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="order_enabled" name="order_enabled" <?php echo ($pushPreferences['order_enabled'] ?? true) ? 'checked' : ''; ?>>
                                     <span class="slider"></span>

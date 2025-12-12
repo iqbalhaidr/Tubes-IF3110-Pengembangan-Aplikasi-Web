@@ -213,6 +213,10 @@ class HomeController {
         $currentSessionUser = AuthMiddleware::getCurrentUser();
         $pushPreferences = $userModel->getPushPreferences($currentSessionUser['user_id']);
 
+        // Get store info for navbar balance display
+        $storeModel = new Store();
+        $store = $storeModel->findBySeller($currentSessionUser['user_id']);
+
         $pageTitle = 'Settings';
         $navbarType = 'seller';
         

@@ -149,7 +149,7 @@ Setelah instalasi selesai, untuk menjalankan server dalam mode development:
    docker-compose down
    ```
 
-## Tangkapan Layar Aplikasi
+## Tangkapan Layar Aplikasi (Milestone 1)
 
 ### Halaman Autentikasi
 
@@ -180,7 +180,33 @@ Setelah instalasi selesai, untuk menjalankan server dalam mode development:
 | **Edit Product** | <img src="./public/image_readme/edit-product.png" width="300">  | <img src="./public/lighthouse-images/edit-product.png" width="300">|
 | **Order Management** | <img src="./public/image_readme/order-management.png" width="300">  | <img src="./public/lighthouse-images/order-management.png" width="300">|
 
-### Implementasi Bonus
+## Tangkapan Layar Aplikasi (Milestone 2)
+
+### Halaman Buyer
+| Halaman | Screenshot | Google Lighthouse Skor |
+|---------|------------|-----------|
+| **Auction List** | <img src="./public/image_readme/.png" width="300">  | <img src="./public/lighthouse-images/auction-list.png" width="300">|
+| **Auction Detail** | <img src="./public/image_readme/.png" width="300">  | <img src="./public/lighthouse-images/buyer-auction-detail.png" width="300">|
+| **Chat** | <img src="./public/image_readme/buyer-chat.png" width="300">  | <img src="./public/lighthouse-images/chat.png" width="300">|
+| **Product Detail** | <img src="./public/image_readme/.png" width="300">  | <img src="./public/lighthouse-images/product-detail2.png" width="300">|
+| **Profile** | <img src="./public/image_readme/buyer-profile-ss.png" width="300">  | <img src="./public/lighthouse-images/settings-buyer.png" width="300">|
+
+### Halaman Seller
+| Halaman | Screenshot | Google Lighthouse Skor |
+|---------|------------|-----------|
+| **Auction Detail** | <img src="./public/image_readme/.png" width="300">  | <img src="./public/lighthouse-images/manage-auction.png" width="300">|
+| **Chat** | <img src="./public/image_readme/seller-chat.png" width="300">  | <img src="./public/lighthouse-images/chat.png" width="300">|
+| **Product Management** | <img src="./public/image_readme/.png" width="300">  | <img src="./public/lighthouse-images/product-management-2.png" width="300">|
+| **Settings** | <img src="./public/image_readme/seller-profile-ss.png" width="300">  | <img src="./public/lighthouse-images/settings-seller.png" width="300">|
+
+### Halaman Admin
+
+| Halaman | Screenshot | Google Lighthouse Skor |
+|---------|------------|-----------|
+| **Login** | <img src="./public/image_readme/admin-login-ss.png" width="300">  | <img src="./public/lighthouse-images/admin-login.png" width="300">|
+| **Dashboard** | <img src="./public/image_readme/admin-dashboard-ss.png" width="300">  | <img src="./public/lighthouse-images/admin-dashboard.png" width="300">|
+
+## Implementasi Bonus
 
 | Spesifikasi | Status |
 |------------|--------|
@@ -257,6 +283,12 @@ Berikut adalah daftar perbaikan aksesibilitas dan performa yang dilakukan berdas
   - Menambahkan "Change Password" link dalam edit profile form untuk kemudahan navigasi
   - Menambahkan `.btn-link` CSS class untuk styling tombol link
 
+### 10. **profile.php & settings.php**
+- **Masalah:** Penggunaan tag html yang kurang tepat
+- **Perbaikan:**
+  - Mengganti tag `<span>` menjadi `<valid>` pada toggle switch karena atribut for hanya valid pada tag `<label>`
+  - Mengganti tag `<dd>` menjadi `<div>`
+
 ## Pembagian Tugas
 
 ### Server-side (Backend)
@@ -277,6 +309,12 @@ Berikut adalah daftar perbaikan aksesibilitas dan performa yang dilakukan berdas
 | Add Product | 13523095 |
 | Edit Product | 13523095 |
 | Order Management | 13523109, 13523111 |
+| Auction | 13523109 |
+| Chat | 13523095 |
+| Push Notification | |
+| Admin | 13523111 |
+| Review | 13532109 |
+| Payment Gateway | 13523095 |
 
 ### Client-side (Frontend)
 
@@ -296,6 +334,12 @@ Berikut adalah daftar perbaikan aksesibilitas dan performa yang dilakukan berdas
 | Add Product | 13523095 |
 | Edit Product | 13523095 |
 | Order Management | 13523109, 13523111 |
+| Auction | 13523109 |
+| Chat | 13523095 |
+| Push Notification | |
+| Admin | 13523111 |
+| Review | 13523109 |
+| Payment Gateway | 13523095 |
 
 ## Contributors
 
