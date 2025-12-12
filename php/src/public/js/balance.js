@@ -9,7 +9,8 @@
     let formElement = null;
     let amountInput = null;
     let feedbackElement = null;
-    let submitButton = null;
+    let manualSubmitButton = null;
+    let midtransSubmitButton = null;
 
     document.addEventListener('DOMContentLoaded', () => {
         if (!window.api || typeof window.api.post !== 'function') {
@@ -56,8 +57,11 @@
                     <div class="topup-feedback" data-topup-feedback></div>
                     <div class="topup-actions">
                         <button type="button" class="topup-cancel-btn" data-close-topup>Batal</button>
-                        <button type="submit" class="topup-submit-btn" data-topup-submit>
-                            <span>Tambah Saldo</span>
+                        <button type="submit" class="topup-submit-btn" data-action="topup-manual">
+                            <span>Top Up Manual</span>
+                        </button>
+                        <button type="submit" class="topup-submit-btn" data-action="topup-midtrans">
+                            <span>Top Up (Midtrans)</span>
                         </button>
                     </div>
                 </form>
@@ -74,7 +78,8 @@
         formElement = document.querySelector(selectors.form);
         amountInput = document.querySelector(selectors.amountInput);
         feedbackElement = document.querySelector('[data-topup-feedback]');
-        submitButton = document.querySelector('[data-topup-submit]');
+        manualSubmitButton = document.querySelector('[data-action="topup-manual"]');
+        midtransSubmitButton = document.querySelector('[data-action="topup-midtrans"]');
     }
 
     function attachModalEvents() {
@@ -82,8 +87,22 @@
             return;
         }
 
-        formElement.addEventListener('submit', handleSubmit);
+        const actionsContainer = formElement.querySelector('.topup-actions');
+        if (actionsContainer) {
+            actionsContainer.addEventListener('click', (event) => {
+                const manualBtn = event.target.closest('[data-action="topup-manual"]');
+                const midtransBtn = event.target.closest('[data-action="topup-midtrans"]');
 
+                if (manualBtn) {
+                    event.preventDefault();
+                    handleSubmit(event, manualSubmitButton); // Pass the specific button
+                } else if (midtransBtn) {
+                    event.preventDefault();
+                    initiateMidtransTopUp(midtransSubmitButton); // Call new Midtrans function
+                }
+            });
+        }
+        
         backdropElement.addEventListener('click', (event) => {
             if (event.target === backdropElement) {
                 closeModal();
@@ -160,9 +179,11 @@
         return backdropElement && backdropElement.classList.contains('is-visible');
     }
 
-    async function handleSubmit(event) {
+    async function handleSubmit(event, buttonElement) {
         event.preventDefault();
-        if (!amountInput || !submitButton) {
+        console.log('handleSubmit: Function started');
+        if (!amountInput || !buttonElement) {
+            console.log('handleSubmit: amountInput or buttonElement not found');
             return;
         }
 
@@ -174,15 +195,20 @@
         if (Number.isNaN(amount) || amount <= 0) {
             showFeedback('Masukkan nominal yang valid dan lebih besar dari 0.', 'error');
             amountInput.focus();
+            console.log('handleSubmit: Validation failed - invalid amount');
             return;
         }
 
-        toggleSubmitting(true);
+        console.log('handleSubmit: Validation passed for amount:', amount);
+        toggleSubmitting(true, buttonElement); // Pass the button to toggleSubmitting
 
         try {
+            console.log('handleSubmit: Attempting to post to /balance/top-up with amount:', amount);
             const response = await window.api.post('/balance/top-up', { amount });
+            console.log('handleSubmit: Received response from /balance/top-up:', response);
 
             if (!response || !response.success) {
+                console.log('handleSubmit: API response indicates failure or is invalid', response);
                 throw response || { message: 'Gagal menambah saldo.' };
             }
 
@@ -198,30 +224,142 @@
             window.dispatchEvent(new CustomEvent('balance:updated', {
                 detail: { balance: newBalance, amount }
             }));
+            console.log('handleSubmit: Top-up successful, new balance:', newBalance);
 
             setTimeout(() => {
                 closeModal();
             }, 800);
         } catch (error) {
+            console.error('handleSubmit: Error during top-up process:', error);
             const message = deriveErrorMessage(error);
             showFeedback(message, 'error');
         } finally {
-            toggleSubmitting(false);
+            console.log('handleSubmit: Finally block executed');
+            toggleSubmitting(false, buttonElement); // Pass the button to toggleSubmitting
         }
     }
 
-    function toggleSubmitting(isSubmitting) {
-        if (!submitButton) {
+    async function initiateMidtransTopUp(buttonElement) {
+        console.log('initiateMidtransTopUp: Function started');
+        if (!amountInput || !buttonElement) {
+            console.log('initiateMidtransTopUp: amountInput or buttonElement not found');
             return;
         }
 
-        submitButton.disabled = isSubmitting;
+        clearFeedback();
+
+        const rawValue = amountInput.value.trim();
+        const amount = Number.parseInt(rawValue, 10);
+
+        if (Number.isNaN(amount) || amount <= 0) {
+            showFeedback('Masukkan nominal yang valid dan lebih besar dari 0.', 'error');
+            amountInput.focus();
+            console.log('initiateMidtransTopUp: Validation failed - invalid amount');
+            return;
+        }
+
+        console.log('initiateMidtransTopUp: Validation passed for amount:', amount);
+        toggleSubmitting(true, buttonElement);
+
+        try {
+            console.log('initiateMidtransTopUp: Attempting to post to /api/topup/midtrans-initiate with amount:', amount);
+            const response = await window.api.post('/api/topup/midtrans-initiate', { amount });
+            console.log('initiateMidtransTopUp: Received response from /api/topup/midtrans-initiate:', response);
+
+            if (!response || !response.success || !response.snapToken) {
+                console.log('initiateMidtransTopUp: API response indicates failure or missing snapToken', response);
+                throw response || { message: 'Gagal memulai pembayaran Midtrans.' };
+            }
+
+            const snapToken = response.snapToken;
+            const clientKey = window.MIDTRANS_CLIENT_KEY; // Get clientKey from global variable
+
+            console.log('initiateMidtransTopUp: Snap Token received:', snapToken);
+
+            await loadMidtransSnap(clientKey);
+
+            window.snap.pay(snapToken, {
+                onSuccess: function(result){
+                    /* You may add your own implementation here */
+                    console.log('Midtrans success:', result);
+                    showFeedback('Pembayaran Midtrans berhasil!', 'success');
+                    // Consider an AJAX call to update the balance or redirect to a success page
+                    setTimeout(() => {
+                        window.location.reload(); // Reload page to update balance
+                    }, 1000);
+                },
+                onPending: function(result){
+                    /* You may add your own implementation here */
+                    console.log('Midtrans pending:', result);
+                    showFeedback('Pembayaran Midtrans menunggu konfirmasi.', 'info');
+                    // Consider an AJAX call to update pending status
+                    setTimeout(() => {
+                        closeModal();
+                    }, 1000);
+                },
+                onError: function(result){
+                    /* You may add your own implementation here */
+                    console.log('Midtrans error:', result);
+                    showFeedback('Pembayaran Midtrans gagal!', 'error');
+                },
+                onClose: function(){
+                    /* You may add your own implementation here */
+                    console.log('Midtrans popup closed without finishing payment');
+                    showFeedback('Pembayaran dibatalkan.', 'error');
+                }
+            });
+
+        } catch (error) {
+            console.error('initiateMidtransTopUp: Error during Midtrans initiation:', error);
+            const message = deriveErrorMessage(error);
+            showFeedback(message, 'error');
+        } finally {
+            console.log('initiateMidtransTopUp: Finally block executed');
+            toggleSubmitting(false, buttonElement);
+        }
+    }
+
+    function toggleSubmitting(isSubmitting, buttonElement) {
+        if (!buttonElement) {
+            return;
+        }
+
+        buttonElement.disabled = isSubmitting;
 
         if (isSubmitting) {
-            submitButton.innerHTML = '<span class="loading" aria-hidden="true"></span><span>Memproses...</span>';
+            buttonElement.innerHTML = '<span class="loading" aria-hidden="true"></span><span>Memproses...</span>';
         } else {
-            submitButton.textContent = 'Tambah Saldo';
+            // Restore original text based on data-action
+            if (buttonElement.dataset.action === 'topup-manual') {
+                buttonElement.innerHTML = '<span>Top Up Manual</span>';
+            } else if (buttonElement.dataset.action === 'topup-midtrans') {
+                buttonElement.innerHTML = '<span>Top Up (Midtrans)</span>';
+            }
         }
+    }
+
+    // Utility to dynamically load Midtrans Snap script
+    function loadMidtransSnap(clientKey) {
+        return new Promise((resolve, reject) => {
+            if (window.snap && window.snap.pay) {
+                console.log('Midtrans Snap already loaded.');
+                resolve();
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = `https://app.sandbox.midtrans.com/snap/snap.js`;
+            script.setAttribute('data-client-key', clientKey);
+            script.onload = () => {
+                console.log('Midtrans Snap script loaded successfully.');
+                resolve();
+            };
+            script.onerror = () => {
+                console.error('Failed to load Midtrans Snap script.');
+                reject(new Error('Failed to load Midtrans Snap script.'));
+            };
+            document.head.appendChild(script);
+        });
     }
 
     function showFeedback(message, type) {
