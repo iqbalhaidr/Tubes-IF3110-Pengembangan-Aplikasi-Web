@@ -27,8 +27,12 @@ const ChatPage = () => {
   const backText = currentUser.role === 'seller' ? 'Back to Dashboard' : 'Back to Home';
 
   return (
-    <div className="h-screen w-full flex bg-page-background text-main-text">
-      <div className="w-1/3 border-r border-secondary-text flex flex-col">
+    <div className="h-screen w-full flex bg-page-background text-main-text overflow-hidden">
+      {/* Sidebar */}
+      <div className={`
+        ${activeRoom ? 'hidden' : 'flex'}
+        w-full md:flex md:w-1/3 border-r border-secondary-text flex-col
+      `}>
         <div className="p-4 border-b border-secondary-text bg-background-main flex-shrink-0">
             <a href={backUrl} className="text-primary-green hover:underline font-semibold">
                 &larr; {backText}
@@ -45,7 +49,12 @@ const ChatPage = () => {
           />
         </div>
       </div>
-      <div className="w-2/3 flex flex-col">
+      
+      {/* Main Chat Panel */}
+      <div className={`
+        ${activeRoom ? 'flex' : 'hidden'}
+        w-full md:flex md:w-2/3 flex-col
+      `}>
         <ChatPanel 
           currentUser={currentUser}
           activeRoom={activeRoom}
@@ -58,6 +67,7 @@ const ChatPage = () => {
           onUploadImage={uploadImage}
           typingUsers={typingUsers}
           onTyping={emitTyping}
+          onBack={() => selectRoom(null)}
         />
       </div>
     </div>
