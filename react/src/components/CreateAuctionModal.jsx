@@ -21,6 +21,7 @@ export default function CreateAuctionModal({ isOpen, onClose, product, onSuccess
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [quantityError, setQuantityError] = useState('');
 
   if (!isOpen || !product) return null;
 
@@ -30,6 +31,17 @@ export default function CreateAuctionModal({ isOpen, onClose, product, onSuccess
       ...prev,
       [name]: value,
     }));
+    
+    // Validate auction quantity in real-time
+    if (name === 'auctionQuantity') {
+      const qty = parseInt(value);
+      if (qty > product.stock) {
+        setQuantityError(`Quantity cannot exceed available stock (${product.stock} units)`);
+      } else {
+        setQuantityError('');
+      }
+    }
+    
     setError('');
   };
 
@@ -52,7 +64,9 @@ export default function CreateAuctionModal({ isOpen, onClose, product, onSuccess
         throw new Error('Auction quantity must be greater than 0');
       }
 
-      if (parseInt(formData.auctionQuantity) > product.stock) {
+      const auctionQty = parseInt(formData.auctionQuantity);
+      if (auctionQty > product.stock) {
+        setQuantityError(`Quantity cannot exceed available stock (${product.stock} units)`);
         throw new Error(`Auction quantity cannot exceed available stock (${product.stock})`);
       }
 
@@ -184,9 +198,11 @@ export default function CreateAuctionModal({ isOpen, onClose, product, onSuccess
               disabled={loading}
               min="1"
               max={product.stock}
+              className={quantityError ? 'input-error' : ''}
               required
             />
             <small>Number of units from this product to auction (max {product.stock})</small>
+            {quantityError && <small className="error-text">{quantityError}</small>}
           </div>
 
           {/* Start Time (Optional) */}
@@ -217,7 +233,7 @@ export default function CreateAuctionModal({ isOpen, onClose, product, onSuccess
             <button
               type="submit"
               className="btn-submit"
-              disabled={loading}
+              disabled={loading || !!quantityError}
             >
               {loading ? 'Creating Auction...' : 'Create Auction'}
             </button>

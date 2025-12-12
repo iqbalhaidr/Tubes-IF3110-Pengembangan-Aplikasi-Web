@@ -161,11 +161,27 @@
   opacity: 0.6;
 }
 
+.form-group input.input-error {
+  border-color: #e74c3c;
+  background-color: #fde8e8;
+}
+
+.form-group input.input-error:focus {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
 .form-group small {
   display: block;
   margin-top: 6px;
   color: #999;
   font-size: 12px;
+}
+
+.form-group small.error-text {
+  color: #e74c3c;
+  font-weight: 500;
+  margin-top: 4px;
 }
 
 /* Error Message */

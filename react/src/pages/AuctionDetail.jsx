@@ -167,8 +167,10 @@ export default function AuctionDetail() {
         localStorage.setItem('user', JSON.stringify(updatedUser));
       }
       refetch();
+      refetchBids();
     } catch (err) {
       console.error('Bid submission failed:', err);
+      await refetch();
     }
   };
 

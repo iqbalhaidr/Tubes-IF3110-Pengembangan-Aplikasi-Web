@@ -465,7 +465,7 @@ function startScheduledAuctionCheckJob(io) {
             `UPDATE auctions 
              SET status = 'ACTIVE', 
                  started_at = CURRENT_TIMESTAMP,
-                 countdown_end_time = CURRENT_TIMESTAMP + INTERVAL '30 seconds'
+                 countdown_end_time = NULL
              WHERE id = $1
              RETURNING *`,
             [auction.id]
