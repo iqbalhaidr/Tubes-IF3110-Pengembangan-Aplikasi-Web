@@ -28,7 +28,7 @@ export default function CreateAuctionPage() {
   // Check if user is a seller
   useEffect(() => {
     if (!user || user.role !== 'SELLER') {
-      navigate('/auctions');
+      navigate('/manage-auctions');
     }
   }, [user, navigate]);
 

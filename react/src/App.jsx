@@ -106,7 +106,7 @@ export default function App() {
     return (
       <div className="app-loading">
         <div className="loading-spinner"></div>
-        <p>Loading Auction Platform...</p>
+        <p>Loading Nimonspedia...</p>
       </div>
     );
   }

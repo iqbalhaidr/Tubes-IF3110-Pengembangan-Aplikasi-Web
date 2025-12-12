@@ -185,6 +185,9 @@ export function useWebSocket(auctionId, userId) {
   const [bidPlaced, setBidPlaced] = useState(null);
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState(new Set());
+  const [auctionEnded, setAuctionEnded] = useState(null); // Track auction ended event
+  const [auctionActivated, setAuctionActivated] = useState(null); // Track when SCHEDULED → ACTIVE
+  const [auctionCancelled, setAuctionCancelled] = useState(null); // Track when auction is cancelled
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -234,6 +237,22 @@ export function useWebSocket(auctionId, userId) {
 
       newSocket.on('auction_ended', (data) => {
         console.log('[WebSocket] Auction ended:', data);
+        setAuctionEnded(data); // Trigger state change for re-render
+      });
+
+      newSocket.on('auction_activated', (data) => {
+        console.log('[WebSocket] Auction activated (SCHEDULED→ACTIVE):', data);
+        setAuctionActivated(data); // Trigger re-render when auction starts
+      });
+
+      newSocket.on('auction_started', (data) => {
+        console.log('[WebSocket] Auction started broadcast:', data);
+        setAuctionActivated(data); // Also listen to global broadcast
+      });
+
+      newSocket.on('auction_cancelled', (data) => {
+        console.log('[WebSocket] Auction cancelled:', data);
+        setAuctionCancelled(data); // Trigger re-render when cancelled
       });
 
       newSocket.on('auction_error', (data) => {
@@ -307,6 +326,9 @@ export function useWebSocket(auctionId, userId) {
     bidPlaced,
     messages,
     typingUsers,
+    auctionEnded,
+    auctionActivated,
+    auctionCancelled,
     sendMessage,
     placeBidViaSocket,
     setTyping,

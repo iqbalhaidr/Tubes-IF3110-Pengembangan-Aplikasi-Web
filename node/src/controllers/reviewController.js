@@ -327,12 +327,33 @@ export const getProductRatingStats = async (req, res) => {
  */
 export const getSellerReviews = async (req, res) => {
     try {
-        const storeId = req.user.store_id;
-        const { page = 1, limit = 10 } = req.query;
+        const userId = req.user.id || req.user.userId;
+        const { page = 1, limit = 10, search = '' } = req.query;
         const offset = (page - 1) * limit;
 
-        if (!storeId) {
+        // Get the user's store_id from database
+        const userResult = await pool.query(
+            `SELECT store_id FROM store WHERE user_id = $1 LIMIT 1`,
+            [userId]
+        );
+
+        if (userResult.rows.length === 0) {
             return res.status(403).json({ error: 'Only sellers can access this endpoint' });
+        }
+
+        const storeId = userResult.rows[0].store_id;
+
+        // Build WHERE clause with search filter
+        let whereClause = 'r.store_id = $1';
+        let queryParams = [storeId];
+        let countParams = [storeId];
+
+        if (search && search.trim()) {
+            // Search by product name, buyer name, or review text
+            whereClause += ` AND (LOWER(p.product_name) LIKE LOWER($2) OR LOWER(u.name) LIKE LOWER($2) OR LOWER(r.text) LIKE LOWER($2))`;
+            const searchPattern = `%${search}%`;
+            queryParams.push(searchPattern);
+            countParams.push(searchPattern);
         }
 
         const reviewsResult = await pool.query(
@@ -356,17 +377,20 @@ export const getSellerReviews = async (req, res) => {
              LEFT JOIN product p ON r.product_id = p.product_id
              LEFT JOIN seller_responses sr ON r.review_id = sr.review_id
              LEFT JOIN review_images ri ON r.review_id = ri.review_id
-             WHERE r.store_id = $1
+             WHERE ${whereClause}
              GROUP BY r.review_id, r.order_id, r.product_id, p.product_name, r.buyer_id, u.name,
                       r.rating, r.text, r.created_at, sr.response_id, sr.response_text, sr.created_at
              ORDER BY r.created_at DESC
-             LIMIT $2 OFFSET $3`,
-            [storeId, limit, offset]
+             LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`,
+            [...queryParams, limit, offset]
         );
 
         const countResult = await pool.query(
-            `SELECT COUNT(*) as total FROM reviews WHERE store_id = $1`,
-            [storeId]
+            `SELECT COUNT(*) as total FROM reviews r
+             LEFT JOIN "user" u ON r.buyer_id = u.user_id
+             LEFT JOIN product p ON r.product_id = p.product_id
+             WHERE ${whereClause}`,
+            countParams
         );
 
         const total = parseInt(countResult.rows[0].total);
@@ -394,13 +418,9 @@ export const getSellerReviews = async (req, res) => {
 export const addSellerResponse = async (req, res) => {
     const client = await pool.connect();
     try {
-        const storeId = req.user.store_id;
+        const userId = req.user.id || req.user.userId;
         const { review_id } = req.params;
         const { response_text } = req.body;
-
-        if (!storeId) {
-            return res.status(403).json({ error: 'Only sellers can add responses' });
-        }
 
         if (!response_text || response_text.length === 0) {
             return res.status(400).json({ error: 'Response text is required' });
@@ -409,6 +429,18 @@ export const addSellerResponse = async (req, res) => {
         if (response_text.length > 500) {
             return res.status(400).json({ error: 'Response cannot exceed 500 characters' });
         }
+
+        // Get the user's store_id from database
+        const userResult = await client.query(
+            `SELECT store_id FROM store WHERE user_id = $1 LIMIT 1`,
+            [userId]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(403).json({ error: 'Only sellers can add responses' });
+        }
+
+        const storeId = userResult.rows[0].store_id;
 
         // Verify review belongs to seller's store
         const reviewResult = await client.query(

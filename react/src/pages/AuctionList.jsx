@@ -9,6 +9,7 @@ export default function AuctionList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const searchTimeoutRef = useRef(null);
+  const socketRef = useRef(null);
 
   const {
     auctions,
@@ -33,6 +34,38 @@ export default function AuctionList() {
     console.log(`[AuctionList] Auction #${auctionId} just started, refreshing list...`);
     refetch();
   };
+
+  // Listen for auction status changes via WebSocket
+  useEffect(() => {
+    import('socket.io-client').then(({ io: ioClient }) => {
+      const socket = ioClient('/', {
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
+      });
+
+      // Listen for auction activation (SCHEDULED → ACTIVE)
+      socket.on('auction_started', (data) => {
+        console.log('[AuctionList] Auction started event:', data);
+        refetch();
+      });
+
+      // Listen for auction cancellation
+      socket.on('auction_cancelled', (data) => {
+        console.log('[AuctionList] Auction cancelled event:', data);
+        refetch();
+      });
+
+      socketRef.current = socket;
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [refetch]);
 
   const handleSort = (newSort) => {
     setSortBy(newSort);

@@ -1,52 +1,54 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
 
 export default function SellerReviewPanel() {
-    const { currentUser, isLoading: isAuthLoading } = useAuth();
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
     const [filter, setFilter] = useState('all'); // all, with-response, no-response
     const [expandedReview, setExpandedReview] = useState(null);
     const [responseText, setResponseText] = useState({});
     const [actionLoading, setActionLoading] = useState(false);
+    const [user, setUser] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const searchTimeoutRef = useRef(null);
 
-    // Auth check
-    if (isAuthLoading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <p className="text-center text-gray-600 font-medium">Loading user data...</p>
-            </div>
-        );
-    }
-
-    if (!currentUser || currentUser.role !== 'SELLER') {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <p className="text-center text-gray-600 font-medium">
-                    Please <a href="/auth/login" className="text-primary-green hover:underline font-semibold">log in</a> as a seller to view reviews.
-                </p>
-            </div>
-        );
-    }
-
+    // Get user from localStorage on component mount
     useEffect(() => {
+        try {
+            const userData = JSON.parse(localStorage.getItem('user'));
+            setUser(userData);
+        } catch {
+            setUser(null);
+        }
+    }, []);
+
+    // Fetch reviews when page, filter, limit, or search changes
+    useEffect(() => {
+        // Guard: only fetch if user is authenticated
+        if (!user || user.role !== 'SELLER') {
+            return;
+        }
+
         const loadReviews = async () => {
             try {
                 setLoading(true);
                 const response = await axios.get('/api/node/reviews/seller', {
                     params: {
                         page,
-                        limit: 10
+                        limit,
+                        search: debouncedSearch
                     },
                     withCredentials: true
                 });
 
                 let filteredReviews = response.data.reviews;
                 
+                // Apply client-side filtering only for display purposes
                 if (filter === 'with-response') {
                     filteredReviews = filteredReviews.filter(r => r.response_id);
                 } else if (filter === 'no-response') {
@@ -65,37 +67,7 @@ export default function SellerReviewPanel() {
         };
 
         loadReviews();
-    }, [page, filter]);
-
-    const fetchSellerReviews = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get('/api/node/reviews/seller', {
-                params: {
-                    page,
-                    limit: 10
-                },
-                withCredentials: true
-            });
-
-            let filteredReviews = response.data.reviews;
-            
-            if (filter === 'with-response') {
-                filteredReviews = filteredReviews.filter(r => r.response_id);
-            } else if (filter === 'no-response') {
-                filteredReviews = filteredReviews.filter(r => !r.response_id);
-            }
-
-            setReviews(filteredReviews);
-            setTotalPages(response.data.pagination.total_pages);
-            setError('');
-        } catch (err) {
-            console.error('Error fetching reviews:', err);
-            setError('Failed to load reviews');
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [page, limit, filter, debouncedSearch, user]);
 
     const handleSaveResponse = async (reviewId) => {
         if (!responseText[reviewId] || responseText[reviewId].trim() === '') {
@@ -114,7 +86,8 @@ export default function SellerReviewPanel() {
 
             setResponseText(prev => ({ ...prev, [reviewId]: '' }));
             setExpandedReview(null);
-            await fetchSellerReviews();
+            // Refetch reviews by resetting page to trigger useEffect
+            setPage(1);
         } catch (err) {
             console.error('Error saving response:', err);
             alert(err.response?.data?.error || 'Failed to save response');
@@ -123,10 +96,43 @@ export default function SellerReviewPanel() {
         }
     };
 
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchQuery(value);
+
+        // Clear previous timeout
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        // Debounce search
+        searchTimeoutRef.current = setTimeout(() => {
+            setDebouncedSearch(value);
+            setPage(1); // Reset to page 1 on search
+        }, 300);
+    };
+
+    const handleSearchClick = () => {
+        setDebouncedSearch(searchQuery);
+        setPage(1); // Reset to page 1 on search
+    };
+
     const toggleExpandReview = (reviewId) => {
         setExpandedReview(expandedReview === reviewId ? null : reviewId);
     };
 
+    // Auth check - verify user is a seller
+    if (!user || user.role !== 'SELLER') {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <p className="text-center text-gray-600 font-medium">
+                    Please <a href="/auth/login" className="text-primary-green hover:underline font-semibold">log in</a> as a seller to view reviews.
+                </p>
+            </div>
+        );
+    }
+
+    // Loading state
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 p-6">
@@ -143,6 +149,50 @@ export default function SellerReviewPanel() {
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-3xl font-bold text-gray-900">Customer Reviews</h1>
                     </div>
+
+                    {/* Search Bar */}
+                    <div className="mb-6 flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="Search by product name, buyer name, or review text..."
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                    handleSearchClick();
+                                }
+                            }}
+                            className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-primary-green focus:ring-2 focus:ring-green-100 transition"
+                        />
+                        <button
+                            onClick={handleSearchClick}
+                            className="px-6 py-3 bg-primary-green hover:bg-green-700 text-white font-semibold rounded-lg transition text-sm"
+                        >
+                            Search
+                        </button>
+                    </div>
+
+                    {/* Pagination Limit Selector */}
+                    <div className="mb-6 flex items-center gap-3">
+                        <label htmlFor="limitSelector" className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                            Reviews per page:
+                        </label>
+                        <select
+                            id="limitSelector"
+                            value={limit}
+                            onChange={(e) => {
+                                setLimit(parseInt(e.target.value));
+                                setPage(1); // Reset to page 1 when changing limit
+                            }}
+                            className="px-4 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:border-primary-green focus:ring-2 focus:ring-green-100 transition"
+                        >
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={15}>15</option>
+                            <option value={20}>20</option>
+                        </select>
+                    </div>
+
                     {/* Filter Tabs */}
                     <div className="flex flex-wrap gap-3 border-b border-gray-200 pb-4">
                         <button 
@@ -285,11 +335,11 @@ export default function SellerReviewPanel() {
                                     </button>
 
                                     {/* Response Form */}
-                                    {expandedReview === review.review_id && !review.response_id && (
+                                    {expandedReview === review.review_id && (
                                         <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
                                             <textarea
                                                 placeholder="Write your response to this review..."
-                                                value={responseText[review.review_id] || ''}
+                                                value={responseText[review.review_id] || review.response_text || ''}
                                                 onChange={(e) => {
                                                     if (e.target.value.length <= 500) {
                                                         setResponseText(prev => ({
@@ -303,14 +353,14 @@ export default function SellerReviewPanel() {
                                             />
                                             <div className="flex justify-between items-center">
                                                 <span className="text-xs text-gray-500 font-medium">
-                                                    {(responseText[review.review_id] || '').length}/500
+                                                    {(responseText[review.review_id] || review.response_text || '').length}/500
                                                 </span>
                                                 <button
                                                     className="px-4 py-2 bg-primary-green hover:bg-primary-green-hover text-white font-semibold rounded-lg transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                                     onClick={() => handleSaveResponse(review.review_id)}
                                                     disabled={actionLoading}
                                                 >
-                                                    {actionLoading ? 'Saving...' : 'Post Response'}
+                                                    {actionLoading ? 'Saving...' : review.response_id ? 'Update Response' : 'Post Response'}
                                                 </button>
                                             </div>
                                         </div>

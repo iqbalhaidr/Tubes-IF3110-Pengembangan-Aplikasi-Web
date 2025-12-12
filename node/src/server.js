@@ -53,6 +53,12 @@ app.get('/api/node/health', (req, res) => {
 });
 
 // ============== ROUTES ==============
+// Middleware to attach io to requests
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 app.use('/api/node/auctions', auctionRoutes);
 app.use('/api/node/chat', chatRoutes);
 app.use('/api/node/admin', adminRoutes);

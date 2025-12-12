@@ -178,6 +178,7 @@ router.get('/:id', async (req, res) => {
         p.description as product_description,
         p.main_image_path as product_image,
         p.price as product_price,
+        p.store_id,
         a.initial_bid,
         a.current_bid,
         a.highest_bidder_id,
@@ -935,6 +936,20 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
 
       await client.query('COMMIT');
 
+      // Emit WebSocket event for auction cancellation (ended with bids)
+      if (req.io) {
+        const room = `auction_${id}`;
+        req.io.to(room).emit('auction_cancelled', {
+          auctionId: id,
+          status: 'ENDED',
+          winnerId,
+          orderId,
+          orderError,
+          timestamp: new Date(),
+          message: 'Auction was cancelled by seller',
+        });
+      }
+
       // Build response
       let message;
       if (orderId) {
@@ -952,16 +967,37 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
       });
     }
 
-    // No bids - cancel normally
+    // No bids - cancel normally and refund stock
+    // Use the already-retrieved auction object to get product_id
+    const product_id = auction.product_id;
+
+    // Refund the stock that was deducted when auction was created
+    await client.query(
+      'UPDATE product SET stock = stock + 1 WHERE product_id = $1',
+      [product_id]
+    );
+    console.log(`[Auction] Refunded 1 unit of stock for product #${product_id}`);
+
     const result = await client.query(
       `UPDATE auctions 
-       SET status = 'CANCELLED', ended_at = CURRENT_TIMESTAMP, cancellation_reason = $2
+       SET status = 'CANCELLED', ended_at = CURRENT_TIMESTAMP, cancellation_reason = $2, highest_bidder_id = NULL, winner_id = NULL
        WHERE id = $1
        RETURNING *`,
       [id, cancellation_reason || null]
     );
 
     await client.query('COMMIT');
+
+    // Emit WebSocket event for auction cancellation (no bids)
+    if (req.io) {
+      const room = `auction_${id}`;
+      req.io.to(room).emit('auction_cancelled', {
+        auctionId: id,
+        status: 'CANCELLED',
+        timestamp: new Date(),
+        message: 'Auction was cancelled by seller (no bids)',
+      });
+    }
 
     res.json({
       success: true,
