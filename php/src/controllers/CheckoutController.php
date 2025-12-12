@@ -9,6 +9,11 @@ class CheckoutController {
         $this->order_model = new Order();
         $this->cart_model = new Cart();
         $this->user_model = new User();
+
+        Midtrans\Config::$serverKey = $_ENV['MIDTRANS_SERVER_KEY'];
+        Midtrans\Config::$isProduction = $_ENV['MIDTRANS_ENV'] === 'production';
+        Midtrans\Config::$isSanitized = true;
+        Midtrans\Config::$is3ds = true;
     }
 
     public function index() {
@@ -42,8 +47,8 @@ class CheckoutController {
 
         $cartData = Helper::structure_cart_data($cartResult['items']);
 
-        $navbarType = 'buyer'; // Mending ditaro di checkout.php??
-        $activeLink = 'checkout'; // For highlighting the 'Checkout' link in navbar (gatau ini buat apa)
+        $navbarType = 'buyer'; 
+        $activeLink = 'checkout';
 
         require_once __DIR__ . '/../views/checkout/checkout.php';
     }
@@ -60,31 +65,70 @@ class CheckoutController {
         $current_user = AuthMiddleware::getCurrentUser();
         $buyer_id = $current_user['user_id'];
 
-        // ============================================
-        // FEATURE FLAG CHECK - Checkout must be enabled
-        // Server-side enforcement to prevent API bypass
-        // ============================================
+        // Feature Flag Check
         FeatureFlag::requireFeature(FeatureFlag::CHECKOUT_ENABLED, $buyer_id);
 
+        $data = json_decode(file_get_contents('php://input'), true);
+        $paymentMethod = $data['paymentMethod'] ?? 'balance';
+        $shipping_address = $data['shippingAddress'] ?? null;
 
-        $cartResult = $this->cart_model->fetchItems($buyer_id);
-        if (!$cartResult['success']) {
-            Response::error('Could not fetch cart items: ' . $cartResult['message'], null, 500);
+        if ($paymentMethod === 'balance') {
+            return $this->checkoutWithBalance($buyer_id, $shipping_address);
+        } elseif ($paymentMethod === 'midtrans') {
+            return $this->checkoutWithMidtrans($buyer_id, $shipping_address);
+        } else {
+            Response::error('Invalid payment method.', null, 400);
         }
-        if (empty($cartResult['items'])) {
-            Response::error('Your cart is empty. Nothing to check out.', null, 400);
+    }
+
+    private function checkoutWithMidtrans($buyer_id, $shipping_address) {
+        $cartResult = $this->cart_model->fetchItems($buyer_id);
+        if (!$cartResult['success'] || empty($cartResult['items'])) {
+            Response::error($cartResult['message'] ?: 'Your cart is empty.', null, 400);
         }
         $cartItems = $cartResult['items'];
-
-        // Shipping Address
-        $data = json_decode(file_get_contents('php://input'), true);
-        $shipping_address = $data['shippingAddress'] ?? null;
 
         if (empty($shipping_address) || trim($shipping_address) === '') {
             Response::error('Shipping address is required.', null, 400);
         }
-        if (strlen($shipping_address) < 1) {
-            Response::error('Shipping address seems too short. Please provide a full address.', null, 400);
+
+        $result = $this->order_model->checkoutWithMidtrans($buyer_id, $shipping_address, $cartItems);
+
+        if ($result['success']) {
+            $user = $this->user_model->getUserById($buyer_id);
+
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $result['data']['midtrans_order_ids'][0], // Use the first order ID as the main transaction ID
+                    'gross_amount' => $result['data']['grand_total'],
+                ],
+                'customer_details' => [
+                    'first_name' => $user['name'],
+                    'email' => $user['email'],
+                ],
+                'item_details' => $result['data']['midtrans_transaction_details'], // Pass individual order details as item details
+            ];
+
+            try {
+                $snapToken = Midtrans\Snap::getSnapToken($params);
+                Response::success('Snap token generated.', ['snap_token' => $snapToken]);
+            } catch (Exception $e) {
+                Response::error('Failed to generate Snap token: ' . $e->getMessage(), null, 500);
+            }
+        } else {
+            Response::error($result['message'], null, 400);
+        }
+    }
+
+    private function checkoutWithBalance($buyer_id, $shipping_address) {
+        $cartResult = $this->cart_model->fetchItems($buyer_id);
+        if (!$cartResult['success'] || empty($cartResult['items'])) {
+            Response::error($cartResult['message'] ?: 'Your cart is empty.', null, 400);
+        }
+        $cartItems = $cartResult['items'];
+
+        if (empty($shipping_address) || trim($shipping_address) === '') {
+            Response::error('Shipping address is required.', null, 400);
         }
         if (strlen($shipping_address) > 500) {
             Response::error('Shipping address is too long (max 500 characters).', null, 400);
@@ -93,7 +137,6 @@ class CheckoutController {
         $result = $this->order_model->checkout($buyer_id, $shipping_address, $cartItems);
 
         if ($result['success']) {
-            // Update session balance
             $user = $this->user_model->getUserById($buyer_id);
             if ($user) {
                 $_SESSION['balance'] = $user['balance'];
