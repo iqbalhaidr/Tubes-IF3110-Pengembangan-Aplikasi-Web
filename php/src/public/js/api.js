@@ -3,6 +3,8 @@ window.api = {
       return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open(method, url, true);
+          xhr.withCredentials = true; // Ensure cookies are sent
+
           
           if (!(body instanceof FormData)) {
               xhr.setRequestHeader("Content-Type", "application/json");

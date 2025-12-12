@@ -1,5 +1,10 @@
 <?php
 
+require_once __DIR__ . '/vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
 // A simple router
 $uri = $_SERVER['REQUEST_URI'];
 
@@ -225,6 +230,14 @@ if ($route_parts[0] === 'auth') {
             echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
             exit;
         }
+    } elseif ($route_parts[1] === 'topup' && ($route_parts[2] ?? '') === 'midtrans-initiate') {
+        if ($method === 'POST') {
+            $topupController = new TopUpController();
+            $topupController->initiateMidtransPayment();
+            exit; 
+        } else {
+            Response::error('Method not allowed', null, 405);
+        }
     } elseif ($route_parts[1] === 'php' && isset($route_parts[2])) {
         // API endpoints for React App
         $sub_route = $route_parts[2];
@@ -328,7 +341,12 @@ if ($route_parts[0] === 'auth') {
         }
     } elseif ($action === 'preferences' && $method === 'POST') {
         $controller->updateBuyerPreferences();
-    } else {
+    } elseif ($action === 'topup-history') {
+        if ($method === 'GET') {
+            $controller->buyerTopUpHistory();
+        } else {
+            Response::error('Method not allowed', null, 405);
+        }
         header("HTTP/1.0 404 Not Found");
         require_once __DIR__ . '/views/404.php';
     }
@@ -395,6 +413,36 @@ if ($route_parts[0] === 'auth') {
         $checkoutController->index();
     } elseif ($method === 'POST') {
         $checkoutController->checkout();
+    } else {
+        Response::error('Method not allowed', null, 405);
+    }
+} elseif ($route_parts[0] === 'topup') {
+    $topupController = new TopUpController();
+    if (!isset($route_parts[1])) {
+        if ($method === 'GET') {
+            $topupController->showTopUpPage();
+        } else {
+            Response::error('Method not allowed', null, 405);
+        }
+    } elseif ($route_parts[1] === 'process') {
+        if ($method === 'POST') {
+            $topupController->processTopUp();
+        } else {
+            Response::error('Method not allowed', null, 405);
+        }
+    } elseif ($route_parts[1] === 'pay') {
+        if ($method === 'GET') {
+            $topupController->showPaymentPage();
+        } else {
+            Response::error('Method not allowed', null, 405);
+        }
+    } else {
+        Response::error('Not found', null, 404);
+    }
+} elseif ($route_parts[0] === 'midtrans' && ($route_parts[1] ?? '') === 'notification') {
+    if ($method === 'POST') {
+        $topupController = new TopUpController();
+        $topupController->notificationHandler();
     } else {
         Response::error('Method not allowed', null, 405);
     }

@@ -92,7 +92,6 @@ class User {
                 $this->db->rollBack();
                 return [
                     'success' => false,
-                    'message' => 'User not found.'
                 ];
             }
 

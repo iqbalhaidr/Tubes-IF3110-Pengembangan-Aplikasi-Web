@@ -10,6 +10,10 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
 }
 ?>
 
+<script>
+    window.MIDTRANS_CLIENT_KEY = "<?= $_ENV['MIDTRANS_CLIENT_KEY'] ?>";
+</script>
+
 <nav class="navbar <?= $navbarType === 'seller' ? 'seller-navbar' : '' ?>">
     <div class="container navbar-container">
         <div class="navbar-left">

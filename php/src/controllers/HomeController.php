@@ -4,6 +4,7 @@ require_once __DIR__ . '/../utils/Helper.php';
 require_once __DIR__ . '/../models/Category.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Store.php';
+require_once __DIR__ . '/../models/TopUp.php';
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 
 class HomeController {
@@ -639,6 +640,19 @@ class HomeController {
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    public function buyerTopUpHistory() {
+        AuthMiddleware::requireRole('BUYER', '/auth/login');
+        $currentUser = AuthMiddleware::getCurrentUser();
+
+        $topUpModel = new TopUp();
+        $topUpHistory = $topUpModel->getTopUpHistoryByUserId($currentUser['user_id']);
+
+        $navbarType = 'buyer';
+        $activeLink = 'topup-history'; // Assuming there will be a link in the navbar
+
+        require_once __DIR__ . '/../views/buyer/topup_history.php';
     }
 
     public function exportPerformanceReport() {

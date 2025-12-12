@@ -1,6 +1,6 @@
 CREATE TYPE user_role AS ENUM ('BUYER', 'SELLER');
 
-CREATE TYPE order_status AS ENUM ('WAITING_APPROVAL', 'APPROVED', 'REJECTED', 'ON_DELIVERY', 'RECEIVED');
+CREATE TYPE order_status AS ENUM ('PENDING_PAYMENT', 'WAITING_APPROVAL', 'APPROVED', 'REJECTED', 'ON_DELIVERY', 'RECEIVED');
 
 CREATE TABLE "user" (
     user_id SERIAL PRIMARY KEY,
@@ -72,6 +72,9 @@ CREATE TABLE "order" (
     total_price INT NOT NULL,
     shipping_address TEXT NOT NULL,
     status order_status NOT NULL DEFAULT 'WAITING_APPROVAL',
+    payment_method VARCHAR(50) NOT NULL DEFAULT 'balance',
+    snap_token VARCHAR(255),
+    midtrans_order_id VARCHAR(255),
     reject_reason TEXT,
     confirmed_at TIMESTAMP WITH TIME ZONE,
     delivery_time TIMESTAMP WITH TIME ZONE,
@@ -551,3 +554,36 @@ LEFT JOIN user_feature_access ufa ON u.user_id = ufa.user_id
 GROUP BY u.user_id, u.name, u.email, u.role, u.balance, u.created_at
 ORDER BY u.user_id;
 
+-- ============================================
+-- TOP UP HISTORY
+-- ============================================
+
+CREATE TYPE top_up_status AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'EXPIRED', 'PENDING_PAYMENT');
+
+CREATE TABLE top_up_history (
+    top_up_id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    amount INT NOT NULL,
+    status top_up_status NOT NULL DEFAULT 'PENDING',
+    midtrans_order_id VARCHAR(255) UNIQUE,
+    snap_token TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES "user"(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_top_up_user ON top_up_history(user_id);
+CREATE INDEX idx_top_up_status ON top_up_history(status);
+CREATE INDEX idx_top_up_midtrans_order_id ON top_up_history(midtrans_order_id);
+
+CREATE OR REPLACE FUNCTION update_top_up_history_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = CURRENT_TIMESTAMP;
+   RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_top_up_history_timestamp_trigger
+BEFORE UPDATE ON top_up_history
+FOR EACH ROW EXECUTE FUNCTION update_top_up_history_timestamp();

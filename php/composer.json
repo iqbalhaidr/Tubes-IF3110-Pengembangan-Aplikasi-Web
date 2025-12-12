@@ -1,0 +1,6 @@
+{
+    "require": {
+        "vlucas/phpdotenv": "v5.6.2",
+        "midtrans/midtrans-php": "2.5.2"
+    }
+}
