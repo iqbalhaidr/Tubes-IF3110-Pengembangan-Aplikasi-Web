@@ -17,8 +17,9 @@ class CartController {
         // ============================================
         $feature_check = FeatureFlag::checkAccess(FeatureFlag::CHECKOUT_ENABLED, $buyer_id);
         if (!$feature_check['enabled']) {
-            $reason = $feature_check['reason'];
-            $is_global = $feature_check['is_global'];
+            $featureDisabledReason = $feature_check['reason'];
+            $featureDisabledIsGlobal = $feature_check['is_global'];
+            $featureDisabledName = 'checkout_enabled';
             http_response_code(403);
             require_once __DIR__ . '/../views/feature-disabled.php';
             exit;

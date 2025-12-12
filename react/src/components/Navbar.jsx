@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import './Navbar.css';
 import { useFeatureEnabled, FEATURES } from '../hooks/useFeatureFlags';
@@ -16,21 +16,23 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
   const [topupAmount, setTopupAmount] = useState('');
   const [topupLoading, setTopupLoading] = useState(false);
   const [topupError, setTopupError] = useState('');
+  const [cartCount, setCartCount] = useState(user?.cartCount ?? 0);
   const dropdownRef = useRef(null);
 
   // Feature flags
-  const { enabled: chatEnabled } = useFeatureEnabled(FEATURES.CHAT_ENABLED, user?.userId);
-  const { enabled: auctionEnabled } = useFeatureEnabled(FEATURES.AUCTION_ENABLED, user?.userId);
-  
+  const { enabled: chatEnabled } = useFeatureEnabled(FEATURES.CHAT_ENABLED, user?.user_id);
+  const { enabled: auctionEnabled } = useFeatureEnabled(FEATURES.AUCTION_ENABLED, user?.user_id);
+  const { enabled: checkoutEnabled } = useFeatureEnabled(FEATURES.CHECKOUT_ENABLED, user?.user_id);
+
   // Determine navbar type based on user
   const navbarType = !user ? 'guest' : user.role === 'SELLER' ? 'seller' : 'buyer';
   const isSeller = navbarType === 'seller';
   const isBuyer = navbarType === 'buyer';
   const isGuest = navbarType === 'guest';
-  
+
   // Quick top-up options
   const quickAmounts = [50000, 100000, 150000, 200000];
-  
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -38,7 +40,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
         setDropdownOpen(false);
       }
     }
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -51,10 +53,52 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
         if (topupModalOpen) closeTopupModal();
       }
     }
-    
+
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [logoutModalOpen, topupModalOpen]);
+
+  // Update cart-badge counter
+  const fetchCartCount = useCallback(async () => {
+    if (!user || user.role !== 'BUYER') return;
+
+    try {
+      const response = await fetch('/api/cartcounter', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setCartCount(data.data.unique_item_count || 0);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch cart count:', error);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (isBuyer) {
+      fetchCartCount();
+    }
+  }, [isBuyer, fetchCartCount, location.pathname]);
+
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      fetchCartCount();
+    };
+
+    window.addEventListener('cart:updated', handleCartUpdate);
+
+    return () => {
+      window.removeEventListener('cart:updated', handleCartUpdate);
+    };
+  }, [fetchCartCount]);
 
   const openLogoutModal = () => {
     setLogoutModalOpen(true);
@@ -91,28 +135,28 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
 
   const handleTopupSubmit = async (e) => {
     e.preventDefault();
-    
+
     const amount = parseInt(topupAmount, 10);
-    
+
     // Validation
     if (!amount || isNaN(amount)) {
       setTopupError('Please enter a valid amount');
       return;
     }
-    
+
     if (amount < 10000) {
       setTopupError('Minimum top-up amount is Rp 10.000');
       return;
     }
-    
+
     if (amount > 10000000) {
       setTopupError('Maximum top-up amount is Rp 10.000.000');
       return;
     }
-    
+
     setTopupLoading(true);
     setTopupError('');
-    
+
     try {
       const response = await fetch('/balance/top-up', {
         method: 'POST',
@@ -122,9 +166,9 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
         credentials: 'include',
         body: JSON.stringify({ amount }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         // Update balance in parent component
         if (onBalanceUpdate) {
@@ -177,7 +221,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
             {isGuest && (
               <a href="/" className="navbar-brand">Nimonspedia</a>
             )}
-            
+
             {/* Buyer: Link to home */}
             {isBuyer && (
               <>
@@ -186,9 +230,9 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                   <span className="balance-label" id="balanceAmount">
                     Balance: Rp {(user?.balance ?? 0).toLocaleString('id-ID')}
                   </span>
-                  <button 
-                    type="button" 
-                    className="balance-topup-btn" 
+                  <button
+                    type="button"
+                    className="balance-topup-btn"
                     onClick={openTopupModal}
                   >
                     Top Up
@@ -196,7 +240,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                 </div>
               </>
             )}
-            
+
             {/* Seller: Link to dashboard */}
             {isSeller && (
               <>
@@ -208,7 +252,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                     </span>
                   </div>
                 )}
-                <button 
+                <button
                   className={`burger-menu ${mobileMenuOpen ? 'active' : ''}`}
                   id="mobileMenuToggle"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -219,9 +263,9 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                 </button>
                 <div className={`navbar-links ${mobileMenuOpen ? 'active' : ''}`} id="navbarMenu">
                   {sellerLinks.map((link) => (
-                    <a 
+                    <a
                       key={link.key}
-                      href={link.href} 
+                      href={link.href}
                       className={`navbar-link ${location.pathname === link.href ? 'active' : ''}`}
                     >
                       {link.label}
@@ -231,7 +275,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
               </>
             )}
           </div>
-          
+
           <div className="navbar-right">
             {/* Guest navigation */}
             {isGuest && (
@@ -240,37 +284,39 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                 <a href="/auth/register" className="navbar-link">Daftar</a>
               </div>
             )}
-            
+
             {/* Buyer navigation */}
             {isBuyer && (
               <>
-                <a href="/cart" className="cart-icon" title="Shopping Cart">
-                  <span className="cart-badge" id="cartBadge">{user?.cartCount ?? 0}</span>
-                  <svg 
-                    className="cart-icon-svg" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="9" cy="21" r="1"></circle>
-                    <circle cx="20" cy="21" r="1"></circle>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                  </svg>
-                </a>
-                <div 
+                {checkoutEnabled && (
+                  <a href="/cart" className="cart-icon" title="Shopping Cart">
+                    <span className="cart-badge" id="cartBadge" style={{ display: cartCount > 0 ? 'flex' : 'none' }}>{cartCount}</span>
+                    <svg
+                      className="cart-icon-svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="9" cy="21" r="1"></circle>
+                      <circle cx="20" cy="21" r="1"></circle>
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                  </a>
+                )}
+                <div
                   className={`user-dropdown ${dropdownOpen ? 'active' : ''}`}
                   ref={dropdownRef}
                 >
-                  <button 
-                    className="user-profile-btn" 
+                  <button
+                    className="user-profile-btn"
                     id="userProfileBtn"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                   >
                     <div className="user-avatar" id="userAvatar">
-                      {(user?.name ?? 'U').charAt(0).toUpperCase()}
+                      {(user?.name ?? 'U').charAt(0)}
                     </div>
                     <span className="user-name" id="userName">
                       {user?.name ?? 'User'}
@@ -282,9 +328,9 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                     <a href="/buyer/order-history" className="dropdown-item">Order History</a>
                     {chatEnabled && <a href="/chat" className="dropdown-item">Chat</a>}
                     {auctionEnabled && <a href="/auctions" className="dropdown-item">Live Auctions</a>}
-                    <button 
-                      type="button" 
-                      className="dropdown-item" 
+                    <button
+                      type="button"
+                      className="dropdown-item"
                       onClick={openLogoutModal}
                     >
                       Logout
@@ -293,12 +339,12 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                 </div>
               </>
             )}
-            
+
             {/* Seller logout */}
             {isSeller && (
-              <button 
-                type="button" 
-                className="navbar-link logout-link" 
+              <button
+                type="button"
+                className="navbar-link logout-link"
                 onClick={openLogoutModal}
               >
                 Logout
@@ -309,31 +355,31 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
       </nav>
 
       {/* Logout Confirmation Modal */}
-      <div 
-        id="logoutConfirmModal" 
+      <div
+        id="logoutConfirmModal"
         className={`modal-overlay logout-modal-overlay ${logoutModalOpen ? 'is-visible' : ''}`}
         aria-hidden={!logoutModalOpen}
         onClick={handleModalOverlayClick}
       >
-        <div 
-          className="modal-content logout-modal-content" 
-          role="dialog" 
-          aria-modal="true" 
+        <div
+          className="modal-content logout-modal-content"
+          role="dialog"
+          aria-modal="true"
           aria-labelledby="logoutModalTitle"
         >
           <h2 id="logoutModalTitle">Confirm Logout</h2>
           <p>Are you sure you want to logout? You will need to login again to access your account.</p>
           <div className="modal-actions">
-            <button 
-              type="button" 
-              className="modal-btn modal-btn-secondary" 
+            <button
+              type="button"
+              className="modal-btn modal-btn-secondary"
               onClick={closeLogoutModal}
             >
               Cancel
             </button>
-            <button 
-              type="button" 
-              className="modal-btn modal-btn-danger" 
+            <button
+              type="button"
+              className="modal-btn modal-btn-danger"
               onClick={confirmLogout}
             >
               Logout
@@ -343,20 +389,20 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
       </div>
 
       {/* Top-up Modal */}
-      <div 
-        id="topupModal" 
+      <div
+        id="topupModal"
         className={`modal-overlay topup-modal-overlay ${topupModalOpen ? 'is-visible' : ''}`}
         aria-hidden={!topupModalOpen}
         onClick={handleTopupOverlayClick}
       >
-        <div 
-          className="modal-content topup-modal-content" 
-          role="dialog" 
-          aria-modal="true" 
+        <div
+          className="modal-content topup-modal-content"
+          role="dialog"
+          aria-modal="true"
           aria-labelledby="topupModalTitle"
         >
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="modal-close-btn"
             onClick={closeTopupModal}
             aria-label="Close"
@@ -365,7 +411,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
           </button>
           <h2 id="topupModalTitle">Top Up Balance</h2>
           <p className="topup-subtitle">Add funds to your account</p>
-          
+
           <form onSubmit={handleTopupSubmit} className="topup-form">
             <div className="topup-quick-amounts">
               {quickAmounts.map((amount) => (
@@ -379,7 +425,7 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
                 </button>
               ))}
             </div>
-            
+
             <div className="topup-input-group">
               <label htmlFor="topupAmount" className="topup-label">Or enter custom amount:</label>
               <div className="topup-input-wrapper">
@@ -400,21 +446,21 @@ export default function Navbar({ user, onLogout, onBalanceUpdate }) {
               </div>
               <p className="topup-hint">Min: Rp 10.000 | Max: Rp 10.000.000</p>
             </div>
-            
+
             {topupError && (
               <div className="topup-error">{topupError}</div>
             )}
-            
+
             <div className="modal-actions">
-              <button 
-                type="button" 
-                className="modal-btn modal-btn-secondary" 
+              <button
+                type="button"
+                className="modal-btn modal-btn-secondary"
                 onClick={closeTopupModal}
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="modal-btn modal-btn-primary"
                 disabled={topupLoading || !topupAmount}
               >

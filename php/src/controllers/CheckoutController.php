@@ -29,6 +29,7 @@ class CheckoutController {
             // Redirect to a disabled feature page or show error
             $featureDisabledReason = $checkoutAccess['reason'];
             $featureDisabledIsGlobal = $checkoutAccess['is_global'];
+            $featureDisabledName = 'checkout_enabled';
             require_once __DIR__ . '/../views/feature-disabled.php';
             return;
         }

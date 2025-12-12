@@ -42,20 +42,22 @@ if (class_exists('AuthMiddleware') && method_exists('AuthMiddleware', 'isLoggedI
                 <div class="navbar-links" id="navbarMenu">
                     <?php 
                     $sellerLinks = [
-                        ['href' => '/seller/dashboard', 'label' => 'Dashboard', 'key' => 'dashboard'],
-                        ['href' => '/chat', 'label' => 'Chat', 'key' => 'chat'],
-                        ['href' => '/seller/products', 'label' => 'Produk', 'key' => 'products'],
-                        ['href' => '/seller/orders', 'label' => 'Orders', 'key' => 'orders'],
-                        ['href' => '/manage-auctions', 'label' => 'Auctions', 'key' => 'auctions'],
-                        ['href' => '/seller/reviews', 'label' => 'Reviews', 'key' => 'reviews'],
-                        ['href' => '/seller/settings', 'label' => 'Settings', 'key' => 'settings'],
+                        ['href' => '/seller/dashboard', 'label' => 'Dashboard', 'key' => 'dashboard', 'feature' => null],
+                        ['href' => '/chat', 'label' => 'Chat', 'key' => 'chat', 'feature' => FeatureFlag::CHAT_ENABLED],
+                        ['href' => '/seller/products', 'label' => 'Produk', 'key' => 'products', 'feature' => null],
+                        ['href' => '/seller/orders', 'label' => 'Orders', 'key' => 'orders', 'feature' => null],
+                        ['href' => '/manage-auctions', 'label' => 'Auctions', 'key' => 'auctions', 'feature' => FeatureFlag::AUCTION_ENABLED],
+                        ['href' => '/seller/reviews', 'label' => 'Reviews', 'key' => 'reviews', 'feature' => null],
+                        ['href' => '/seller/settings', 'label' => 'Settings', 'key' => 'settings', 'feature' => null],
                     ];
                     ?>
                     <?php foreach ($sellerLinks as $link): ?>
-                        <a href="<?= htmlspecialchars($link['href']) ?>" 
-                           class="navbar-link <?= ($activeLink === $link['key']) ? 'active' : '' ?>">
-                            <?= htmlspecialchars($link['label']) ?>
-                        </a>
+                        <?php if ($link['feature'] === null || FeatureFlag::isEnabled($link['feature'], $current_user['user_id'] ?? null)): ?>
+                            <a href="<?= htmlspecialchars($link['href']) ?>" 
+                            class="navbar-link <?= ($activeLink === $link['key']) ? 'active' : '' ?>">
+                                <?= htmlspecialchars($link['label']) ?>
+                            </a>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>

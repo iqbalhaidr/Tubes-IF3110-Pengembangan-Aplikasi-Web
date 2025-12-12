@@ -97,7 +97,7 @@ function FeatureDisabledPage({ feature, reason, isGlobal }) {
                 <div className="flex gap-3 justify-center flex-wrap mb-6 max-sm:flex-col">
                     <a
                         href="/"
-                        className="py-3 px-6 text-[15px] font-semibold rounded-lg no-underline border-none cursor-pointer transition-all bg-primary-green text-white hover:bg-primary-green-hover hover:-translate-y-0.5 max-sm:w-full"
+                        className="py-3 px-6 text-[15px] font-semibold rounded-lg no-underline border-none cursor-pointer transition-all bg-primary-green text-white hover:text-white hover:bg-primary-green-hover hover:-translate-y-0.5 max-sm:w-full"
                     >
                         ← Back to Home
                     </a>
