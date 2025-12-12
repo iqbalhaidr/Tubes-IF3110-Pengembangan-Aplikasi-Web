@@ -185,19 +185,19 @@ Setelah instalasi selesai, untuk menjalankan server dalam mode development:
 ### Halaman Buyer
 | Halaman | Screenshot | Google Lighthouse Skor |
 |---------|------------|-----------|
-| **Auction List** | <img src="./public/image_readme/.png" width="300">  | <img src="./public/lighthouse-images/auction-list.png" width="300">|
-| **Auction Detail** | <img src="./public/image_readme/.png" width="300">  | <img src="./public/lighthouse-images/buyer-auction-detail.png" width="300">|
+| **Auction List** | <img src="./public/image_readme/auction-list-ss.png" width="300">  | <img src="./public/lighthouse-images/auction-list.png" width="300">|
+| **Auction Detail** | <img src="./public/image_readme/auction-detail-ss.png" width="300">  | <img src="./public/lighthouse-images/buyer-auction-detail.png" width="300">|
 | **Chat** | <img src="./public/image_readme/buyer-chat.png" width="300">  | <img src="./public/lighthouse-images/chat.png" width="300">|
-| **Product Detail** | <img src="./public/image_readme/.png" width="300">  | <img src="./public/lighthouse-images/product-detail2.png" width="300">|
+| **Product Detail** | <img src="./public/image_readme/product-detail.png" width="300">  | <img src="./public/lighthouse-images/product-detail2.png" width="300">|
 | **Profile** | <img src="./public/image_readme/buyer-profile-ss.png" width="300">  | <img src="./public/lighthouse-images/settings-buyer.png" width="300">|
 
 ### Halaman Seller
 | Halaman | Screenshot | Google Lighthouse Skor |
 |---------|------------|-----------|
-| **Auction Detail** | <img src="./public/image_readme/.png" width="300">  | <img src="./public/lighthouse-images/manage-auction.png" width="300">|
+| **Auction Detail** | <img src="./public/image_readme/auction-detail-seller-ss.png" width="300">  | <img src="./public/lighthouse-images/manage-auction.png" width="300">|
 | **Chat** | <img src="./public/image_readme/seller-chat.png" width="300">  | <img src="./public/lighthouse-images/chat.png" width="300">|
-| **Product Management** | <img src="./public/image_readme/.png" width="300">  | <img src="./public/lighthouse-images/product-management-2.png" width="300">|
-| **Settings** | <img src="./public/image_readme/seller-profile-ss.png" width="300">  | <img src="./public/lighthouse-images/settings-seller.png" width="300">|
+| **Product Management** | <img src="./public/image_readme/product-management-ss.png" width="300">  | <img src="./public/lighthouse-images/product-management-2.png" width="300">|
+| **Settings** | <img src="./public/image_readme/seller-profile-ss.png" width="300">  | <img src="./public/lighthouse-images/settings-seller2.png" width="300">|
 
 ### Halaman Admin
 
@@ -311,7 +311,7 @@ Berikut adalah daftar perbaikan aksesibilitas dan performa yang dilakukan berdas
 | Order Management | 13523109, 13523111 |
 | Auction | 13523109 |
 | Chat | 13523095 |
-| Push Notification | |
+| Push Notification | 13523095 |
 | Admin | 13523111 |
 | Review | 13532109 |
 | Payment Gateway | 13523095 |
@@ -336,7 +336,7 @@ Berikut adalah daftar perbaikan aksesibilitas dan performa yang dilakukan berdas
 | Order Management | 13523109, 13523111 |
 | Auction | 13523109 |
 | Chat | 13523095 |
-| Push Notification | |
+| Push Notification | 13523095 |
 | Admin | 13523111 |
 | Review | 13523109 |
 | Payment Gateway | 13523095 |
