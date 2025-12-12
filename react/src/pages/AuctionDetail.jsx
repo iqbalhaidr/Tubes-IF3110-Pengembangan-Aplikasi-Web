@@ -217,7 +217,7 @@ export default function AuctionDetail() {
           {/* Countdown */}
           {isAuctionActive && (
             <AuctionCountdown
-              countdownSeconds={countdownSeconds}
+              countdownSeconds={countdownSeconds !== null ? countdownSeconds : auction?.seconds_remaining}
               onExpired={handleAuctionExpired}
               auctionId={id}
             />

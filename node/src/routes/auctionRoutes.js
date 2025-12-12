@@ -100,6 +100,16 @@ router.get('/', async (req, res) => {
 
     // Get paginated auctions with seller info
     queryParams.push(limit, offset);
+    let orderByClause;
+    if (status === 'SCHEDULED') {
+      orderByClause = 'a.start_time ASC';
+    } else if (status === 'ACTIVE') {
+      // For ACTIVE auctions, sort by countdown_end_time (with NULLs last for auctions with no bids)
+      orderByClause = 'a.countdown_end_time IS NULL ASC, a.countdown_end_time ASC';
+    } else {
+      orderByClause = 'a.ended_at DESC';
+    }
+
     const result = await pool.query(
       `SELECT 
         a.id,
@@ -119,7 +129,7 @@ router.get('/', async (req, res) => {
         a.countdown_end_time,
         a.started_at,
         a.ended_at,
-        EXTRACT(EPOCH FROM (a.countdown_end_time - CURRENT_TIMESTAMP))::INTEGER as seconds_remaining,
+        COALESCE(EXTRACT(EPOCH FROM (a.countdown_end_time - CURRENT_TIMESTAMP))::INTEGER, 0) as seconds_remaining,
         EXTRACT(EPOCH FROM (a.start_time - CURRENT_TIMESTAMP))::INTEGER as seconds_until_start,
         (SELECT COUNT(*) FROM auction_bids WHERE auction_id = a.id) as total_bids
       FROM auctions a
@@ -127,7 +137,7 @@ router.get('/', async (req, res) => {
       LEFT JOIN "user" u_bidder ON a.highest_bidder_id = u_bidder.user_id
       LEFT JOIN product p ON a.product_id = p.product_id
       WHERE ${whereClause}
-      ORDER BY ${status === 'SCHEDULED' ? 'a.start_time ASC' : status === 'ACTIVE' ? 'a.countdown_end_time ASC' : 'a.ended_at DESC'}
+      ORDER BY ${orderByClause}
       LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}`,
       queryParams
     );
@@ -180,7 +190,7 @@ router.get('/:id', async (req, res) => {
         a.ended_at,
         a.highest_bidder_id as winner_id,
         u_bidder.name as winner_username,
-        EXTRACT(EPOCH FROM (a.countdown_end_time - CURRENT_TIMESTAMP))::INTEGER as seconds_remaining,
+        COALESCE(EXTRACT(EPOCH FROM (a.countdown_end_time - CURRENT_TIMESTAMP))::INTEGER, 0) as seconds_remaining,
         EXTRACT(EPOCH FROM (a.start_time - CURRENT_TIMESTAMP))::INTEGER as seconds_until_start
       FROM auctions a
       LEFT JOIN "user" u_seller ON a.seller_id = u_seller.user_id
@@ -342,7 +352,7 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
 
     // Verify product exists and belongs to seller
     const productCheck = await client.query(
-      `SELECT p.product_id, p.store_id, s.user_id 
+      `SELECT p.product_id, p.store_id, p.stock, s.user_id 
        FROM product p 
        JOIN store s ON p.store_id = s.store_id
        WHERE p.product_id = $1`,
@@ -354,13 +364,31 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
 
-    const { store_id, user_id } = productCheck.rows[0];
+    const { store_id, stock, user_id } = productCheck.rows[0];
+    
+    // Check if product has stock
+    if (!stock || stock === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Cannot create auction for product with no stock' 
+      });
+    }
     
     // Verify seller owns the store
     if (user_id !== seller_id) {
       await client.query('ROLLBACK');
       return res.status(403).json({ success: false, error: 'You do not own this product' });
     }
+
+    // Reserve/deduct stock for auction
+    // Calculate effective quantity to reserve (requested auction_quantity or available stock)
+    const quantityToReserve = Math.min(auctionQuantity, stock);
+    await client.query(
+      'UPDATE product SET stock = stock - $1 WHERE product_id = $2',
+      [quantityToReserve, product_id]
+    );
+    console.log(`[Auction Creation] Reserved ${quantityToReserve} units from product #${product_id} (stock after: ${stock - quantityToReserve})`);
 
     // Check if seller already has an ACTIVE or SCHEDULED auction in the same store
     const existingAuction = await client.query(
@@ -382,10 +410,10 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
       });
     }
 
-    // Calculate countdown end time (30 seconds from start if ACTIVE, or from start_time for SCHEDULED)
-    const countdownEndTime = initialStatus === 'ACTIVE' 
-      ? new Date(Date.now() + 30 * 1000)
-      : new Date(auctionStartTime.getTime()); // For scheduled, the countdown starts when the job runs
+    // Countdown will NOT start until first bid is placed
+    // countdown_end_time is NULL for ACTIVE and SCHEDULED until first bid occurs
+    // Once first bid placed, countdown_end_time will be set to CURRENT_TIMESTAMP + 15 seconds
+    const countdownEndTime = null;
 
     // Create auction
     const result = await client.query(
@@ -401,7 +429,7 @@ router.post('/', authenticateToken, requireFeature(FEATURES.AUCTION_ENABLED), as
         min_bid_increment, 
         initialStatus,
         auctionStartTime.toISOString(),
-        countdownEndTime.toISOString(),
+        countdownEndTime,
         initialStatus === 'ACTIVE' ? new Date().toISOString() : null,
       ]
     );
@@ -556,7 +584,19 @@ router.post('/:id/bid', authenticateToken, requireFeature(FEATURES.AUCTION_ENABL
     await client.query('ROLLBACK');
     console.error('Error placing bid:', error);
     
-    res.status(500).json({ success: false, error: error.message });
+    // Handle concurrent bid conflict gracefully
+    if (error.code === '40P01' || error.message?.includes('deadlock')) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Bid failed due to high traffic, please try again' 
+      });
+    }
+    
+    // Return user-friendly error message instead of raw DB error
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to place bid. Please try again or contact support if the issue persists.' 
+    });
   } finally {
     // Always release the advisory lock
     try {
@@ -727,6 +767,16 @@ router.put('/:id/end', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Auction is not active' });
     }
 
+    // Check if countdown has been started (if countdown_end_time is NULL, no bids yet)
+    if (auction.countdown_end_time === null) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Auction countdown has not started yet (waiting for first bid)',
+        seconds_remaining: -1
+      });
+    }
+
     // Check if countdown has expired
     const now = new Date();
     const endTime = new Date(auction.countdown_end_time);
@@ -793,7 +843,8 @@ router.put('/:id/end', async (req, res) => {
 
 /**
  * PUT /api/node/auctions/:id/cancel
- * Cancel a SCHEDULED auction (seller only)
+ * Cancel a SCHEDULED or ACTIVE auction (seller only)
+ * NEW LOGIC: If bids exist, auction is ended and order is created for winner instead of cancelling
  * Optional: cancellation_reason (max 255 characters)
  * Auth: Required (must be auction seller)
  */
@@ -838,15 +889,70 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
       return res.status(403).json({ success: false, error: 'Only auction seller can cancel' });
     }
 
-    // Only SCHEDULED auctions can be cancelled
-    if (auction.status !== 'SCHEDULED') {
+    // Can cancel SCHEDULED or ACTIVE auctions
+    if (!['SCHEDULED', 'ACTIVE'].includes(auction.status)) {
       await client.query('ROLLBACK');
       return res.status(400).json({ 
         success: false, 
-        error: 'Only scheduled auctions can be cancelled. Active auctions must be stopped instead.' 
+        error: `Cannot cancel ${auction.status} auctions` 
       });
     }
 
+    // Check if there are bids
+    const bidCount = await client.query(
+      'SELECT COUNT(*) FROM auction_bids WHERE auction_id = $1',
+      [id]
+    );
+    const totalBids = parseInt(bidCount.rows[0].count);
+
+    // NEW LOGIC: If bids exist, end auction and create order for winner
+    if (totalBids > 0) {
+      console.log(`[Auction] Cancel requested for auction #${id}, but ${totalBids} bids exist. Creating order for winner instead.`);
+      
+      let orderId = null;
+      let orderError = null;
+      const winnerId = auction.highest_bidder_id;
+
+      // Try to create order for the highest bidder
+      if (winnerId) {
+        const orderResult = await createOrderFromAuction(client, auction);
+        if (orderResult.success) {
+          orderId = orderResult.orderId;
+        } else {
+          orderError = orderResult.error;
+          console.warn(`[Auction] Could not create order for cancelled auction #${id}: ${orderError}`);
+        }
+      }
+
+      // End auction and set winner (transaction completed)
+      const result = await client.query(
+        `UPDATE auctions 
+         SET status = 'ENDED', winner_id = $1, ended_at = CURRENT_TIMESTAMP, cancellation_reason = $3
+         WHERE id = $2
+         RETURNING *`,
+        [winnerId, id, cancellation_reason || null]
+      );
+
+      await client.query('COMMIT');
+
+      // Build response
+      let message;
+      if (orderId) {
+        message = 'Auction cancelled by seller, but bids existed. Auction ended and order created for winner.';
+      } else {
+        message = `Auction cancelled by seller with bids. Auction ended, but order creation failed: ${orderError}`;
+      }
+
+      return res.json({
+        success: true,
+        data: result.rows[0],
+        order_id: orderId,
+        order_error: orderError,
+        message,
+      });
+    }
+
+    // No bids - cancel normally
     const result = await client.query(
       `UPDATE auctions 
        SET status = 'CANCELLED', ended_at = CURRENT_TIMESTAMP, cancellation_reason = $2
@@ -860,7 +966,7 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
     res.json({
       success: true,
       data: result.rows[0],
-      message: 'Auction cancelled successfully',
+      message: 'Auction cancelled successfully (no bids existed)',
     });
   } catch (error) {
     await client.query('ROLLBACK');

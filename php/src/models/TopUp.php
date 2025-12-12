@@ -2,9 +2,6 @@
 
 require_once __DIR__ . '/../utils/Database.php';
 
-use Exception;
-use PDO;
-
 class TopUp
 {
   private $db;

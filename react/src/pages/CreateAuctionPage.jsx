@@ -46,7 +46,14 @@ export default function CreateAuctionPage() {
         );
 
         if (response.data.success && response.data.data) {
-          setProduct(response.data.data);
+          const product = response.data.data;
+          
+          // Check if product has stock
+          if (product.stock === 0 || product.stock === null) {
+            setError('Cannot create auction for product with no stock');
+          } else {
+            setProduct(product);
+          }
         } else {
           setError('Product not found or you do not own this product');
         }

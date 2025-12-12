@@ -128,6 +128,11 @@
     
     <div id="toast" class="toast"></div>
 
+    <!-- Make product ID available to JavaScript -->
+    <script>
+        window.productId = <?php echo json_encode($product['id']); ?>;
+    </script>
+
     <script src="/public/js/api.js"></script>
     <script src="/public/js/balance.js"></script>
     <script src="/public/js/main.js"></script>

@@ -1,5 +1,43 @@
-// Get product ID from URL
-const productId = new URLSearchParams(window.location.search).get('id');
+/**
+ * Get product ID from multiple sources (in order of preference):
+ * 1. window.productId (set by PHP if available)
+ * 2. URL path (if route is /product/{id})
+ * 3. URL query param (if route is /product?id={id})
+ * 4. Data attribute on page (if set by PHP)
+ */
+function getProductId() {
+    // Try window variable first (most reliable if PHP sets it)
+    if (window.productId) {
+        return window.productId;
+    }
+    
+    // Try URL path: /product/{id}
+    const pathMatch = window.location.pathname.match(/\/product\/(\d+)/);
+    if (pathMatch && pathMatch[1]) {
+        return pathMatch[1];
+    }
+    
+    // Try URL query param: ?id={id}
+    const queryId = new URLSearchParams(window.location.search).get('id');
+    if (queryId) {
+        return queryId;
+    }
+    
+    // Try data attribute on body or main container
+    const bodyId = document.body.getAttribute('data-product-id');
+    if (bodyId) {
+        return bodyId;
+    }
+    
+    const mainContainer = document.querySelector('[data-product-id]');
+    if (mainContainer) {
+        return mainContainer.getAttribute('data-product-id');
+    }
+    
+    return null;
+}
+
+const productId = getProductId();
 let currentPage = 1;
 let currentSort = 'recent';
 let currentRatingFilter = 'all';
@@ -7,9 +45,16 @@ let ratingStats = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     if (productId) {
+        console.log(`[Reviews] Loaded reviews for product #${productId}`);
         loadProductReviews(1);
         loadRatingStats();
         initializeEventListeners();
+    } else {
+        console.warn('[Reviews] Product ID not found');
+        const container = document.getElementById('reviewsContainer');
+        if (container) {
+            container.innerHTML = '<div style="text-align: center; padding: 2rem; color: red;"><p>Unable to load reviews - Product ID not found</p></div>';
+        }
     }
 });
 
@@ -27,7 +72,7 @@ function loadRatingStats() {
             }
         })
         .catch(error => {
-            console.error('Error loading rating stats:', error);
+            console.error('[Reviews] Error loading rating stats:', error);
         });
 }
 
@@ -102,7 +147,7 @@ function loadProductReviews(page = 1) {
             }
         })
         .catch(error => {
-            console.error('Error loading reviews:', error);
+            console.error('[Reviews] Error loading reviews:', error);
             if (!existingStats) {
                 container.innerHTML = '<div style="text-align: center; padding: 2rem; color: red;"><p>Failed to load reviews</p></div>';
             }
@@ -193,7 +238,7 @@ function voteHelpfulness(reviewId, isHelpful) {
             }
         })
         .catch(error => {
-            console.error('Error voting on helpfulness:', error);
+            console.error('[Reviews] Error voting on helpfulness:', error);
             alert('Failed to vote. Please try again.');
         });
 }

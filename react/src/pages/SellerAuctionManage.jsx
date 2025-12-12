@@ -255,7 +255,7 @@ export default function SellerAuctionManage() {
           {/* Countdown - Active Auction */}
           {isAuctionActive && (
             <AuctionCountdown
-              countdownSeconds={countdownSeconds}
+              countdownSeconds={countdownSeconds !== null ? countdownSeconds : auction?.seconds_remaining}
               onExpired={handleAuctionExpired}
             />
           )}

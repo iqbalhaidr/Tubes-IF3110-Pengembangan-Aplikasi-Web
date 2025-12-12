@@ -64,33 +64,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const stockStatus = product.stock > 0 ? `${product.stock} Pcs` : '<span class="stock-out">Habis</span>';
             const imageUrl = product.main_image_path || '/public/images/default.png';
             const isAuctioned = product.auction_status === 'ACTIVE' || product.auction_status === 'SCHEDULED';
+            const hasNoStock = product.stock === 0;
 
             const auctionBadge = isAuctioned ? '<span class="badge auction-badge">Dalam Lelang</span>' : '';
             
             // Check if product has active/scheduled auction
             const hasAuction = product.auction_status && (product.auction_status === 'ACTIVE' || product.auction_status === 'SCHEDULED');
             
-            let actionsHtml = '';
-            if (hasAuction) {
-                // Show badge instead of edit/delete buttons
-                actionsHtml = `
-                    <div class="auction-status">
-                        <span class="badge-dalam-lelang">DALAM LELANG</span>
-                        <a href="/seller/products/${product.product_id}/manage-auctions" class="btn btn-info btn-sm">Lihat Lelang</a>
-                    </div>
-                `;
-            } else {
-                // Show Lelang, Edit, Delete buttons
-                actionsHtml = `
-                    <a href="/seller/products/${product.product_id}/create-auction" class="btn btn-secondary btn-sm">Jadikan Lelang</a>
-                    <a href="/seller/products/edit/${product.product_id}" class="btn btn-secondary btn-sm">Edit</a>
-                    <button class="btn btn-danger btn-sm btn-delete" 
-                            data-id="${product.product_id}" 
-                            data-name="${product.product_name}">
-                        Delete
-                    </button>
-                `;
-            }
+            // Create Auction button - disabled if auctioned or no stock
+            const createAuctionBtn = hasAuction || hasNoStock
+                ? `<button class="btn btn-primary btn-sm" disabled title="${hasNoStock ? 'Stok habis - tidak bisa dijadikan lelang' : 'Produk sedang dalam lelang'}">Jadikan Lelang</button>`
+                : `<a href="/seller/products/${product.product_id}/create-auction" class="btn btn-primary btn-sm">Jadikan Lelang</a>`;
+            
+            // Edit button - disabled if auctioned
+            const editBtn = hasAuction
+                ? `<button class="btn btn-secondary btn-sm" disabled title="Tidak bisa edit produk yang sedang dalam lelang">Edit</button>`
+                : `<a href="/seller/products/edit/${product.product_id}" class="btn btn-secondary btn-sm">Edit</a>`;
+            
+            // Delete button - disabled if auctioned
+            const deleteBtn = hasAuction
+                ? `<button class="btn btn-danger btn-sm" disabled title="Tidak bisa hapus produk yang sedang dalam lelang">Delete</button>`
+                : `<button class="btn btn-danger btn-sm btn-delete" data-id="${product.product_id}" data-name="${product.product_name}">Delete</button>`;
             
             const row = `
                 <tr data-id="${product.product_id}">
@@ -100,14 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td data-label="Harga">Rp. ${Number(product.price).toLocaleString('id-ID')}</td>
                     <td data-label="Stok">${stockStatus}</td>
                     <td data-label="Aksi">
-                        <a href="/seller/products/${product.product_id}/create-auction" class="btn btn-primary btn-sm" ${isAuctioned ? 'disabled' : ''}>Jadikan Lelang</a>
-                        <a href="/seller/products/edit/${product.product_id}" class="btn btn-secondary btn-sm" ${isAuctioned ? 'disabled' : ''}>Edit</a>
-                        <button class="btn btn-danger btn-sm btn-delete" 
-                                data-id="${product.product_id}" 
-                                data-name="${product.product_name}"
-                                ${isAuctioned ? 'disabled' : ''}>
-                            Delete
-                        </button>
+                        ${createAuctionBtn}
+                        ${editBtn}
+                        ${deleteBtn}
                     </td>
                 </tr>
             `;

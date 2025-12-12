@@ -63,7 +63,9 @@ export default function AuctionCard({ auction, onAuctionStarted }) {
   };
 
   const formatTime = (seconds) => {
-    if (!seconds || seconds < 0) return 'Ended';
+    // Handle NULL or undefined (auction has no bids yet, countdown hasn't started)
+    if (seconds === null || seconds === undefined) return '-';
+    if (seconds < 0) return 'Ended';
     if (seconds < 60) return `${seconds}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;

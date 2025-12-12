@@ -239,7 +239,12 @@ export const getProductReviews = async (req, res) => {
         const stats = statsResult.rows[0];
 
         res.json({
+            success: true,
             reviews: reviewsResult.rows,
+            page: parseInt(page),
+            total_pages: Math.ceil(total / limit),
+            total: total,
+            limit: parseInt(limit),
             pagination: {
                 current_page: parseInt(page),
                 limit: parseInt(limit),

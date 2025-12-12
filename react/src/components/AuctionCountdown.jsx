@@ -67,7 +67,9 @@ export default function AuctionCountdown({ countdownSeconds, onExpired, auctionI
   }, [displaySeconds, onExpired]);
 
   const formatCountdown = (seconds) => {
-    if (!seconds || seconds <= 0) return 'EXPIRED';
+    // Handle NULL or undefined (auction has no bids yet, countdown hasn't started)
+    if (seconds === null || seconds === undefined) return '-';
+    if (seconds <= 0) return 'EXPIRED';
 
     if (seconds < 60) {
       return `${seconds}s`;
@@ -86,6 +88,10 @@ export default function AuctionCountdown({ countdownSeconds, onExpired, auctionI
   };
 
   const getCountdownColors = () => {
+    // Handle NULL countdown (auction has no bids yet)
+    if (displaySeconds === null || displaySeconds === undefined) {
+      return 'bg-gray-400 border-gray-500 text-white';
+    }
     if (!displaySeconds) return 'bg-gray-500 border-gray-600 text-white';
     if (displaySeconds < 60) return 'bg-red-600 border-red-700 text-white animate-pulse';
     if (displaySeconds < 300) return 'bg-orange-500 border-orange-600 text-white';
@@ -98,7 +104,7 @@ export default function AuctionCountdown({ countdownSeconds, onExpired, auctionI
       <div className="text-5xl font-bold tracking-tight mb-3">
         {formatCountdown(displaySeconds)}
       </div>
-      {displaySeconds && displaySeconds < 60 && (
+      {displaySeconds && displaySeconds > 0 && displaySeconds < 60 && (
         <div className="text-sm font-bold animate-pulse">
           Auction ending soon!
         </div>
