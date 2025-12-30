@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "seed": "node loadtest/seed-database.js",
+    "test": "k6 run loadtest-config/load-test.js",
+    "test:html": "k6 run loadtest-config/load-test.js --out=html=loadtest-config/results.html"
   },
   "keywords": [
     "websocket",
@@ -19,6 +21,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

@@ -1,0 +1,33 @@
+{
+  "name": "nimonspedia-k6-loadtest",
+  "version": "1.0.0",
+  "description": "K6 load testing setup for Nimonspedia backend",
+  "scripts": {
+    "seed": "node seed-database.js",
+    "test": "k6 run load-test.js",
+    "test:summary": "k6 run --summary-export=summary.json load-test.js",
+    "test:html": "k6 run --out json=test-results.json load-test.js && node generate-report.js",
+    "validate-config": "node validate-config.js",
+    "help": "node -e \"console.log('Available commands:\\n  npm run seed - Seed database with test data\\n  npm run test - Run K6 load test\\n  npm run test:summary - Run test and export summary\\n  npm run validate-config - Validate configuration file\\n  npm run help - Show this help')\""
+  },
+  "keywords": [
+    "k6",
+    "load-testing",
+    "performance",
+    "backend",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "mysql2": "^3.6.0",
+    "pg": "^8.11.0"
+  },
+  "devDependencies": {
+    "k6": "^0.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

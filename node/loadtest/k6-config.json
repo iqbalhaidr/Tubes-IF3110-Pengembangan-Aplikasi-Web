@@ -1,0 +1,246 @@
+{
+  "baseUrl": "http://nginx",
+  "endpoints": {
+    "getAllProducts": {
+      "path": "/api/php/products",
+      "method": "GET",
+      "description": "Ambil semua produk tanpa filter"
+    },
+
+    "getProductsWithRange": {
+      "path": "/api/php/products",
+      "method": "GET",
+      "params": {
+        "priceMin": "min_price",
+        "priceMax": "max_price"
+      },
+      "testValues": {
+        "priceMin": 10000,
+        "priceMax": 500000
+      },
+      "description": "Ambil produk dengan filter rentang harga"
+    },
+
+    "getProductsWithFilter": {
+      "path": "/api/php/products",
+      "method": "GET",
+      "params": {
+        "category": "category"
+      },
+      "testValues": {
+        "category": "1"
+      },
+      "description": "Ambil produk dengan filter kategori"
+    },
+
+    "getProductsWithSearch": {
+      "path": "/api/php/products",
+      "method": "GET",
+      "params": {
+        "search": "search"
+      },
+      "testValues": {
+        "search": "laptop"
+      },
+      "description": "Ambil produk berdasarkan query pencarian"
+    },
+
+    "getAllAuctions": {
+      "path": "/api/node/auctions",
+      "method": "GET",
+      "description": "Ambil semua auctions"
+    },
+
+    "getAuctionDetail": {
+      "path": "/api/node/auctions/{auctionId}",
+      "method": "GET",
+      "description": "Ambil detail auction"
+    },
+
+    "createBid": {
+      "path": "/api/node/auctions/{auctionId}/bid",
+      "method": "POST",
+      "description": "Create bid on auction"
+    },
+
+    "getOrders": {
+      "path": "/api/node/orders",
+      "method": "GET",
+      "description": "Ambil semua orders"
+    },
+
+    "getReviews": {
+      "path": "/api/php/reviews",
+      "method": "GET",
+      "description": "Ambil semua reviews"
+    }
+  },
+
+  "database": {
+    "type": "postgresql",
+    "host": "db",
+    "port": 5432,
+    "name": "nimonspedia",
+    "user": "postgres",
+    "password": "postgres",
+
+    "schema": {
+      "tables": {
+        "user": "user",
+        "store": "store",
+        "product": "product",
+        "category": "category",
+        "categoryItem": "category_item",
+        "order": "order",
+        "orderItem": "order_item",
+        "productReview": "reviews",
+        "sellerResponse": "seller_responses"
+      },
+
+      "columns": {
+        "user": {
+          "id": "user_id",
+          "email": "email",
+          "password": "password_hash",
+          "role": "role",
+          "name": "name",
+          "address": "address",
+          "balance": "balance",
+          "createdAt": "created_at",
+          "updatedAt": "updated_at"
+        },
+        "store": {
+          "id": "store_id",
+          "userId": "user_id",
+          "name": "store_name",
+          "description": "store_description",
+          "logoPath": "store_logo_path",
+          "balance": "balance",
+          "createdAt": "created_at",
+          "updatedAt": "updated_at"
+        },
+        "product": {
+          "id": "product_id",
+          "storeId": "store_id",
+          "name": "product_name",
+          "description": "description",
+          "price": "price",
+          "stock": "stock",
+          "imagePath": "main_image_path",
+          "createdAt": "created_at",
+          "updatedAt": "updated_at",
+          "deletedAt": "deleted_at"
+        },
+        "category": {
+          "id": "category_id",
+          "name": "category_name"
+        },
+        "categoryItem": {
+          "categoryId": "category_id",
+          "productId": "product_id"
+        },
+        "order": {
+          "id": "order_id",
+          "auctionId": "auction_id",
+          "buyerId": "buyer_id",
+          "sellerId": "store_id",
+          "totalPrice": "total_price",
+          "orderStatus": "status",
+          "createdAt": "created_at"
+        },
+        "orderItem": {
+          "id": "order_item_id",
+          "orderId": "order_id",
+          "productId": "product_id",
+          "quantity": "quantity",
+          "price": "price_at_purchase",
+          "subtotal": "subtotal"
+        },
+        "productReview": {
+          "id": "review_id",
+          "productId": "product_id",
+          "buyerId": "buyer_id",
+          "orderId": "order_id",
+          "storeId": "store_id",
+          "rating": "rating",
+          "reviewText": "text",
+          "createdAt": "created_at",
+          "updatedAt": "updated_at"
+        },
+        "sellerResponse": {
+          "id": "response_id",
+          "reviewId": "review_id",
+          "storeId": "store_id",
+          "responseText": "response_text",
+          "createdAt": "created_at",
+          "updatedAt": "updated_at"
+        }
+      },
+
+      "additionalColumns": {
+        "user": [],
+        "store": [],
+        "product": [],
+        "category": [],
+        "categoryItem": [],
+        "order": [],
+        "orderItem": [],
+        "productReview": [],
+        "sellerResponse": []
+      }
+    }
+  },
+
+  "seeding": {
+    "enabled": true,
+    "productsCount": 10000,
+    "categoriesCount": 5,
+    "storesCount": 10,
+    "ordersCount": 6000,
+    "reviewsCount": 4000,
+
+    "customValues": {
+      "product": {
+        "stock": {
+          "type": "random",
+          "min": 10,
+          "max": 100
+        }
+      }
+    }
+  },
+
+  "loadTest": {
+    "stages": [
+      { "duration": "10s", "target": 20 },
+      { "duration": "30s", "target": 50 },
+      { "duration": "1m", "target": 100 },
+      { "duration": "30s", "target": 50 },
+      { "duration": "10s", "target": 0 }
+    ],
+
+    "thresholds": {
+      "http_req_duration": ["avg<8000", "p(90)<12000", "p(95)<25000"],
+      "http_req_failed": ["rate<0.01"],
+      "http_req_duration{scenario:getAllProducts}": ["avg<6000", "p(90)<10000", "p(95)<12000"],
+      "http_req_failed{scenario:getAllProducts}": ["rate<0.01"],
+      "http_req_duration{scenario:getProductsWithRange}": ["avg<6000", "p(90)<10000", "p(95)<12000"],        
+      "http_req_failed{scenario:getProductsWithRange}": ["rate<0.01"],
+      "http_req_duration{scenario:getProductsWithFilter}": ["avg<5000", "p(90)<9000", "p(95)<10000"],        
+      "http_req_failed{scenario:getProductsWithFilter}": ["rate<0.01"],
+      "http_req_duration{scenario:getProductsWithSearch}": ["avg<25000", "p(90)<35000", "p(95)<40000"],      
+      "http_req_failed{scenario:getProductsWithSearch}": ["rate<0.01"],
+      "http_req_duration{scenario:getOrders}": ["avg<5000", "p(90)<9000", "p(95)<10000"],
+      "http_req_failed{scenario:getOrders}": ["rate<0.01"],
+      "http_req_duration{scenario:getReviews}": ["avg<4000", "p(90)<8000", "p(95)<9000"],
+      "http_req_failed{scenario:getReviews}": ["rate<0.01"]
+    }
+  },
+
+  "validation": {
+    "checkStatusCode": true,
+    "checkNonEmptyResponse": true,
+    "expectedFields": ["success", "data", "pagination"],
+    "minimumProducts": 1
+  }
+}

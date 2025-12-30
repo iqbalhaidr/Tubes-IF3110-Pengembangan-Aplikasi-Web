@@ -14,7 +14,7 @@ services:
       - "5432:5432"
     volumes:
       - ./db/migrations/init.sql:/docker-entrypoint-initdb.d/01-init.sql
-      - ./db/migrations/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      # - ./db/migrations/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
       - postgres_data:/var/lib/postgresql/data
     networks:
       - nimonspedia-network
@@ -86,6 +86,7 @@ services:
       - ./node/src:/app/src
       - ./node/.env:/app/.env
       - ./node/uploads:/app/uploads
+      - ./loadtest-config:/app/loadtest-config
     depends_on:
       db:
         condition: service_healthy

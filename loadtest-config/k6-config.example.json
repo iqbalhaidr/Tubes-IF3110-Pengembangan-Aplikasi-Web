@@ -1,0 +1,152 @@
+{
+  "baseUrl": "http://localhost:8000",
+  "endpoints": {
+    "getAllProducts": {
+      "path": "/api/products",
+      "method": "GET",
+      "description": "Get all products without any filters"
+    },
+    "getProductsWithRange": {
+      "path": "/api/products",
+      "method": "GET",
+      "params": {
+        "priceMin": "price_min",
+        "priceMax": "price_max"
+      },
+      "testValues": {
+        "priceMin": 10000,
+        "priceMax": 500000
+      },
+      "description": "Get products filtered by price range"
+    },
+    "getProductsWithFilter": {
+      "path": "/api/products",
+      "method": "GET",
+      "params": {
+        "category": "category"
+      },
+      "testValues": {
+        "category": "Electronics"
+      },
+      "description": "Get products filtered by category"
+    },
+    "getProductsWithSearch": {
+      "path": "/api/products",
+      "method": "GET",
+      "params": {
+        "search": "search"
+      },
+      "testValues": {
+        "search": "laptop"
+      },
+      "description": "Get products by search query"
+    }
+  },
+  "database": {
+    "type": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "name": "nimonspedia",
+    "user": "root",
+    "password": "password",
+    "schema": {
+      "tables": {
+        "user": "User",
+        "store": "Store",
+        "product": "Product",
+        "category": "Category",
+        "categoryItem": "Category_Item"
+      },
+      "columns": {
+        "user": {
+          "id": "user_id",
+          "email": "email",
+          "password": "password",
+          "role": "role",
+          "name": "name",
+          "address": "address",
+          "balance": "balance",
+          "createdAt": "created_at",
+          "updatedAt": "updated_at"
+        },
+        "store": {
+          "id": "store_id",
+          "userId": "user_id",
+          "name": "store_name",
+          "description": "store_description",
+          "logoPath": "store_logo_path",
+          "balance": "balance",
+          "createdAt": "created_at",
+          "updatedAt": "updated_at"
+        },
+        "product": {
+          "id": "product_id",
+          "storeId": "store_id",
+          "name": "product_name",
+          "description": "description",
+          "price": "price",
+          "stock": "stock",
+          "imagePath": "main_image_path",
+          "createdAt": "created_at",
+          "updatedAt": "updated_at",
+          "deletedAt": "deleted_at"
+        },
+        "category": {
+          "id": "category_id",
+          "name": "name"
+        },
+        "categoryItem": {
+          "categoryId": "category_id",
+          "productId": "product_id"
+        }
+      },
+      "additionalColumns": {
+        "user": [],
+        "store": [],
+        "product": [],
+        "category": [],
+        "categoryItem": []
+      }
+    }
+  },
+  "seeding": {
+    "enabled": true,
+    "productsCount": 100,
+    "categoriesCount": 5,
+    "storesCount": 10,
+    "customValues": {
+      "product": {
+        "stock": {
+          "type": "random",
+          "min": 10,
+          "max": 100
+        }
+      }
+    }
+  },
+  "loadTest": {
+    "stages": [
+      { "duration": "10s", "target": 20 },
+      { "duration": "30s", "target": 50 },
+      { "duration": "10s", "target": 20 }
+    ],
+    "thresholds": {
+      "http_req_duration": ["avg<8000", "p(90)<12000", "p(95)<25000"],
+      "http_req_failed": ["rate<0.01"],
+      "http_req_duration{scenario:getAllProducts}": ["avg<6000", "p(90)<10000", "p(95)<12000"],
+      "http_req_duration{scenario:getProductsWithRange}": ["avg<6000", "p(90)<10000", "p(95)<12000"],
+      "http_req_duration{scenario:getProductsWithFilter}": ["avg<5000", "p(90)<9000", "p(95)<10000"],
+      "http_req_duration{scenario:getProductsWithSearch}": ["avg<25000", "p(90)<35000", "p(95)<40000"],
+      "http_req_failed{scenario:getAllProducts}": ["rate<0.01"],
+      "http_req_failed{scenario:getProductsWithRange}": ["rate<0.01"],
+      "http_req_failed{scenario:getProductsWithFilter}": ["rate<0.01"],
+      "http_req_failed{scenario:getProductsWithSearch}": ["rate<0.01"]
+    }
+  },
+  "validation": {
+    "checkStatusCode": true,
+    "checkNonEmptyResponse": true,
+    "expectedFields": ["success", "data", "pagination"],
+    "minimumProducts": 1
+  }
+}
